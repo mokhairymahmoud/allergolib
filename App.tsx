@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import {
+  PanResponder,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -696,6 +697,18 @@ function DetailScreen({
 }) {
   const [activeTab, setActiveTab] = useState<TestKind>(availableTests(drug)[0] ?? "prick");
   const [showSource, setShowSource] = useState(false);
+
+  const swipeBack = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) =>
+          gestureState.dx > 20 && Math.abs(gestureState.dy) < 60 && gestureState.moveX < 60,
+        onPanResponderRelease: (_, gestureState) => {
+          if (gestureState.dx > 60) onBack();
+        },
+      }),
+    [onBack]
+  );
   const availableTestKinds = availableTests(drug);
 
   useEffect(() => {
@@ -754,7 +767,7 @@ function DetailScreen({
   }
 
   return (
-    <>
+    <View style={styles.flex1} {...swipeBack.panHandlers}>
       {/* Sticky nav header */}
       <View style={styles.detailNavHeader}>
         <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
@@ -924,7 +937,7 @@ function DetailScreen({
 
         <ComplianceBanner language={language} />
       </ScrollView>
-    </>
+    </View>
   );
 }
 
@@ -1196,6 +1209,9 @@ const styles = StyleSheet.create({
   mainContent: {
     flex: 1,
   },
+  flex1: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
     backgroundColor: "#F4F6F9",
@@ -1263,7 +1279,6 @@ const styles = StyleSheet.create({
   topLevelTabs: {
     flexDirection: "row",
     height: 56,
-    paddingBottom: 12,
   },
   topLevelTab: {
     flex: 1,
