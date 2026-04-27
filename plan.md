@@ -105,3 +105,7 @@ Harden the product for beta distribution with compliance wording, edge-case hand
 - The exact EAACI source is deferred, but the schema must support adding it without redesign.
 - MVP excludes patient data, decision support, EHR integration, and an admin dashboard.
 - The first dataset is manually seeded into Google Sheets, then maintained through the structured publish flow.
+
+## Delivery Notes
+- The dataset pipeline has been migrated from local tab files to authenticated `Google Sheets` import.
+- The export step now reads the spreadsheet tabs `release_metadata`, `sources`, `drugs`, `aliases`, `test_entries`, and `notes` before generating the bundled `dataset.json` and `manifest.json`.
