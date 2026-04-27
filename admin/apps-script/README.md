@@ -40,6 +40,30 @@ Suggested web app settings:
 - Execute as: `User accessing the web app`
 - Access: restricted to the intended admin account(s)
 
+## `clasp` workflow
+
+You can manage this Apps Script project from the repo root with `clasp`.
+
+1. Install dependencies:
+   - `npm install`
+2. Log in to Google Apps Script:
+   - `npm run admin:clasp:login`
+3. Copy the target Apps Script `scriptId` from the Apps Script URL.
+4. Create the local link file:
+   - `npm run admin:clasp:link -- <SCRIPT_ID>`
+5. Push the admin app files:
+   - `npm run admin:clasp:push`
+6. Open the linked Apps Script project:
+   - `npm run admin:clasp:open`
+
+Other useful commands:
+
+- `npm run admin:clasp:status`
+- `npm run admin:clasp:pull`
+- `npm run admin:clasp:deploy`
+
+The repo keeps a template at [admin/apps-script/.clasp.json.example](/Users/mohamedkhairy/dev/allergolib/admin/apps-script/.clasp.json.example:1). Your real `admin/apps-script/.clasp.json` stays local and is ignored by git.
+
 ## Notes
 
 - The script preserves the current export contract and current sheet headers.
