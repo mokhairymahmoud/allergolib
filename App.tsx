@@ -1421,30 +1421,9 @@ function SearchScreen({
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const [activeClass, setActiveClass] = useState<string | null>(null);
-  const [inputFocused, setInputFocused] = useState(false);
-  const recentFadeAnim = useRef(new Animated.Value(0)).current;
-  const recentHeightAnim = useRef(new Animated.Value(0)).current;
   const favoriteDrugSet = new Set(favoriteDrugIds);
   const trimmedQuery = query.trim();
   const hasQuery = trimmedQuery.length > 0;
-
-  const showRecents = !hasQuery && recentDrugs.length > 0;
-  const shouldRevealRecents = showRecents && inputFocused;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(recentFadeAnim, {
-        toValue: shouldRevealRecents ? 1 : 0,
-        duration: 180,
-        useNativeDriver: false,
-      }),
-      Animated.timing(recentHeightAnim, {
-        toValue: shouldRevealRecents ? 1 : 0,
-        duration: 180,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  }, [shouldRevealRecents, recentFadeAnim, recentHeightAnim]);
 
   // Derive sorted unique class names from the full drug list
   const drugClasses = [...new Set(allDrugs.map((d) => d.className[language]))].sort();
@@ -1466,21 +1445,9 @@ function SearchScreen({
     <View style={styles.flex1}>
       {/* ── Sticky header ── */}
       <View style={styles.searchStickyHeader}>
-        {/* Recent searches — fades in/out on input focus */}
-        {recentDrugs.length > 0 ? (
-          <Animated.View
-            style={[
-              styles.recentSection,
-              {
-                opacity: recentFadeAnim,
-                maxHeight: recentHeightAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, 80],
-                }),
-                overflow: "hidden",
-              },
-            ]}
-          >
+        {/* Recent searches — visible when no query is active */}
+        {!hasQuery && recentDrugs.length > 0 ? (
+          <View style={styles.recentSection}>
             <Text style={styles.sectionLabel}>{copy(language, "search.recentTitle")}</Text>
             <ScrollView
               horizontal
@@ -1498,7 +1465,7 @@ function SearchScreen({
                 </Pressable>
               ))}
             </ScrollView>
-          </Animated.View>
+          </View>
         ) : null}
 
         {/* Search input */}
@@ -1507,8 +1474,6 @@ function SearchScreen({
           <TextInput
             autoCapitalize="none"
             autoCorrect={false}
-            onFocus={() => setInputFocused(true)}
-            onBlur={() => setInputFocused(false)}
             onChangeText={(v) => { onChangeQuery(v); setActiveClass(null); }}
             placeholder={copy(language, "search.placeholder")}
             placeholderTextColor={theme.textDisabled}
