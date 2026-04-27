@@ -3,6 +3,7 @@ export type Language = "en" | "fr";
 export type LocalizedString = Record<Language, string>;
 
 export type TestKind = "prick" | "idr" | "patch";
+export type NoteKind = "info" | "warning" | "cross-reactivity";
 
 export type DatasetRelease = {
   version: string;
@@ -29,12 +30,17 @@ export type SourceDocument = {
   excerpt: LocalizedString;
 };
 
+export type TestNote = {
+  kind: NoteKind;
+  value: LocalizedString;
+};
+
 export type TestRecord = {
   concentration?: string;
   maxConcentration?: string;
   dilutions: string[];
   vehicle?: LocalizedString;
-  notes: LocalizedString[];
+  notes: TestNote[];
   preferredSourceId: string;
   alternateSourceId?: string;
 };

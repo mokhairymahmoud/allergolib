@@ -19,6 +19,7 @@ const SHEET_RANGES = {
 
 const LANGUAGES = ["en", "fr"];
 const TEST_KINDS = ["prick", "idr", "patch"];
+const NOTE_KINDS = new Set(["info", "warning", "cross-reactivity"]);
 const REQUIRED_METADATA_KEYS = [
   "version",
   "releasedAt",
@@ -327,10 +328,18 @@ function buildDrugs(drugRows, aliasRows, testRows, noteRows, sources) {
     assert(drugsById[row.drug_id], `notes references unknown drug ${row.drug_id}.`);
     assert(TEST_KINDS.includes(row.test_kind), `Invalid test kind ${row.test_kind} in notes.`);
     requireLocalizedColumns(row, `Note ${row.drug_id}/${row.test_kind}`, "note");
+    const noteKind = row.note_kind || "info";
+    assert(
+      NOTE_KINDS.has(noteKind),
+      `Invalid note_kind "${noteKind}" for ${row.drug_id}/${row.test_kind}.`
+    );
 
     drugsById[row.drug_id].tests[row.test_kind].notes.push({
-      en: row.note_en,
-      fr: row.note_fr,
+      kind: noteKind,
+      value: {
+        en: row.note_en,
+        fr: row.note_fr,
+      },
     });
   }
 

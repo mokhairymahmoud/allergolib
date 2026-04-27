@@ -5,9 +5,11 @@ import appConfig from "../../app.json";
 import type {
   Dataset,
   DatasetManifest,
+  NoteKind,
   DatasetRelease,
   LocalizedString,
   SourceDocument,
+  TestNote,
   TestKind,
   TestRecord,
 } from "../types";
@@ -121,6 +123,71 @@ function asLocalizedStringArray(value: unknown, context: string): LocalizedStrin
   return value.map((entry, index) => asLocalizedString(entry, `${context}[${index}]`));
 }
 
+function inferLegacyNoteKind(note: LocalizedString): NoteKind {
+  const combined = `${note.en} ${note.fr}`.toLowerCase();
+
+  if (
+    combined.includes("cross-react") ||
+    combined.includes("cross react") ||
+    combined.includes("reactivite croisee")
+  ) {
+    return "cross-reactivity";
+  }
+
+  if (
+    combined.includes("risk") ||
+    combined.includes("warning") ||
+    combined.includes("irritant") ||
+    combined.includes("false positive") ||
+    combined.includes("aucune") ||
+    combined.includes("no ") ||
+    combined.includes("risque") ||
+    combined.includes("attention")
+  ) {
+    return "warning";
+  }
+
+  return "info";
+}
+
+function asNoteKind(value: unknown, context: string): NoteKind {
+  if (value === undefined || value === null || value === "") {
+    return "info";
+  }
+
+  if (value !== "info" && value !== "warning" && value !== "cross-reactivity") {
+    fail(`${context} must be info, warning, or cross-reactivity.`);
+  }
+
+  return value;
+}
+
+function asTestNotes(value: unknown, context: string): TestNote[] {
+  if (value === undefined || value === null) {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    fail(`${context} must be an array.`);
+  }
+
+  return value.map((entry, index) => {
+    if (isRecord(entry) && ("value" in entry || "kind" in entry)) {
+      return {
+        kind: asNoteKind(entry.kind, `${context}[${index}].kind`),
+        value: asLocalizedString(entry.value, `${context}[${index}].value`),
+      };
+    }
+
+    const localizedValue = asLocalizedString(entry, `${context}[${index}]`);
+
+    return {
+      kind: inferLegacyNoteKind(localizedValue),
+      value: localizedValue,
+    };
+  });
+}
+
 function normalizeRelease(value: unknown, context: string): DatasetRelease {
   const record = asRecord(value, context);
 
@@ -183,7 +250,7 @@ function normalizeTestRecord(
     maxConcentration: asOptionalString(record.maxConcentration, `${context}.maxConcentration`),
     dilutions: asStringArray(record.dilutions, `${context}.dilutions`),
     vehicle: record.vehicle ? asLocalizedString(record.vehicle, `${context}.vehicle`) : undefined,
-    notes: asLocalizedStringArray(record.notes, `${context}.notes`),
+    notes: asTestNotes(record.notes, `${context}.notes`),
     preferredSourceId,
     alternateSourceId,
   };

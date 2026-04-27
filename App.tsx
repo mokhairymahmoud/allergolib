@@ -16,15 +16,34 @@ import {
   syncDatasetInBackground,
   type DatasetOrigin,
 } from "./src/data/runtimeDataset";
-import { filterDrugs } from "./src/lib/filterDrugs";
+import {
+  buildDilutionPlans,
+  extractConcentrationUnit,
+  preferredDilutionRatios,
+} from "./src/lib/dilutionCalculator";
+import { loadFavoriteDrugIds, persistFavoriteDrugIds, sanitizeFavoriteDrugIds } from "./src/lib/favorites";
 import { copy } from "./src/lib/i18n";
-import type { DrugRecord, Language, SourceDocument, TestKind } from "./src/types";
+import { searchDrugs, type DrugSearchResult } from "./src/lib/drugSearch";
+import type {
+  DrugRecord,
+  Language,
+  NoteKind,
+  SourceDocument,
+  TestKind,
+  TestNote,
+} from "./src/types";
 
 const TAB_ORDER: TestKind[] = ["prick", "idr", "patch"];
 
 function isTestAvailable(drug: DrugRecord, kind: TestKind) {
   const test = drug.tests[kind];
-  return Boolean(test?.concentration || test?.maxConcentration || test?.notes.length);
+  return Boolean(
+    test?.concentration ||
+      test?.maxConcentration ||
+      test?.dilutions.length ||
+      test?.vehicle ||
+      test?.notes.length
+  );
 }
 
 function availableTests(drug: DrugRecord) {
@@ -51,26 +70,127 @@ function datasetOriginLabelKey(origin: DatasetOrigin) {
   return "home.datasetOriginUpdated";
 }
 
-function DrugRow({
-  drug,
+function matchLabel(language: Language, result: DrugSearchResult) {
+  if (result.matchedField === "alias") {
+    return copy(language, "search.matchAlias");
+  }
+
+  if (result.matchedField === "class") {
+    return copy(language, "search.matchClass");
+  }
+
+  if (result.matchedField === "id") {
+    return copy(language, "search.matchId");
+  }
+
+  if (result.matchedField === "name") {
+    return copy(language, "search.matchName");
+  }
+
+  return null;
+}
+
+function noteLabel(language: Language, kind: NoteKind) {
+  if (kind === "cross-reactivity") {
+    return copy(language, "detail.note.cross-reactivity");
+  }
+
+  return copy(language, "detail.note.info");
+}
+
+function formatNumber(value: number, language: Language) {
+  return new Intl.NumberFormat(language === "fr" ? "fr-FR" : "en-US", {
+    maximumFractionDigits: 3,
+  }).format(Math.round((value + Number.EPSILON) * 1000) / 1000);
+}
+
+function parsePositiveNumber(value: string) {
+  const normalized = value.trim().replace(",", ".");
+
+  if (!normalized) {
+    return null;
+  }
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function arraysEqual(left: string[], right: string[]) {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+function splitNotes(notes: TestNote[]) {
+  return {
+    warnings: notes.filter((note) => note.kind === "warning"),
+    supporting: notes.filter((note) => note.kind !== "warning"),
+  };
+}
+
+function SavePill({
   language,
+  isSaved,
   onPress,
 }: {
-  drug: DrugRecord;
   language: Language;
+  isSaved: boolean;
+  onPress?: () => void;
+}) {
+  if (!onPress) {
+    return (
+      <View style={[styles.savePill, isSaved && styles.savePillActive]}>
+        <Text style={[styles.savePillText, isSaved && styles.savePillTextActive]}>
+          {copy(language, isSaved ? "detail.saved" : "detail.save")}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[styles.savePill, isSaved && styles.savePillActive]}
+    >
+      <Text style={[styles.savePillText, isSaved && styles.savePillTextActive]}>
+        {copy(language, isSaved ? "detail.saved" : "detail.save")}
+      </Text>
+    </Pressable>
+  );
+}
+
+function DrugRow({
+  language,
+  result,
+  isSaved,
+  onPress,
+}: {
+  language: Language;
+  result: DrugSearchResult;
+  isSaved: boolean;
   onPress: () => void;
 }) {
+  const matchCopy = matchLabel(language, result);
+
   return (
     <Pressable onPress={onPress} style={styles.resultCard}>
       <View style={styles.resultHeader}>
-        <Text style={styles.resultName}>{drug.name[language]}</Text>
-        <View style={styles.classBadge}>
-          <Text style={styles.classBadgeText}>{drug.className[language]}</Text>
+        <View style={styles.resultTitleColumn}>
+          <Text style={styles.resultName}>{result.drug.name[language]}</Text>
+          <Text style={styles.resultAlias}>
+            {copy(language, "search.aliases")}: {result.drug.aliases.join(", ")}
+          </Text>
+        </View>
+        <View style={styles.resultHeaderBadges}>
+          {isSaved ? <SavePill language={language} isSaved /> : null}
+          <View style={styles.classBadge}>
+            <Text style={styles.classBadgeText}>{result.drug.className[language]}</Text>
+          </View>
         </View>
       </View>
-      <Text style={styles.resultAlias}>
-        {copy(language, "search.aliases")}: {drug.aliases.join(", ")}
-      </Text>
+      {matchCopy && result.matchedText ? (
+        <Text style={styles.matchHint}>
+          {matchCopy}: {result.matchedText}
+        </Text>
+      ) : null}
     </Pressable>
   );
 }
@@ -88,8 +208,135 @@ function SourceCard({
     <View style={styles.sourceCard}>
       <Text style={styles.sourceEyebrow}>{eyebrow}</Text>
       <Text style={styles.sourceTitle}>{source.label}</Text>
+      <Text style={styles.sourceMeta}>
+        {source.organization} {source.year} • {source.version}
+      </Text>
       <Text style={styles.sourceMeta}>{source.documentName[language]}</Text>
       <Text style={styles.sourceExcerpt}>{source.excerpt[language]}</Text>
+    </View>
+  );
+}
+
+function NoteList({
+  language,
+  notes,
+}: {
+  language: Language;
+  notes: TestNote[];
+}) {
+  return (
+    <View style={styles.notesBlock}>
+      {notes.map((note, index) => (
+        <View
+          key={`${note.kind}-${note.value.en}-${note.value.fr}-${index}`}
+          style={styles.noteRow}
+        >
+          <View style={styles.noteBadge}>
+            <Text style={styles.noteBadgeText}>{noteLabel(language, note.kind)}</Text>
+          </View>
+          <Text style={styles.noteText}>{note.value[language]}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function DilutionCalculator({
+  language,
+  dilutions,
+  concentrationUnit,
+}: {
+  language: Language;
+  dilutions: string[];
+  concentrationUnit: string;
+}) {
+  const [stockConcentration, setStockConcentration] = useState("");
+  const [finalVolume, setFinalVolume] = useState("10");
+  const ratios = preferredDilutionRatios(dilutions);
+  const parsedStockConcentration = parsePositiveNumber(stockConcentration);
+  const parsedFinalVolume = parsePositiveNumber(finalVolume);
+  const plans =
+    parsedStockConcentration && parsedFinalVolume
+      ? buildDilutionPlans(ratios, parsedStockConcentration, parsedFinalVolume)
+      : [];
+  const showInvalidState = stockConcentration.trim() !== "" && parsedStockConcentration === null;
+  const showVolumeInvalidState = finalVolume.trim() !== "" && parsedFinalVolume === null;
+
+  return (
+    <View style={styles.panel}>
+      <Text style={styles.sectionTitle}>{copy(language, "detail.calculatorTitle")}</Text>
+      <Text style={styles.panelBody}>{copy(language, "detail.calculatorBody")}</Text>
+
+      <View style={styles.calculatorRow}>
+        <View style={styles.calculatorField}>
+          <Text style={styles.metricLabel}>{copy(language, "detail.calculatorStock")}</Text>
+          <TextInput
+            keyboardType="decimal-pad"
+            onChangeText={setStockConcentration}
+            placeholder={copy(language, "detail.calculatorStockPlaceholder")}
+            placeholderTextColor="#6D7B8A"
+            style={styles.searchInput}
+            value={stockConcentration}
+          />
+          {concentrationUnit ? (
+            <Text style={styles.fieldHint}>{concentrationUnit}</Text>
+          ) : null}
+        </View>
+
+        <View style={styles.calculatorField}>
+          <Text style={styles.metricLabel}>{copy(language, "detail.calculatorVolume")}</Text>
+          <TextInput
+            keyboardType="decimal-pad"
+            onChangeText={setFinalVolume}
+            placeholder="10"
+            placeholderTextColor="#6D7B8A"
+            style={styles.searchInput}
+            value={finalVolume}
+          />
+        </View>
+      </View>
+
+      <Text style={styles.fieldHint}>
+        {copy(language, "detail.calculatorRatios")}: {ratios.join(", ")}
+      </Text>
+
+      {showInvalidState || showVolumeInvalidState ? (
+        <Text style={styles.warningText}>{copy(language, "detail.calculatorInvalid")}</Text>
+      ) : null}
+
+      {!stockConcentration.trim() ? (
+        <Text style={styles.emptyState}>{copy(language, "detail.calculatorEmpty")}</Text>
+      ) : null}
+
+      {plans.length ? (
+        <View style={styles.calculatorResults}>
+          {plans.map((plan) => (
+            <View key={plan.ratio} style={styles.calculatorCard}>
+              <Text style={styles.calculatorRatio}>{plan.ratio}</Text>
+              <Text style={styles.calculatorMeta}>
+                {copy(language, "detail.calculatorTarget")}:{" "}
+                {formatNumber(plan.targetConcentration, language)}
+                {concentrationUnit ? ` ${concentrationUnit}` : ""}
+              </Text>
+              <Text style={styles.calculatorMeta}>
+                {copy(language, "detail.calculatorDirect")}:{" "}
+                {formatNumber(plan.stockVolumeMl, language)} mL +{" "}
+                {formatNumber(plan.diluentVolumeMl, language)} mL diluent
+              </Text>
+              {plan.stepUpFromRatio &&
+              plan.stepUpStockVolumeMl !== undefined &&
+              plan.stepUpDiluentVolumeMl !== undefined ? (
+                <Text style={styles.calculatorMeta}>
+                  {copy(language, "detail.calculatorStepwise")}: {plan.stepUpFromRatio}
+                  {" -> "}
+                  {formatNumber(plan.stepUpStockVolumeMl, language)} mL +{" "}
+                  {formatNumber(plan.stepUpDiluentVolumeMl, language)} mL diluent
+                </Text>
+              ) : null}
+            </View>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -98,12 +345,16 @@ function DetailScreen({
   drug,
   language,
   sources,
+  isSaved,
   onBack,
+  onToggleFavorite,
 }: {
   drug: DrugRecord;
   language: Language;
   sources: Record<string, SourceDocument>;
+  isSaved: boolean;
   onBack: () => void;
+  onToggleFavorite: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<TestKind>(availableTests(drug)[0] ?? "prick");
   const [showSource, setShowSource] = useState(false);
@@ -116,9 +367,17 @@ function DetailScreen({
     }
   }, [activeTab, drug]);
 
+  useEffect(() => {
+    setShowSource(false);
+  }, [drug.id, activeTab]);
+
   const test = drug.tests[activeTab];
   const preferredSource = sources[test.preferredSourceId];
   const alternateSource = test.alternateSourceId ? sources[test.alternateSourceId] : undefined;
+  const { warnings, supporting } = splitNotes(test.notes);
+  const concentrationUnit = extractConcentrationUnit(test.maxConcentration ?? test.concentration);
+  const shouldShowStandardConcentration =
+    Boolean(test.concentration) && (activeTab !== "idr" || test.concentration !== test.maxConcentration);
 
   return (
     <ScrollView contentContainerStyle={styles.screenContent}>
@@ -127,8 +386,13 @@ function DetailScreen({
       </Pressable>
 
       <View style={styles.detailHeader}>
-        <Text style={styles.detailEyebrow}>{drug.className[language]}</Text>
-        <Text style={styles.detailTitle}>{drug.name[language]}</Text>
+        <View style={styles.detailHeaderTop}>
+          <View style={styles.detailHeaderTitleBlock}>
+            <Text style={styles.detailEyebrow}>{drug.className[language]}</Text>
+            <Text style={styles.detailTitle}>{drug.name[language]}</Text>
+          </View>
+          <SavePill language={language} isSaved={isSaved} onPress={onToggleFavorite} />
+        </View>
         <Text style={styles.detailSubtitle}>{copy(language, "detail.seedNotice")}</Text>
       </View>
 
@@ -163,7 +427,9 @@ function DetailScreen({
       </View>
 
       <View style={styles.panel}>
-        {test.concentration ? (
+        <Text style={styles.sectionTitle}>{copy(language, "detail.validatedData")}</Text>
+
+        {shouldShowStandardConcentration ? (
           <View style={styles.metricBlock}>
             <Text style={styles.metricLabel}>{concentrationLabel(language, activeTab)}</Text>
             <Text style={styles.metricValue}>{test.concentration}</Text>
@@ -180,31 +446,41 @@ function DetailScreen({
         {test.dilutions.length ? (
           <View style={styles.metricBlock}>
             <Text style={styles.metricLabel}>{copy(language, "detail.idr.dilutions")}</Text>
-            <Text style={styles.metricValue}>{test.dilutions.join(" -> ")}</Text>
+            <Text style={styles.metricValueSmall}>{test.dilutions.join(" -> ")}</Text>
           </View>
         ) : null}
 
         {test.vehicle ? (
           <View style={styles.metricBlock}>
             <Text style={styles.metricLabel}>{copy(language, "detail.patch.vehicle")}</Text>
-            <Text style={styles.metricValue}>{test.vehicle[language]}</Text>
+            <Text style={styles.metricValueSmall}>{test.vehicle[language]}</Text>
           </View>
         ) : null}
 
-        {test.notes.length ? (
-          <View style={styles.notesBlock}>
-            <Text style={styles.sectionTitle}>{copy(language, "detail.notes")}</Text>
-            {test.notes.map((note) => (
-              <View key={note[language]} style={styles.noteRow}>
-                <Text style={styles.noteBullet}>•</Text>
-                <Text style={styles.noteText}>{note[language]}</Text>
-              </View>
-            ))}
-          </View>
-        ) : (
+        {!shouldShowStandardConcentration && !test.maxConcentration && !test.dilutions.length && !test.vehicle ? (
           <Text style={styles.emptyState}>{copy(language, "detail.noTestData")}</Text>
-        )}
+        ) : null}
       </View>
+
+      {warnings.length ? (
+        <View style={styles.warningPanel}>
+          <Text style={styles.warningTitle}>{copy(language, "detail.warnings")}</Text>
+          <NoteList language={language} notes={warnings} />
+        </View>
+      ) : null}
+
+      {supporting.length ? (
+        <View style={styles.panel}>
+          <Text style={styles.sectionTitle}>{copy(language, "detail.notes")}</Text>
+          <NoteList language={language} notes={supporting} />
+        </View>
+      ) : null}
+
+      <DilutionCalculator
+        language={language}
+        dilutions={test.dilutions}
+        concentrationUnit={concentrationUnit}
+      />
 
       {preferredSource ? (
         <View style={styles.panel}>
@@ -245,13 +521,18 @@ export default function App() {
   const [language, setLanguage] = useState<Language>("en");
   const [query, setQuery] = useState("");
   const [selectedDrugId, setSelectedDrugId] = useState<string | null>(null);
+  const [favoriteDrugIds, setFavoriteDrugIds] = useState<string[]>([]);
+  const [favoritesHydrated, setFavoritesHydrated] = useState(false);
   const deferredQuery = useDeferredValue(query);
 
   useEffect(() => {
     let cancelled = false;
 
     async function hydrate() {
-      const storedDataset = await loadActiveDataset();
+      const [storedDataset, storedFavorites] = await Promise.all([
+        loadActiveDataset(),
+        loadFavoriteDrugIds(),
+      ]);
 
       if (cancelled) {
         return;
@@ -259,6 +540,13 @@ export default function App() {
 
       startTransition(() => {
         setActiveDataset(storedDataset);
+        setFavoriteDrugIds(
+          sanitizeFavoriteDrugIds(
+            storedFavorites,
+            storedDataset.dataset.drugs.map((drug) => drug.id)
+          )
+        );
+        setFavoritesHydrated(true);
       });
 
       const syncResult = await syncDatasetInBackground(storedDataset.manifest);
@@ -279,10 +567,37 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!favoritesHydrated) {
+      return;
+    }
+
+    const sanitized = sanitizeFavoriteDrugIds(
+      favoriteDrugIds,
+      activeDataset.dataset.drugs.map((drug) => drug.id)
+    );
+
+    if (!arraysEqual(sanitized, favoriteDrugIds)) {
+      setFavoriteDrugIds(sanitized);
+    }
+  }, [activeDataset.dataset.drugs, favoriteDrugIds, favoritesHydrated]);
+
+  useEffect(() => {
+    if (!favoritesHydrated) {
+      return;
+    }
+
+    void persistFavoriteDrugIds(favoriteDrugIds);
+  }, [favoriteDrugIds, favoritesHydrated]);
+
   const selectedDrug = selectedDrugId
     ? activeDataset.dataset.drugs.find((drug) => drug.id === selectedDrugId) ?? null
     : null;
-  const results = filterDrugs(activeDataset.dataset.drugs, deferredQuery, language);
+  const searchResults = searchDrugs(activeDataset.dataset.drugs, deferredQuery, language);
+  const favoriteDrugSet = new Set(favoriteDrugIds);
+  const favoriteDrugs = favoriteDrugIds
+    .map((drugId) => activeDataset.dataset.drugs.find((drug) => drug.id === drugId) ?? null)
+    .filter((drug): drug is DrugRecord => Boolean(drug));
 
   useEffect(() => {
     if (selectedDrugId && !selectedDrug) {
@@ -291,6 +606,18 @@ export default function App() {
       });
     }
   }, [selectedDrug, selectedDrugId]);
+
+  function toggleFavorite(drugId: string) {
+    startTransition(() => {
+      setFavoriteDrugIds((current) => {
+        if (current.includes(drugId)) {
+          return current.filter((id) => id !== drugId);
+        }
+
+        return [drugId, ...current];
+      });
+    });
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -331,11 +658,13 @@ export default function App() {
         {selectedDrug ? (
           <DetailScreen
             drug={selectedDrug}
+            isSaved={favoriteDrugSet.has(selectedDrug.id)}
             language={language}
-            sources={activeDataset.dataset.sources}
             onBack={() => {
               startTransition(() => setSelectedDrugId(null));
             }}
+            onToggleFavorite={() => toggleFavorite(selectedDrug.id)}
+            sources={activeDataset.dataset.sources}
           />
         ) : (
           <ScrollView contentContainerStyle={styles.screenContent}>
@@ -351,6 +680,29 @@ export default function App() {
               </Text>
             </View>
 
+            {favoriteDrugs.length ? (
+              <View style={styles.panel}>
+                <Text style={styles.sectionTitle}>{copy(language, "home.favoritesTitle")}</Text>
+                <Text style={styles.panelBody}>{copy(language, "home.favoritesBody")}</Text>
+                <View style={styles.resultsList}>
+                  {favoriteDrugs.map((drug) => (
+                    <DrugRow
+                      key={`favorite-${drug.id}`}
+                      isSaved
+                      language={language}
+                      onPress={() => {
+                        startTransition(() => setSelectedDrugId(drug.id));
+                      }}
+                      result={{
+                        drug,
+                        score: Number.MAX_SAFE_INTEGER,
+                      }}
+                    />
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
             <View style={styles.searchCard}>
               <Text style={styles.sectionTitle}>{copy(language, "search.title")}</Text>
               <TextInput
@@ -363,24 +715,25 @@ export default function App() {
                 value={query}
               />
               <Text style={styles.searchSummary}>
-                {results.length} {copy(language, "search.results")}
+                {searchResults.length} {copy(language, "search.results")}
               </Text>
             </View>
 
             <View style={styles.resultsList}>
-              {results.map((drug) => (
+              {searchResults.map((result) => (
                 <DrugRow
-                  key={drug.id}
-                  drug={drug}
+                  key={result.drug.id}
+                  isSaved={favoriteDrugSet.has(result.drug.id)}
                   language={language}
                   onPress={() => {
-                    startTransition(() => setSelectedDrugId(drug.id));
+                    startTransition(() => setSelectedDrugId(result.drug.id));
                   }}
+                  result={result}
                 />
               ))}
             </View>
 
-            {!results.length ? (
+            {!searchResults.length ? (
               <View style={styles.emptyCard}>
                 <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
                 <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
@@ -409,6 +762,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 12,
+    gap: 12,
   },
   eyebrow: {
     color: "#0E6B66",
@@ -480,6 +834,32 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
   },
+  panel: {
+    backgroundColor: "#FCFBF7",
+    borderRadius: 24,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#D8D4CB",
+    gap: 14,
+  },
+  panelBody: {
+    color: "#536070",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  warningPanel: {
+    backgroundColor: "#FCE6D8",
+    borderRadius: 24,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#F2C1AB",
+    gap: 12,
+  },
+  warningTitle: {
+    color: "#8A3312",
+    fontSize: 16,
+    fontWeight: "800",
+  },
   searchCard: {
     backgroundColor: "#FCFBF7",
     borderRadius: 24,
@@ -503,6 +883,11 @@ const styles = StyleSheet.create({
     color: "#16222E",
     fontSize: 16,
   },
+  fieldHint: {
+    color: "#536070",
+    fontSize: 12,
+    lineHeight: 18,
+  },
   searchSummary: {
     color: "#536070",
     fontSize: 13,
@@ -523,8 +908,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
   },
-  resultName: {
+  resultTitleColumn: {
     flex: 1,
+    gap: 6,
+  },
+  resultHeaderBadges: {
+    alignItems: "flex-end",
+    gap: 8,
+  },
+  resultName: {
     color: "#16222E",
     fontSize: 19,
     fontWeight: "800",
@@ -542,10 +934,35 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     textTransform: "uppercase",
   },
+  savePill: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: "#D8D4CB",
+    backgroundColor: "#FCFBF7",
+  },
+  savePillActive: {
+    borderColor: "#0E6B66",
+    backgroundColor: "#E3F0ED",
+  },
+  savePillText: {
+    color: "#536070",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  savePillTextActive: {
+    color: "#0E6B66",
+  },
   resultAlias: {
     color: "#536070",
     fontSize: 13,
     lineHeight: 18,
+  },
+  matchHint: {
+    color: "#0E6B66",
+    fontSize: 13,
+    fontWeight: "700",
   },
   emptyCard: {
     backgroundColor: "#FCE6D8",
@@ -584,6 +1001,16 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
     borderColor: "#D8D4CB",
+  },
+  detailHeaderTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  detailHeaderTitleBlock: {
+    flex: 1,
+    gap: 8,
   },
   detailEyebrow: {
     color: "#0E6B66",
@@ -629,14 +1056,6 @@ const styles = StyleSheet.create({
   tabButtonTextDisabled: {
     color: "#70808F",
   },
-  panel: {
-    backgroundColor: "#FCFBF7",
-    borderRadius: 24,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#D8D4CB",
-    gap: 16,
-  },
   metricBlock: {
     gap: 6,
   },
@@ -652,27 +1071,69 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "800",
   },
+  metricValueSmall: {
+    color: "#16222E",
+    fontSize: 18,
+    fontWeight: "700",
+  },
   notesBlock: {
     gap: 10,
   },
   noteRow: {
-    flexDirection: "row",
-    gap: 10,
-    alignItems: "flex-start",
+    gap: 8,
   },
-  noteBullet: {
-    color: "#B53E16",
-    fontSize: 18,
-    lineHeight: 20,
+  noteBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#EEF2F5",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  noteBadgeText: {
+    color: "#536070",
+    fontSize: 11,
+    fontWeight: "800",
+    textTransform: "uppercase",
   },
   noteText: {
-    flex: 1,
     color: "#223243",
     fontSize: 15,
     lineHeight: 22,
   },
+  warningText: {
+    color: "#8A3312",
+    fontSize: 14,
+    lineHeight: 20,
+  },
   emptyState: {
     color: "#536070",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  calculatorRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  calculatorField: {
+    flex: 1,
+    gap: 8,
+  },
+  calculatorResults: {
+    gap: 12,
+  },
+  calculatorCard: {
+    gap: 6,
+    backgroundColor: "#F4F7FA",
+    borderRadius: 18,
+    padding: 14,
+  },
+  calculatorRatio: {
+    color: "#16222E",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  calculatorMeta: {
+    color: "#223243",
     fontSize: 14,
     lineHeight: 20,
   },
