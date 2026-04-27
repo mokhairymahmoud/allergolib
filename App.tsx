@@ -326,7 +326,7 @@ function SearchScreen({
   const hasQuery = trimmedQuery.length > 0;
 
   return (
-    <ScrollView contentContainerStyle={styles.screenContent} keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.scrollView} contentContainerStyle={styles.screenContent} keyboardShouldPersistTaps="handled">
       <View style={styles.searchHeader}>
         <Text style={styles.screenTitle}>{copy(language, "search.heroTitle")}</Text>
         <Text style={styles.screenSubtitle}>{copy(language, "search.heroBody")}</Text>
@@ -425,7 +425,7 @@ function FavoritesScreen({
   onToggleFavorite: (drugId: string) => void;
 }) {
   return (
-    <ScrollView contentContainerStyle={styles.screenContent}>
+    <ScrollView style={styles.scrollView} contentContainerStyle={styles.screenContent}>
       <View style={styles.searchHeader}>
         <Text style={styles.screenTitle}>{copy(language, "favorites.title")}</Text>
         <Text style={styles.screenSubtitle}>{copy(language, "favorites.body")}</Text>
@@ -487,7 +487,7 @@ function InfoScreen({
   ];
 
   return (
-    <ScrollView contentContainerStyle={styles.screenContent}>
+    <ScrollView style={styles.scrollView} contentContainerStyle={styles.screenContent}>
       <View style={styles.infoAppCard}>
         <View style={styles.infoAppIcon}>
           <Text style={styles.infoAppIconText}>A</Text>
@@ -770,7 +770,7 @@ function DetailScreen({
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={styles.screenContent}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.screenContent}>
         {/* Drug header card */}
         <View style={styles.detailHeader}>
           <View style={styles.detailHeaderMetaRow}>
@@ -1196,7 +1196,12 @@ const styles = StyleSheet.create({
   mainContent: {
     flex: 1,
   },
+  scrollView: {
+    flex: 1,
+    backgroundColor: "#F4F6F9",
+  },
   screenContent: {
+    flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 32,
