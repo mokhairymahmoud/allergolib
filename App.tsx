@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { startTransition, useEffect, useState } from "react";
 import {
@@ -50,24 +51,10 @@ type DetailMetricItem = {
   compact?: boolean;
 };
 
-function homeTabIcon(tab: HomeTab, selected: boolean) {
-  if (tab === "favorites") {
-    return selected ? "♥" : "♡";
-  }
-
-  if (tab === "info") {
-    return "ⓘ";
-  }
-
-  return "⌕";
-}
-
-function homeTabIconStyle(tab: HomeTab) {
-  if (tab === "search") {
-    return styles.topLevelTabIconSearch;
-  }
-
-  return null;
+function homeTabIconName(tab: HomeTab, selected: boolean): React.ComponentProps<typeof Ionicons>["name"] {
+  if (tab === "favorites") return selected ? "heart" : "heart-outline";
+  if (tab === "info") return selected ? "information-circle" : "information-circle-outline";
+  return selected ? "search" : "search-outline";
 }
 
 function hasDisplayableTestContent(test: TestRecord) {
@@ -216,44 +203,27 @@ function formatReleaseDate(value: string, language: Language) {
   }).format(date);
 }
 
-function ComplianceCard({ language }: { language: Language }) {
+// Slim blue compliance banner shown on non-Info screens
+function ComplianceBanner({ language }: { language: Language }) {
   return (
-    <View style={styles.complianceCard}>
-      <Text style={styles.complianceBadge}>{copy(language, "compliance.badge")}</Text>
-      <Text style={styles.complianceTitle}>{copy(language, "compliance.title")}</Text>
-      <Text style={styles.complianceBody}>{copy(language, "compliance.body")}</Text>
+    <View style={styles.complianceBanner}>
+      <Ionicons name="shield-checkmark-outline" size={14} color="#1E40AF" style={{ marginTop: 1 }} />
+      <Text style={styles.complianceBannerText}>{copy(language, "compliance.badge")} — {copy(language, "compliance.title")}</Text>
     </View>
   );
 }
 
-function SavePill({
-  language,
-  isSaved,
-  onPress,
-}: {
-  language: Language;
-  isSaved: boolean;
-  onPress?: () => void;
-}) {
-  if (!onPress) {
-    return (
-      <View style={[styles.savePill, isSaved && styles.savePillActive]}>
-        <Text style={[styles.savePillText, isSaved && styles.savePillTextActive]}>
-          {copy(language, isSaved ? "detail.saved" : "detail.save")}
-        </Text>
-      </View>
-    );
-  }
-
+// Full compliance card used on InfoScreen
+function ComplianceCard({ language }: { language: Language }) {
   return (
-    <Pressable
-      onPress={onPress}
-      style={[styles.savePill, isSaved && styles.savePillActive]}
-    >
-      <Text style={[styles.savePillText, isSaved && styles.savePillTextActive]}>
-        {copy(language, isSaved ? "detail.saved" : "detail.save")}
-      </Text>
-    </Pressable>
+    <View style={styles.complianceCard}>
+      <View style={styles.complianceBadgeRow}>
+        <Ionicons name="shield-checkmark-outline" size={14} color="#1E40AF" />
+        <Text style={styles.complianceBadge}>{copy(language, "compliance.badge")}</Text>
+      </View>
+      <Text style={styles.complianceTitle}>{copy(language, "compliance.title")}</Text>
+      <Text style={styles.complianceBody}>{copy(language, "compliance.body")}</Text>
+    </View>
   );
 }
 
@@ -262,56 +232,58 @@ function DrugRow({
   result,
   isSaved,
   onPress,
+  onToggleFavorite,
 }: {
   language: Language;
   result: DrugSearchResult;
   isSaved: boolean;
   onPress: () => void;
+  onToggleFavorite?: () => void;
 }) {
   const matchCopy = matchLabel(language, result);
 
   return (
-    <Pressable onPress={onPress} style={styles.resultCard}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.resultCard, pressed && styles.resultCardPressed]}
+    >
       <View style={styles.resultHeader}>
         <View style={styles.resultTitleColumn}>
-          <Text style={styles.resultName}>{result.drug.name[language]}</Text>
-          <View style={styles.resultMetaRow}>
-            <View style={styles.idBadge}>
-              <Text style={styles.idBadgeText}>{result.drug.id}</Text>
+          <View style={styles.resultNameRow}>
+            <Text style={styles.resultName} numberOfLines={1}>{result.drug.name[language]}</Text>
+            <View style={styles.classBadge}>
+              <Text style={styles.classBadgeText}>{result.drug.className[language]}</Text>
             </View>
-            <Text style={styles.resultAlias}>
-              {copy(language, "search.aliases")}: {result.drug.aliases.join(", ")}
+          </View>
+          {result.drug.aliases.length > 0 ? (
+            <Text style={styles.resultAlias} numberOfLines={1}>
+              {result.drug.aliases.join(", ")}
             </Text>
-          </View>
+          ) : null}
+          {matchCopy && result.matchedText ? (
+            <Text style={styles.matchHint}>
+              {matchCopy}: {result.matchedText}
+            </Text>
+          ) : null}
         </View>
-        <View style={styles.resultHeaderBadges}>
-          {isSaved ? <SavePill language={language} isSaved /> : null}
-          <View style={styles.classBadge}>
-            <Text style={styles.classBadgeText}>{result.drug.className[language]}</Text>
-          </View>
+        <View style={styles.resultActions}>
+          {onToggleFavorite ? (
+            <Pressable
+              onPress={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+              hitSlop={8}
+              style={styles.heartButton}
+            >
+              <Ionicons
+                name={isSaved ? "heart" : "heart-outline"}
+                size={20}
+                color={isSaved ? "#1A73D4" : "#94A3B8"}
+              />
+            </Pressable>
+          ) : null}
+          <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
         </View>
       </View>
-      {matchCopy && result.matchedText ? (
-        <Text style={styles.matchHint}>
-          {matchCopy}: {result.matchedText}
-        </Text>
-      ) : null}
     </Pressable>
-  );
-}
-
-function SectionIntro({
-  title,
-  body,
-}: {
-  title: string;
-  body: string;
-}) {
-  return (
-    <View style={styles.sectionIntro}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <Text style={styles.panelBody}>{body}</Text>
-    </View>
   );
 }
 
@@ -338,6 +310,7 @@ function SearchScreen({
   favoriteDrugIds,
   onChangeQuery,
   onOpenDrug,
+  onToggleFavorite,
 }: {
   language: Language;
   query: string;
@@ -346,37 +319,42 @@ function SearchScreen({
   favoriteDrugIds: string[];
   onChangeQuery: (value: string) => void;
   onOpenDrug: (drugId: string) => void;
+  onToggleFavorite: (drugId: string) => void;
 }) {
   const favoriteDrugSet = new Set(favoriteDrugIds);
   const trimmedQuery = query.trim();
   const hasQuery = trimmedQuery.length > 0;
 
   return (
-    <ScrollView contentContainerStyle={styles.screenContent}>
-      <View style={styles.searchHeroCard}>
-        <Text style={styles.searchHeroTitle}>{copy(language, "search.heroTitle")}</Text>
-        <Text style={styles.searchHeroBody}>{copy(language, "search.heroBody")}</Text>
-        <View style={styles.searchInputWrap}>
-          <Text style={styles.metricLabel}>{copy(language, "search.title")}</Text>
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            onChangeText={onChangeQuery}
-            placeholder={copy(language, "search.placeholder")}
-            placeholderTextColor="#6B7888"
-            style={styles.searchInput}
-            value={query}
-          />
-        </View>
-        {hasQuery ? (
-          <Text style={styles.searchSummary}>
-            {searchResults.length} {copy(language, "search.results")}
-          </Text>
+    <ScrollView contentContainerStyle={styles.screenContent} keyboardShouldPersistTaps="handled">
+      <View style={styles.searchHeader}>
+        <Text style={styles.screenTitle}>{copy(language, "search.heroTitle")}</Text>
+        <Text style={styles.screenSubtitle}>{copy(language, "search.heroBody")}</Text>
+      </View>
+
+      <View style={styles.searchInputWrap}>
+        <Ionicons name="search" size={18} color="#64748B" style={styles.searchIcon} />
+        <TextInput
+          autoCapitalize="none"
+          autoCorrect={false}
+          onChangeText={onChangeQuery}
+          placeholder={copy(language, "search.placeholder")}
+          placeholderTextColor="#94A3B8"
+          style={styles.searchInput}
+          value={query}
+        />
+        {query.length > 0 ? (
+          <Pressable onPress={() => onChangeQuery("")} hitSlop={8} style={styles.searchClear}>
+            <Ionicons name="close-circle" size={18} color="#94A3B8" />
+          </Pressable>
         ) : null}
       </View>
 
       {hasQuery ? (
         <>
+          <Text style={styles.resultCount}>
+            {searchResults.length} {copy(language, "search.results")}
+          </Text>
           {searchResults.length ? (
             <View style={styles.resultsList}>
               {searchResults.map((result) => (
@@ -385,37 +363,39 @@ function SearchScreen({
                   isSaved={favoriteDrugSet.has(result.drug.id)}
                   language={language}
                   onPress={() => onOpenDrug(result.drug.id)}
+                  onToggleFavorite={() => onToggleFavorite(result.drug.id)}
                   result={result}
                 />
               ))}
             </View>
           ) : (
             <View style={styles.emptyCard}>
+              <Ionicons name="search-outline" size={32} color="#94A3B8" style={styles.emptyIcon} />
               <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
               <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
             </View>
           )}
         </>
       ) : (
-        <View style={styles.panel}>
-          <SectionIntro
-            title={copy(language, "search.recentTitle")}
-            body={copy(language, "search.recentBody")}
-          />
-          {recentDrugs.length ? (
-            <View style={styles.resultsList}>
-              {recentDrugs.map((drug) => (
-                <DrugRow
-                  key={`recent-${drug.id}`}
-                  isSaved={favoriteDrugSet.has(drug.id)}
-                  language={language}
-                  onPress={() => onOpenDrug(drug.id)}
-                  result={{
-                    drug,
-                    score: Number.MAX_SAFE_INTEGER,
-                  }}
-                />
-              ))}
+        <>
+          {recentDrugs.length > 0 ? (
+            <View style={styles.recentSection}>
+              <Text style={styles.sectionLabel}>{copy(language, "search.recentTitle")}</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.recentChips}
+              >
+                {recentDrugs.map((drug) => (
+                  <Pressable
+                    key={`recent-${drug.id}`}
+                    onPress={() => onOpenDrug(drug.id)}
+                    style={styles.recentChip}
+                  >
+                    <Text style={styles.recentChipText} numberOfLines={1}>{drug.name[language]}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
             </View>
           ) : (
             <NeutralEmptyCard
@@ -423,8 +403,10 @@ function SearchScreen({
               body={copy(language, "search.emptyRecentBody")}
             />
           )}
-        </View>
+        </>
       )}
+
+      <ComplianceBanner language={language} />
     </ScrollView>
   );
 }
@@ -434,41 +416,46 @@ function FavoritesScreen({
   favoriteDrugs,
   favoriteDrugIds,
   onOpenDrug,
+  onToggleFavorite,
 }: {
   language: Language;
   favoriteDrugs: DrugRecord[];
   favoriteDrugIds: string[];
   onOpenDrug: (drugId: string) => void;
+  onToggleFavorite: (drugId: string) => void;
 }) {
   return (
     <ScrollView contentContainerStyle={styles.screenContent}>
-      <View style={styles.panel}>
-        <SectionIntro
-          title={copy(language, "favorites.title")}
-          body={copy(language, "favorites.body")}
-        />
-        {favoriteDrugs.length ? (
-          <View style={styles.resultsList}>
-            {favoriteDrugs.map((drug) => (
-              <DrugRow
-                key={`favorite-${drug.id}`}
-                isSaved={favoriteDrugIds.includes(drug.id)}
-                language={language}
-                onPress={() => onOpenDrug(drug.id)}
-                result={{
-                  drug,
-                  score: Number.MAX_SAFE_INTEGER,
-                }}
-              />
-            ))}
-          </View>
-        ) : (
-          <NeutralEmptyCard
-            title={copy(language, "favorites.emptyTitle")}
-            body={copy(language, "favorites.emptyBody")}
-          />
-        )}
+      <View style={styles.searchHeader}>
+        <Text style={styles.screenTitle}>{copy(language, "favorites.title")}</Text>
+        <Text style={styles.screenSubtitle}>{copy(language, "favorites.body")}</Text>
       </View>
+
+      {favoriteDrugs.length ? (
+        <View style={styles.resultsList}>
+          {favoriteDrugs.map((drug) => (
+            <DrugRow
+              key={`favorite-${drug.id}`}
+              isSaved={favoriteDrugIds.includes(drug.id)}
+              language={language}
+              onPress={() => onOpenDrug(drug.id)}
+              onToggleFavorite={() => onToggleFavorite(drug.id)}
+              result={{
+                drug,
+                score: Number.MAX_SAFE_INTEGER,
+              }}
+            />
+          ))}
+        </View>
+      ) : (
+        <View style={styles.favoritesEmptyState}>
+          <Ionicons name="heart-outline" size={56} color="#CBD5E1" />
+          <Text style={styles.neutralEmptyTitle}>{copy(language, "favorites.emptyTitle")}</Text>
+          <Text style={styles.neutralEmptyBody}>{copy(language, "favorites.emptyBody")}</Text>
+        </View>
+      )}
+
+      <ComplianceBanner language={language} />
     </ScrollView>
   );
 }
@@ -480,33 +467,45 @@ function InfoScreen({
   activeDataset: ReturnType<typeof getBundledActiveDataset>;
   language: Language;
 }) {
+  const rows = [
+    {
+      label: copy(language, "home.release"),
+      value: activeDataset.manifest.version,
+    },
+    {
+      label: copy(language, "home.datasetOrigin"),
+      value: copy(language, datasetOriginLabelKey(activeDataset.origin)),
+    },
+    {
+      label: copy(language, "home.approvedBy"),
+      value: activeDataset.manifest.approvedBy,
+    },
+    {
+      label: copy(language, "home.releasedAt"),
+      value: formatReleaseDate(activeDataset.manifest.releasedAt, language),
+    },
+  ];
+
   return (
     <ScrollView contentContainerStyle={styles.screenContent}>
-      <View style={styles.panel}>
-        <SectionIntro
-          title={copy(language, "info.title")}
-          body={copy(language, "info.body")}
-        />
+      <View style={styles.infoAppCard}>
+        <View style={styles.infoAppIcon}>
+          <Text style={styles.infoAppIconText}>A</Text>
+        </View>
+        <View style={styles.infoAppMeta}>
+          <Text style={styles.infoAppName}>{copy(language, "home.heroTitle")}</Text>
+          <Text style={styles.infoAppVersion}>{copy(language, "info.releaseCardTitle")} {activeDataset.manifest.version}</Text>
+        </View>
       </View>
 
-      <View style={styles.heroCard}>
-        <Text style={styles.heroMeta}>{copy(language, "info.releaseCardTitle")}</Text>
-        <Text style={styles.heroTitle}>{copy(language, "home.heroTitle")}</Text>
-        <Text style={styles.heroBody}>{copy(language, "home.heroBody")}</Text>
-        <Text style={styles.heroMetaSecondary}>
-          {copy(language, "home.release")}: {activeDataset.manifest.version}
-        </Text>
-        <Text style={styles.heroMetaSecondary}>
-          {copy(language, "home.datasetOrigin")}:{" "}
-          {copy(language, datasetOriginLabelKey(activeDataset.origin))}
-        </Text>
-        <Text style={styles.heroMetaSecondary}>
-          {copy(language, "home.approvedBy")}: {activeDataset.manifest.approvedBy}
-        </Text>
-        <Text style={styles.heroMetaSecondary}>
-          {copy(language, "home.releasedAt")}:{" "}
-          {formatReleaseDate(activeDataset.manifest.releasedAt, language)}
-        </Text>
+      <View style={styles.infoMetaCard}>
+        <Text style={styles.infoMetaHeader}>{copy(language, "info.title")}</Text>
+        {rows.map((row, index) => (
+          <View key={row.label} style={[styles.infoMetaRow, index < rows.length - 1 && styles.infoMetaRowBorder]}>
+            <Text style={styles.infoMetaLabel}>{row.label}</Text>
+            <Text style={styles.infoMetaValue}>{row.value}</Text>
+          </View>
+        ))}
       </View>
 
       <ComplianceCard language={language} />
@@ -573,6 +572,7 @@ function DilutionCalculator({
   dilutions: string[];
   concentrationUnit: string;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const [stockConcentration, setStockConcentration] = useState("");
   const [finalVolume, setFinalVolume] = useState("10");
   const ratios = preferredDilutionRatios(dilutions);
@@ -587,78 +587,93 @@ function DilutionCalculator({
 
   return (
     <View style={styles.panel}>
-      <Text style={styles.sectionTitle}>{copy(language, "detail.calculatorTitle")}</Text>
-      <Text style={styles.panelBody}>{copy(language, "detail.calculatorBody")}</Text>
-
-      <View style={styles.calculatorRow}>
-        <View style={styles.calculatorField}>
-          <Text style={styles.metricLabel}>{copy(language, "detail.calculatorStock")}</Text>
-          <TextInput
-            keyboardType="decimal-pad"
-            onChangeText={setStockConcentration}
-            placeholder={copy(language, "detail.calculatorStockPlaceholder")}
-            placeholderTextColor="#6D7B8A"
-            style={styles.searchInput}
-            value={stockConcentration}
-          />
-          {concentrationUnit ? (
-            <Text style={styles.fieldHint}>{concentrationUnit}</Text>
-          ) : null}
+      <Pressable onPress={() => setExpanded((v) => !v)} style={styles.calculatorToggle}>
+        <View style={styles.calculatorToggleLeft}>
+          <Ionicons name="calculator-outline" size={18} color="#1A73D4" />
+          <Text style={styles.sectionTitle}>{copy(language, "detail.calculatorTitle")}</Text>
         </View>
+        <Ionicons
+          name={expanded ? "chevron-up" : "chevron-down"}
+          size={18}
+          color="#64748B"
+        />
+      </Pressable>
 
-        <View style={styles.calculatorField}>
-          <Text style={styles.metricLabel}>{copy(language, "detail.calculatorVolume")}</Text>
-          <TextInput
-            keyboardType="decimal-pad"
-            onChangeText={setFinalVolume}
-            placeholder="10"
-            placeholderTextColor="#6D7B8A"
-            style={styles.searchInput}
-            value={finalVolume}
-          />
-        </View>
-      </View>
+      {expanded ? (
+        <>
+          <Text style={styles.panelBody}>{copy(language, "detail.calculatorBody")}</Text>
 
-      <Text style={styles.fieldHint}>
-        {copy(language, "detail.calculatorRatios")}: {ratios.join(", ")}
-      </Text>
-
-      {showInvalidState || showVolumeInvalidState ? (
-        <Text style={styles.warningText}>{copy(language, "detail.calculatorInvalid")}</Text>
-      ) : null}
-
-      {!stockConcentration.trim() ? (
-        <Text style={styles.emptyState}>{copy(language, "detail.calculatorEmpty")}</Text>
-      ) : null}
-
-      {plans.length ? (
-        <View style={styles.calculatorResults}>
-          {plans.map((plan) => (
-            <View key={plan.ratio} style={styles.calculatorCard}>
-              <Text style={styles.calculatorRatio}>{plan.ratio}</Text>
-              <Text style={styles.calculatorMeta}>
-                {copy(language, "detail.calculatorTarget")}:{" "}
-                {formatNumber(plan.targetConcentration, language)}
-                {concentrationUnit ? ` ${concentrationUnit}` : ""}
-              </Text>
-              <Text style={styles.calculatorMeta}>
-                {copy(language, "detail.calculatorDirect")}:{" "}
-                {formatNumber(plan.stockVolumeMl, language)} mL +{" "}
-                {formatNumber(plan.diluentVolumeMl, language)} mL diluent
-              </Text>
-              {plan.stepUpFromRatio &&
-              plan.stepUpStockVolumeMl !== undefined &&
-              plan.stepUpDiluentVolumeMl !== undefined ? (
-                <Text style={styles.calculatorMeta}>
-                  {copy(language, "detail.calculatorStepwise")}: {plan.stepUpFromRatio}
-                  {" -> "}
-                  {formatNumber(plan.stepUpStockVolumeMl, language)} mL +{" "}
-                  {formatNumber(plan.stepUpDiluentVolumeMl, language)} mL diluent
-                </Text>
+          <View style={styles.calculatorRow}>
+            <View style={styles.calculatorField}>
+              <Text style={styles.metricLabel}>{copy(language, "detail.calculatorStock")}</Text>
+              <TextInput
+                keyboardType="decimal-pad"
+                onChangeText={setStockConcentration}
+                placeholder={copy(language, "detail.calculatorStockPlaceholder")}
+                placeholderTextColor="#94A3B8"
+                style={styles.calcInput}
+                value={stockConcentration}
+              />
+              {concentrationUnit ? (
+                <Text style={styles.fieldHint}>{concentrationUnit}</Text>
               ) : null}
             </View>
-          ))}
-        </View>
+
+            <View style={styles.calculatorField}>
+              <Text style={styles.metricLabel}>{copy(language, "detail.calculatorVolume")}</Text>
+              <TextInput
+                keyboardType="decimal-pad"
+                onChangeText={setFinalVolume}
+                placeholder="10"
+                placeholderTextColor="#94A3B8"
+                style={styles.calcInput}
+                value={finalVolume}
+              />
+            </View>
+          </View>
+
+          <Text style={styles.fieldHint}>
+            {copy(language, "detail.calculatorRatios")}: {ratios.join(", ")}
+          </Text>
+
+          {showInvalidState || showVolumeInvalidState ? (
+            <Text style={styles.warningText}>{copy(language, "detail.calculatorInvalid")}</Text>
+          ) : null}
+
+          {!stockConcentration.trim() ? (
+            <Text style={styles.emptyState}>{copy(language, "detail.calculatorEmpty")}</Text>
+          ) : null}
+
+          {plans.length ? (
+            <View style={styles.calculatorResults}>
+              {plans.map((plan) => (
+                <View key={plan.ratio} style={styles.calculatorCard}>
+                  <Text style={styles.calculatorRatio}>{plan.ratio}</Text>
+                  <Text style={styles.calculatorMeta}>
+                    {copy(language, "detail.calculatorTarget")}:{" "}
+                    {formatNumber(plan.targetConcentration, language)}
+                    {concentrationUnit ? ` ${concentrationUnit}` : ""}
+                  </Text>
+                  <Text style={styles.calculatorMeta}>
+                    {copy(language, "detail.calculatorDirect")}:{" "}
+                    {formatNumber(plan.stockVolumeMl, language)} mL +{" "}
+                    {formatNumber(plan.diluentVolumeMl, language)} mL diluent
+                  </Text>
+                  {plan.stepUpFromRatio &&
+                  plan.stepUpStockVolumeMl !== undefined &&
+                  plan.stepUpDiluentVolumeMl !== undefined ? (
+                    <Text style={styles.calculatorMeta}>
+                      {copy(language, "detail.calculatorStepwise")}: {plan.stepUpFromRatio}
+                      {" -> "}
+                      {formatNumber(plan.stepUpStockVolumeMl, language)} mL +{" "}
+                      {formatNumber(plan.stepUpDiluentVolumeMl, language)} mL diluent
+                    </Text>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </>
       ) : null}
     </View>
   );
@@ -725,7 +740,7 @@ function DetailScreen({
   if (test.dilutions.length) {
     metricItems.push({
       label: copy(language, "detail.idr.dilutions"),
-      value: test.dilutions.join(" -> "),
+      value: test.dilutions.join(" → "),
       compact: true,
     });
   }
@@ -739,184 +754,177 @@ function DetailScreen({
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.screenContent}>
-      <Pressable onPress={onBack} style={styles.backButton}>
-        <Text style={styles.backButtonText}>{copy(language, "detail.back")}</Text>
-      </Pressable>
-
-      <View style={styles.detailHeader}>
-        <View style={styles.detailHeaderTop}>
-          <View style={styles.detailHeaderTitleBlock}>
-            <View style={styles.detailHeaderMetaRow}>
-              <View style={styles.detailClassBadge}>
-                <Text style={styles.detailClassBadgeText}>{drug.className[language]}</Text>
-              </View>
-              <View style={styles.detailIdBadge}>
-                <Text style={styles.detailIdBadgeText}>{drug.id}</Text>
-              </View>
-            </View>
-            <Text style={styles.detailTitle}>{drug.name[language]}</Text>
-            <Text style={styles.detailSubtitle}>{copy(language, "detail.seedNotice")}</Text>
-          </View>
-          <SavePill language={language} isSaved={isSaved} onPress={onToggleFavorite} />
-        </View>
-        <View style={styles.detailAvailableTestsRow}>
-          {availableTestKinds.map((kind) => {
-            const selected = kind === activeTab;
-
-            return (
-              <View
-                key={`available-${kind}`}
-                style={[styles.detailTestChip, selected && styles.detailTestChipSelected]}
-              >
-                <Text
-                  style={[
-                    styles.detailTestChipText,
-                    selected && styles.detailTestChipTextSelected,
-                  ]}
-                >
-                  {testTitle(language, kind)}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
+    <>
+      {/* Sticky nav header */}
+      <View style={styles.detailNavHeader}>
+        <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
+          <Ionicons name="arrow-back" size={20} color="#0F172A" />
+        </Pressable>
+        <Text style={styles.detailNavTitle} numberOfLines={1}>{drug.name[language]}</Text>
+        <Pressable onPress={onToggleFavorite} style={styles.detailNavAction} hitSlop={8}>
+          <Ionicons
+            name={isSaved ? "heart" : "heart-outline"}
+            size={22}
+            color={isSaved ? "#1A73D4" : "#64748B"}
+          />
+        </Pressable>
       </View>
 
-      <ComplianceCard language={language} />
-
-      <View style={styles.detailTabsPanel}>
-        <View style={styles.detailTabsPanelHeader}>
-          <Text style={styles.sectionTitle}>{copy(language, "detail.validatedData")}</Text>
-          <Text style={styles.detailTabsPanelLabel}>{testTitle(language, activeTab)}</Text>
-        </View>
-        <View style={styles.tabRow}>
-          {TAB_ORDER.map((kind) => {
-            const selected = kind === activeTab;
-            const disabled = !isTestAvailable(drug, kind);
-
-            return (
-              <Pressable
-                key={kind}
-                disabled={disabled}
-                onPress={() => setActiveTab(kind)}
-                style={[
-                  styles.tabButton,
-                  selected && styles.tabButtonSelected,
-                  disabled && styles.tabButtonDisabled,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tabButtonText,
-                    selected && styles.tabButtonTextSelected,
-                    disabled && styles.tabButtonTextDisabled,
-                  ]}
-                >
-                  {testTitle(language, kind)}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
-
-      {!canShowProvenance ? (
-        <View style={styles.warningPanel}>
-          <Text style={styles.warningTitle}>
-            {copy(language, "detail.provenanceUnavailableTitle")}
-          </Text>
-          <Text style={styles.warningText}>
-            {copy(language, "detail.provenanceUnavailableBody")}
-          </Text>
-        </View>
-      ) : null}
-
-      {canShowProvenance ? (
-        <View style={styles.panel}>
-          <Text style={styles.sectionTitle}>{testTitle(language, activeTab)}</Text>
-
-          {metricItems.length ? (
-            <View style={styles.metricGrid}>
-              {metricItems.map((item) => (
-                <View
-                  key={`${activeTab}-${item.label}`}
-                  style={[styles.metricCard, item.compact && styles.metricCardCompact]}
-                >
-                  <Text style={styles.metricLabel}>{item.label}</Text>
-                  <Text style={item.compact ? styles.metricValueSmall : styles.metricValue}>
-                    {item.value}
-                  </Text>
-                </View>
-              ))}
+      <ScrollView contentContainerStyle={styles.screenContent}>
+        {/* Drug header card */}
+        <View style={styles.detailHeader}>
+          <View style={styles.detailHeaderMetaRow}>
+            <View style={styles.detailClassBadge}>
+              <Text style={styles.detailClassBadgeText}>{drug.className[language]}</Text>
             </View>
-          ) : (
-            <Text style={styles.emptyState}>{copy(language, "detail.noTestData")}</Text>
-          )}
-        </View>
-      ) : null}
-
-      {canShowProvenance && warnings.length ? (
-        <View style={styles.warningPanel}>
-          <Text style={styles.warningTitle}>{copy(language, "detail.warnings")}</Text>
-          <NoteList language={language} notes={warnings} tone="warning" />
-        </View>
-      ) : null}
-
-      {canShowProvenance && supporting.length ? (
-        <View style={styles.panel}>
-          <Text style={styles.sectionTitle}>{copy(language, "detail.notes")}</Text>
-          <NoteList language={language} notes={supporting} />
-        </View>
-      ) : null}
-
-      {canShowProvenance ? (
-        <DilutionCalculator
-          language={language}
-          dilutions={test.dilutions}
-          concentrationUnit={concentrationUnit}
-        />
-      ) : null}
-
-      {canShowProvenance && preferredSource ? (
-        <View style={styles.panel}>
-          <View style={styles.sourceSummaryCard}>
-            <Text style={styles.sourceEyebrow}>{copy(language, "detail.preferredSource")}</Text>
-            <Text style={styles.sourceTitle}>{preferredSource.label}</Text>
-            <Text style={styles.sourceMeta}>
-              {preferredSource.organization} {preferredSource.year} • {preferredSource.version}
-            </Text>
-            <Text style={styles.sourceLabel}>{preferredSource.documentName[language]}</Text>
+            <View style={styles.detailIdBadge}>
+              <Text style={styles.detailIdBadgeText}>{drug.id}</Text>
+            </View>
           </View>
-          <Pressable onPress={() => setShowSource((current) => !current)} style={styles.sourceToggle}>
-            <View>
-              <Text style={styles.sectionTitle}>{copy(language, "detail.source")}</Text>
-              <Text style={styles.sourceLabel}>{preferredSource.label}</Text>
-            </View>
-            <Text style={styles.sourceToggleLabel}>
-              {showSource ? copy(language, "detail.hideSource") : copy(language, "detail.showSource")}
-            </Text>
-          </Pressable>
-
-          {showSource ? (
-            <View style={styles.sourceStack}>
-              <SourceCard
-                source={preferredSource}
-                language={language}
-                eyebrow={copy(language, "detail.preferredSource")}
-              />
-              {alternateSource ? (
-                <SourceCard
-                  source={alternateSource}
-                  language={language}
-                  eyebrow={copy(language, "detail.alternateSource")}
-                />
-              ) : null}
-            </View>
+          <Text style={styles.detailTitle}>{drug.name[language]}</Text>
+          {drug.aliases.length > 0 ? (
+            <Text style={styles.detailSubtitle}>{drug.aliases.join(", ")}</Text>
           ) : null}
         </View>
-      ) : null}
-    </ScrollView>
+
+        {/* Segmented control for test types */}
+        {availableTestKinds.length > 1 ? (
+          <View style={styles.segmentedControl}>
+            {TAB_ORDER.map((kind) => {
+              const selected = kind === activeTab;
+              const disabled = !isTestAvailable(drug, kind);
+
+              return (
+                <Pressable
+                  key={kind}
+                  disabled={disabled}
+                  onPress={() => setActiveTab(kind)}
+                  style={[
+                    styles.segmentButton,
+                    selected && styles.segmentButtonSelected,
+                    disabled && styles.segmentButtonDisabled,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.segmentButtonText,
+                      selected && styles.segmentButtonTextSelected,
+                      disabled && styles.segmentButtonTextDisabled,
+                    ]}
+                  >
+                    {testTitle(language, kind)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
+
+        {!canShowProvenance ? (
+          <View style={styles.warningPanel}>
+            <View style={styles.warningPanelHeader}>
+              <Ionicons name="warning-outline" size={18} color="#92400E" />
+              <Text style={styles.warningTitle}>
+                {copy(language, "detail.provenanceUnavailableTitle")}
+              </Text>
+            </View>
+            <Text style={styles.warningText}>
+              {copy(language, "detail.provenanceUnavailableBody")}
+            </Text>
+          </View>
+        ) : null}
+
+        {canShowProvenance ? (
+          <View style={styles.panel}>
+            <View style={styles.panelHeaderRow}>
+              <Text style={styles.sectionTitle}>{testTitle(language, activeTab)}</Text>
+              <Text style={styles.panelHeaderLabel}>{copy(language, "detail.validatedData")}</Text>
+            </View>
+
+            {metricItems.length ? (
+              <View style={styles.metricGrid}>
+                {metricItems.map((item) => (
+                  <View
+                    key={`${activeTab}-${item.label}`}
+                    style={[styles.metricCard, item.compact && styles.metricCardCompact]}
+                  >
+                    <Text style={styles.metricLabel}>{item.label}</Text>
+                    <Text style={item.compact ? styles.metricValueSmall : styles.metricValue}>
+                      {item.value}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.emptyState}>{copy(language, "detail.noTestData")}</Text>
+            )}
+          </View>
+        ) : null}
+
+        {canShowProvenance && warnings.length ? (
+          <View style={styles.warningPanel}>
+            <View style={styles.warningPanelHeader}>
+              <Ionicons name="warning-outline" size={18} color="#92400E" />
+              <Text style={styles.warningTitle}>{copy(language, "detail.warnings")}</Text>
+            </View>
+            <NoteList language={language} notes={warnings} tone="warning" />
+          </View>
+        ) : null}
+
+        {canShowProvenance && supporting.length ? (
+          <View style={styles.panel}>
+            <Text style={styles.sectionTitle}>{copy(language, "detail.notes")}</Text>
+            <NoteList language={language} notes={supporting} />
+          </View>
+        ) : null}
+
+        {canShowProvenance ? (
+          <DilutionCalculator
+            language={language}
+            dilutions={test.dilutions}
+            concentrationUnit={concentrationUnit}
+          />
+        ) : null}
+
+        {canShowProvenance && preferredSource ? (
+          <View style={styles.panel}>
+            <View style={styles.sourceSummaryCard}>
+              <Text style={styles.sourceEyebrow}>{copy(language, "detail.preferredSource")}</Text>
+              <Text style={styles.sourceTitle}>{preferredSource.label}</Text>
+              <Text style={styles.sourceMeta}>
+                {preferredSource.organization} {preferredSource.year} • {preferredSource.version}
+              </Text>
+              <Text style={styles.sourceLabel}>{preferredSource.documentName[language]}</Text>
+            </View>
+            <Pressable onPress={() => setShowSource((current) => !current)} style={styles.sourceToggle}>
+              <Text style={styles.sectionTitle}>{copy(language, "detail.source")}</Text>
+              <Text style={styles.sourceToggleLabel}>
+                {showSource ? copy(language, "detail.hideSource") : copy(language, "detail.showSource")}
+              </Text>
+            </Pressable>
+
+            {showSource ? (
+              <View style={styles.sourceStack}>
+                <SourceCard
+                  source={preferredSource}
+                  language={language}
+                  eyebrow={copy(language, "detail.preferredSource")}
+                />
+                {alternateSource ? (
+                  <SourceCard
+                    source={alternateSource}
+                    language={language}
+                    eyebrow={copy(language, "detail.alternateSource")}
+                  />
+                ) : null}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        <ComplianceBanner language={language} />
+      </ScrollView>
+    </>
   );
 }
 
@@ -1082,38 +1090,35 @@ export default function App() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <View style={styles.container}>
+        {/* Top bar */}
         <View style={styles.topBar}>
           <View style={styles.titleBlock}>
-            <Text style={styles.eyebrow}>{copy(language, "home.eyebrow")}</Text>
             <Text style={styles.title}>{copy(language, "home.title")}</Text>
           </View>
-          <View style={styles.topBarBody}>
-            <Text style={styles.topBarLabel}>{copy(language, "home.language")}</Text>
-            <View style={styles.languageToggle}>
-              {(["fr", "en"] as Language[]).map((nextLanguage) => {
-                const selected = nextLanguage === language;
+          <View style={styles.languageToggle}>
+            {(["fr", "en"] as Language[]).map((nextLanguage) => {
+              const selected = nextLanguage === language;
 
-                return (
-                  <Pressable
-                    key={nextLanguage}
-                    onPress={() => setLanguage(nextLanguage)}
+              return (
+                <Pressable
+                  key={nextLanguage}
+                  onPress={() => setLanguage(nextLanguage)}
+                  style={[
+                    styles.languageButton,
+                    selected && styles.languageButtonSelected,
+                  ]}
+                >
+                  <Text
                     style={[
-                      styles.languageButton,
-                      selected && styles.languageButtonSelected,
+                      styles.languageButtonText,
+                      selected && styles.languageButtonTextSelected,
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.languageButtonText,
-                        selected && styles.languageButtonTextSelected,
-                      ]}
-                    >
-                      {nextLanguage.toUpperCase()}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+                    {nextLanguage.toUpperCase()}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 
@@ -1124,6 +1129,7 @@ export default function App() {
               language={language}
               onChangeQuery={setQuery}
               onOpenDrug={openDrug}
+              onToggleFavorite={toggleFavorite}
               query={query}
               recentDrugs={recentDrugs}
               searchResults={searchResults}
@@ -1136,6 +1142,7 @@ export default function App() {
               favoriteDrugs={favoriteDrugs}
               language={language}
               onOpenDrug={openDrug}
+              onToggleFavorite={toggleFavorite}
             />
           ) : null}
 
@@ -1144,31 +1151,28 @@ export default function App() {
           ) : null}
         </View>
 
+        {/* Flat bottom tab bar */}
         <View style={styles.footer}>
           <View style={styles.topLevelTabs}>
             {HOME_TABS.map((tab) => {
               const selected = tab === homeTab;
 
               return (
-              <Pressable
-                key={tab}
-                onPress={() => setHomeTab(tab)}
-                style={[styles.topLevelTab, selected && styles.topLevelTabSelected]}
-              >
-                <Text
-                  style={[
-                    styles.topLevelTabIcon,
-                    homeTabIconStyle(tab),
-                    selected && styles.topLevelTabIconSelected,
-                  ]}
+                <Pressable
+                  key={tab}
+                  onPress={() => setHomeTab(tab)}
+                  style={styles.topLevelTab}
                 >
-                  {homeTabIcon(tab, selected)}
-                </Text>
-                <Text
-                  style={[styles.topLevelTabText, selected && styles.topLevelTabTextSelected]}
-                >
-                  {copy(language, homeTabLabelKey(tab))}
-                </Text>
+                  <Ionicons
+                    name={homeTabIconName(tab, selected)}
+                    size={24}
+                    color={selected ? "#1A73D4" : "#94A3B8"}
+                  />
+                  <Text
+                    style={[styles.topLevelTabText, selected && styles.topLevelTabTextSelected]}
+                  >
+                    {copy(language, homeTabLabelKey(tab))}
+                  </Text>
                 </Pressable>
               );
             })}
@@ -1180,615 +1184,730 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  // ─── Layout ──────────────────────────────────────────────────────────
   safeArea: {
     flex: 1,
-    backgroundColor: "#EEF3F8",
+    backgroundColor: "#F4F6F9",
   },
   container: {
     flex: 1,
-    backgroundColor: "#EEF3F8",
-  },
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 10,
-    gap: 16,
-  },
-  titleBlock: {
-    flex: 1,
-  },
-  eyebrow: {
-    color: "#0E6B66",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 1.1,
-    textTransform: "uppercase",
-  },
-  title: {
-    color: "#16222E",
-    fontSize: 30,
-    fontWeight: "800",
-    marginTop: 4,
-  },
-  topBarBody: {
-    alignItems: "flex-end",
-    gap: 8,
-  },
-  topBarLabel: {
-    color: "#536070",
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  languageToggle: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  languageButton: {
-    borderWidth: 1,
-    borderColor: "#D2D0C8",
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: "#FCFBF7",
-  },
-  languageButtonSelected: {
-    backgroundColor: "#16222E",
-    borderColor: "#16222E",
-  },
-  languageButtonText: {
-    color: "#16222E",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  languageButtonTextSelected: {
-    color: "#FCFBF7",
-  },
-  footer: {
-    paddingHorizontal: 14,
-    paddingTop: 8,
-    paddingBottom: 12,
-    backgroundColor: "#EEF3F8",
-    borderTopWidth: 1,
-    borderTopColor: "#D5DEE7",
-  },
-  topLevelTabs: {
-    flexDirection: "row",
-    padding: 10,
-    backgroundColor: "#F8FBFD",
-    borderRadius: 26,
-    borderWidth: 1,
-    borderColor: "#D5DEE7",
+    backgroundColor: "#F4F6F9",
   },
   mainContent: {
     flex: 1,
   },
-  topLevelTab: {
-    flex: 1,
-    borderRadius: 18,
-    paddingVertical: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 2,
-  },
-  topLevelTabSelected: {
-    backgroundColor: "#E7F3F0",
-  },
-  topLevelTabIcon: {
-    color: "#6E7B8A",
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 2,
-  },
-  topLevelTabIconSearch: {
-    fontSize: 23,
-  },
-  topLevelTabIconSelected: {
-    color: "#0E6B66",
-  },
-  topLevelTabText: {
-    color: "#6E7B8A",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  topLevelTabTextSelected: {
-    color: "#0E6B66",
-  },
   screenContent: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 28,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 32,
     gap: 16,
   },
-  sectionIntro: {
+
+  // ─── Top Bar ─────────────────────────────────────────────────────────
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E4E9EF",
+    backgroundColor: "#F4F6F9",
+    gap: 12,
+  },
+  titleBlock: {
+    flex: 1,
+  },
+  title: {
+    color: "#0F172A",
+    fontSize: 22,
+    fontWeight: "700",
+  },
+  languageToggle: {
+    flexDirection: "row",
     gap: 6,
   },
-  searchHeroCard: {
-    backgroundColor: "#16353D",
-    borderRadius: 28,
-    padding: 22,
-    gap: 16,
+  languageButton: {
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: "#FFFFFF",
   },
-  searchHeroTitle: {
-    color: "#F7F3EA",
-    fontSize: 24,
-    fontWeight: "800",
+  languageButtonSelected: {
+    backgroundColor: "#0F172A",
+    borderColor: "#0F172A",
   },
-  searchHeroBody: {
-    color: "#D7E6E2",
-    fontSize: 15,
-    lineHeight: 22,
+  languageButtonText: {
+    color: "#0F172A",
+    fontSize: 12,
+    fontWeight: "700",
   },
+  languageButtonTextSelected: {
+    color: "#FFFFFF",
+  },
+
+  // ─── Bottom Tab Bar ───────────────────────────────────────────────────
+  footer: {
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#E4E9EF",
+  },
+  topLevelTabs: {
+    flexDirection: "row",
+    height: 56,
+  },
+  topLevelTab: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+  },
+  topLevelTabText: {
+    color: "#94A3B8",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  topLevelTabTextSelected: {
+    color: "#1A73D4",
+  },
+
+  // ─── Screen Headers ───────────────────────────────────────────────────
+  searchHeader: {
+    gap: 4,
+  },
+  screenTitle: {
+    color: "#0F172A",
+    fontSize: 20,
+    fontWeight: "700",
+  },
+  screenSubtitle: {
+    color: "#64748B",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+
+  // ─── Search Input ─────────────────────────────────────────────────────
   searchInputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    paddingHorizontal: 12,
+    height: 52,
     gap: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
-  heroCard: {
-    backgroundColor: "#16353D",
-    borderRadius: 28,
-    padding: 20,
+  searchIcon: {
+    flexShrink: 0,
+  },
+  searchInput: {
+    flex: 1,
+    color: "#0F172A",
+    fontSize: 16,
+    paddingVertical: 0,
+  },
+  searchClear: {
+    flexShrink: 0,
+  },
+  resultCount: {
+    color: "#64748B",
+    fontSize: 13,
+    fontWeight: "500",
+    marginBottom: -4,
+  },
+
+  // ─── Recent searches ─────────────────────────────────────────────────
+  recentSection: {
     gap: 10,
   },
-  heroTitle: {
-    color: "#F7F3EA",
-    fontSize: 20,
-    fontWeight: "800",
-  },
-  heroBody: {
-    color: "#D7E6E2",
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  heroMeta: {
-    color: "#9EC2BB",
-    fontSize: 12,
+  sectionLabel: {
+    color: "#0F172A",
+    fontSize: 13,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  heroMetaSecondary: {
-    color: "#D7E6E2",
-    fontSize: 13,
-    lineHeight: 20,
+  recentChips: {
+    gap: 8,
+    paddingRight: 16,
   },
-  complianceCard: {
-    backgroundColor: "#FFF6E8",
-    borderRadius: 24,
-    padding: 18,
+  recentChip: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#F2CFA2",
+    borderColor: "#CBD5E1",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    maxWidth: 200,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+  recentChipText: {
+    color: "#0F172A",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  // ─── Result Cards ─────────────────────────────────────────────────────
+  resultsList: {
+    gap: 10,
+  },
+  resultCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  resultCardPressed: {
+    opacity: 0.95,
+  },
+  resultHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  resultTitleColumn: {
+    flex: 1,
+    gap: 4,
+  },
+  resultNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
     gap: 8,
   },
+  resultName: {
+    color: "#0F172A",
+    fontSize: 16,
+    fontWeight: "700",
+    flexShrink: 1,
+  },
+  classBadge: {
+    backgroundColor: "#DBEAFE",
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    alignSelf: "flex-start",
+  },
+  classBadgeText: {
+    color: "#1D4ED8",
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  resultAlias: {
+    color: "#64748B",
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  matchHint: {
+    color: "#1A73D4",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  resultActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 0,
+  },
+  heartButton: {
+    padding: 2,
+  },
+
+  // ─── Empty States ─────────────────────────────────────────────────────
+  emptyCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 24,
+    alignItems: "center",
+    gap: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+  emptyIcon: {
+    marginBottom: 4,
+  },
+  emptyTitle: {
+    color: "#0F172A",
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  emptyText: {
+    color: "#64748B",
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  neutralEmptyCard: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 12,
+    padding: 16,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: "#E4E9EF",
+  },
+  neutralEmptyTitle: {
+    color: "#0F172A",
+    fontSize: 15,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  neutralEmptyBody: {
+    color: "#64748B",
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  favoritesEmptyState: {
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 32,
+  },
+
+  // ─── Panels ───────────────────────────────────────────────────────────
+  panel: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    gap: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+  panelBody: {
+    color: "#64748B",
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  panelHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
+  },
+  panelHeaderLabel: {
+    color: "#1A73D4",
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  sectionTitle: {
+    color: "#0F172A",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+
+  // ─── Compliance ───────────────────────────────────────────────────────
+  complianceBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    backgroundColor: "#EFF6FF",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  complianceBannerText: {
+    flex: 1,
+    color: "#1E40AF",
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "500",
+  },
+  complianceCard: {
+    backgroundColor: "#EFF6FF",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+    gap: 8,
+  },
+  complianceBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   complianceBadge: {
-    color: "#8A3312",
+    color: "#1E40AF",
     fontSize: 11,
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
   complianceTitle: {
-    color: "#16222E",
-    fontSize: 16,
-    fontWeight: "800",
+    color: "#0F172A",
+    fontSize: 15,
+    fontWeight: "700",
   },
   complianceBody: {
-    color: "#5A4331",
+    color: "#1E3A5F",
     fontSize: 14,
     lineHeight: 20,
   },
-  panel: {
-    backgroundColor: "#FCFBF7",
-    borderRadius: 24,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#D8D4CB",
-    gap: 14,
-  },
-  panelBody: {
-    color: "#536070",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  neutralEmptyCard: {
-    backgroundColor: "#F4F7FA",
-    borderRadius: 18,
-    padding: 16,
-    gap: 8,
-  },
-  neutralEmptyTitle: {
-    color: "#16222E",
-    fontSize: 15,
-    fontWeight: "800",
-  },
-  neutralEmptyBody: {
-    color: "#536070",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  warningPanel: {
-    backgroundColor: "#FCE6D8",
-    borderRadius: 24,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#F2C1AB",
-    gap: 12,
-  },
-  warningTitle: {
-    color: "#8A3312",
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  searchCard: {
-    backgroundColor: "#FCFBF7",
-    borderRadius: 24,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#D8D4CB",
-    gap: 12,
-  },
-  sectionTitle: {
-    color: "#16222E",
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  searchInput: {
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#C8D0D8",
+
+  // ─── Info Screen ──────────────────────────────────────────────────────
+  infoAppCard: {
     backgroundColor: "#FFFFFF",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: "#16222E",
-    fontSize: 16,
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
-  fieldHint: {
-    color: "#536070",
-    fontSize: 12,
-    lineHeight: 18,
+  infoAppIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: "#1A73D4",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  searchSummary: {
-    color: "#536070",
+  infoAppIconText: {
+    color: "#FFFFFF",
+    fontSize: 26,
+    fontWeight: "800",
+  },
+  infoAppMeta: {
+    flex: 1,
+    gap: 2,
+  },
+  infoAppName: {
+    color: "#0F172A",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  infoAppVersion: {
+    color: "#64748B",
     fontSize: 13,
   },
-  resultsList: {
-    gap: 12,
+  infoMetaCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
-  resultCard: {
-    backgroundColor: "#FCFBF7",
-    borderRadius: 22,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#D8D4CB",
-    gap: 10,
+  infoMetaHeader: {
+    color: "#64748B",
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 8,
   },
-  resultHeader: {
+  infoMetaRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 12,
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    gap: 16,
   },
-  resultTitleColumn: {
-    flex: 1,
-    gap: 6,
+  infoMetaRowBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E4E9EF",
   },
-  resultMetaRow: {
-    gap: 8,
-  },
-  resultHeaderBadges: {
-    alignItems: "flex-end",
-    gap: 8,
-  },
-  resultName: {
-    color: "#16222E",
-    fontSize: 19,
-    fontWeight: "800",
-  },
-  classBadge: {
-    backgroundColor: "#E3F0ED",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    alignSelf: "flex-start",
-  },
-  classBadgeText: {
-    color: "#0E6B66",
-    fontSize: 11,
-    fontWeight: "800",
-    textTransform: "uppercase",
-  },
-  idBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "#EEF2F5",
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-  },
-  idBadgeText: {
-    color: "#536070",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  savePill: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderWidth: 1,
-    borderColor: "#D8D4CB",
-    backgroundColor: "#FCFBF7",
-  },
-  savePillActive: {
-    borderColor: "#0E6B66",
-    backgroundColor: "#E3F0ED",
-  },
-  savePillText: {
-    color: "#536070",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  savePillTextActive: {
-    color: "#0E6B66",
-  },
-  resultAlias: {
-    color: "#536070",
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  matchHint: {
-    color: "#0E6B66",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  emptyCard: {
-    backgroundColor: "#FCE6D8",
-    borderRadius: 22,
-    padding: 18,
-    gap: 8,
-  },
-  emptyTitle: {
-    color: "#8A3312",
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  emptyText: {
-    color: "#8A3312",
+  infoMetaLabel: {
+    color: "#0F172A",
     fontSize: 14,
-    lineHeight: 20,
+    fontWeight: "500",
+  },
+  infoMetaValue: {
+    color: "#64748B",
+    fontSize: 14,
+    textAlign: "right",
+    flexShrink: 1,
+  },
+
+  // ─── Detail Screen ────────────────────────────────────────────────────
+  detailNavHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E4E9EF",
+    backgroundColor: "#F4F6F9",
+    gap: 8,
   },
   backButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#FCFBF7",
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#D8D4CB",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+    flexShrink: 0,
   },
-  backButtonText: {
-    color: "#16222E",
-    fontSize: 13,
+  detailNavTitle: {
+    flex: 1,
+    color: "#0F172A",
+    fontSize: 16,
     fontWeight: "700",
+    textAlign: "center",
+  },
+  detailNavAction: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+    flexShrink: 0,
   },
   detailHeader: {
-    backgroundColor: "#FCFBF7",
-    borderRadius: 26,
-    padding: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
     gap: 8,
-    borderWidth: 1,
-    borderColor: "#D8D4CB",
-  },
-  detailHeaderTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  detailHeaderTitleBlock: {
-    flex: 1,
-    gap: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
   detailHeaderMetaRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
   },
-  detailEyebrow: {
-    color: "#0E6B66",
-    fontSize: 12,
-    fontWeight: "800",
-    textTransform: "uppercase",
-  },
   detailClassBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "#E6F2EF",
+    backgroundColor: "#DBEAFE",
     borderRadius: 999,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 4,
   },
   detailClassBadgeText: {
-    color: "#0E6B66",
+    color: "#1D4ED8",
     fontSize: 11,
-    fontWeight: "800",
+    fontWeight: "700",
     textTransform: "uppercase",
   },
   detailIdBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "#EEF2F5",
+    backgroundColor: "#F1F5F9",
     borderRadius: 999,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 4,
   },
   detailIdBadgeText: {
-    color: "#536070",
+    color: "#64748B",
     fontSize: 11,
-    fontWeight: "700",
+    fontWeight: "600",
   },
   detailTitle: {
-    color: "#16222E",
-    fontSize: 28,
+    color: "#0F172A",
+    fontSize: 24,
     fontWeight: "800",
+    lineHeight: 30,
   },
   detailSubtitle: {
-    color: "#536070",
+    color: "#64748B",
     fontSize: 14,
     lineHeight: 20,
   },
-  detailAvailableTestsRow: {
+
+  // ─── Segmented Control ────────────────────────────────────────────────
+  segmentedControl: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
+    backgroundColor: "#E4E9EF",
+    borderRadius: 10,
+    padding: 3,
+    gap: 2,
   },
-  detailTestChip: {
-    backgroundColor: "#F3F6F9",
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+  segmentButton: {
+    flex: 1,
+    borderRadius: 8,
+    paddingVertical: 9,
+    alignItems: "center",
   },
-  detailTestChipSelected: {
-    backgroundColor: "#E6F2EF",
+  segmentButtonSelected: {
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
   },
-  detailTestChipText: {
-    color: "#536070",
-    fontSize: 12,
+  segmentButtonDisabled: {
+    opacity: 0.4,
+  },
+  segmentButtonText: {
+    color: "#64748B",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  segmentButtonTextSelected: {
+    color: "#0F172A",
     fontWeight: "700",
   },
-  detailTestChipTextSelected: {
-    color: "#0E6B66",
+  segmentButtonTextDisabled: {
+    color: "#94A3B8",
   },
-  detailTabsPanel: {
-    backgroundColor: "#FCFBF7",
-    borderRadius: 24,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#D8D4CB",
-    gap: 14,
+
+  // ─── Warning Panel ────────────────────────────────────────────────────
+  warningPanel: {
+    backgroundColor: "#FFFBEB",
+    borderRadius: 12,
+    padding: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: "#F59E0B",
+    gap: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
-  detailTabsPanelHeader: {
+  warningPanelHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    gap: 12,
-  },
-  detailTabsPanelLabel: {
-    color: "#0E6B66",
-    fontSize: 12,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  tabRow: {
-    flexDirection: "row",
     gap: 8,
   },
-  tabButton: {
-    flex: 1,
-    borderRadius: 16,
-    backgroundColor: "#EEF3F7",
-    paddingVertical: 12,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#D7E1E9",
+  warningTitle: {
+    color: "#92400E",
+    fontSize: 15,
+    fontWeight: "700",
   },
-  tabButtonSelected: {
-    backgroundColor: "#16353D",
-    borderColor: "#16353D",
-  },
-  tabButtonDisabled: {
-    backgroundColor: "#F4F7FA",
-    borderColor: "#E3E8EE",
-    opacity: 0.7,
-  },
-  tabButtonText: {
-    color: "#536070",
+  warningText: {
+    color: "#92400E",
     fontSize: 14,
-    fontWeight: "800",
+    lineHeight: 20,
   },
-  tabButtonTextSelected: {
-    color: "#F7FAFC",
-  },
-  tabButtonTextDisabled: {
-    color: "#70808F",
-  },
-  metricBlock: {
-    gap: 6,
-  },
+
+  // ─── Metric Cards ─────────────────────────────────────────────────────
   metricGrid: {
-    gap: 12,
+    gap: 10,
   },
   metricCard: {
-    gap: 8,
-    backgroundColor: "#F4F7FA",
-    borderRadius: 20,
-    padding: 16,
+    gap: 6,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 10,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#E4E9EF",
   },
   metricCardCompact: {
-    gap: 6,
+    gap: 4,
   },
   metricLabel: {
-    color: "#536070",
-    fontSize: 12,
+    color: "#64748B",
+    fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
   metricValue: {
-    color: "#16222E",
-    fontSize: 24,
+    color: "#0F172A",
+    fontSize: 22,
     fontWeight: "800",
   },
   metricValueSmall: {
-    color: "#16222E",
-    fontSize: 18,
+    color: "#0F172A",
+    fontSize: 16,
     fontWeight: "700",
   },
+
+  // ─── Notes ────────────────────────────────────────────────────────────
   notesBlock: {
-    gap: 10,
+    gap: 8,
   },
   noteRow: {
     gap: 8,
-    backgroundColor: "#F4F7FA",
-    borderRadius: 18,
-    padding: 14,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#E4E9EF",
   },
   noteRowWarning: {
-    backgroundColor: "#FFF0E6",
-    borderWidth: 1,
-    borderColor: "#F2C1AB",
+    backgroundColor: "#FFFBEB",
+    borderColor: "#FCD34D",
+    borderLeftWidth: 3,
+    borderLeftColor: "#F59E0B",
   },
   noteBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "#EEF2F5",
+    backgroundColor: "#E4E9EF",
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
   noteBadgeWarning: {
-    backgroundColor: "#FCE1CF",
+    backgroundColor: "#FEF3C7",
   },
   noteBadgeText: {
-    color: "#536070",
-    fontSize: 11,
+    color: "#64748B",
+    fontSize: 10,
     fontWeight: "800",
     textTransform: "uppercase",
   },
   noteBadgeTextWarning: {
-    color: "#8A3312",
+    color: "#92400E",
   },
   noteText: {
-    color: "#223243",
-    fontSize: 15,
+    color: "#0F172A",
+    fontSize: 14,
     lineHeight: 22,
   },
-  warningText: {
-    color: "#8A3312",
-    fontSize: 14,
-    lineHeight: 20,
+
+  // ─── Dilution Calculator ──────────────────────────────────────────────
+  calculatorToggle: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  emptyState: {
-    color: "#536070",
-    fontSize: 14,
-    lineHeight: 20,
+  calculatorToggleLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   calculatorRow: {
     flexDirection: "row",
@@ -1796,26 +1915,58 @@ const styles = StyleSheet.create({
   },
   calculatorField: {
     flex: 1,
-    gap: 8,
+    gap: 6,
+  },
+  calcInput: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    color: "#0F172A",
+    fontSize: 15,
+  },
+  fieldHint: {
+    color: "#64748B",
+    fontSize: 12,
+    lineHeight: 16,
   },
   calculatorResults: {
-    gap: 12,
+    gap: 10,
   },
   calculatorCard: {
-    gap: 6,
-    backgroundColor: "#F4F7FA",
-    borderRadius: 18,
-    padding: 14,
+    gap: 4,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#E4E9EF",
   },
   calculatorRatio: {
-    color: "#16222E",
-    fontSize: 18,
+    color: "#0F172A",
+    fontSize: 16,
     fontWeight: "800",
   },
   calculatorMeta: {
-    color: "#223243",
+    color: "#0F172A",
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  emptyState: {
+    color: "#64748B",
     fontSize: 14,
     lineHeight: 20,
+  },
+
+  // ─── Source / References ──────────────────────────────────────────────
+  sourceSummaryCard: {
+    gap: 6,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#E4E9EF",
   },
   sourceToggle: {
     flexDirection: "row",
@@ -1823,51 +1974,46 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-  sourceSummaryCard: {
-    gap: 8,
-    backgroundColor: "#F4F7FA",
-    borderRadius: 18,
-    padding: 14,
-  },
-  sourceLabel: {
-    color: "#536070",
-    fontSize: 14,
-    marginTop: 4,
-  },
   sourceToggleLabel: {
-    color: "#0E6B66",
+    color: "#1A73D4",
     fontSize: 13,
     fontWeight: "700",
-    alignSelf: "center",
   },
   sourceStack: {
-    gap: 12,
+    gap: 10,
   },
   sourceCard: {
-    gap: 8,
-    backgroundColor: "#F4F7FA",
-    borderRadius: 18,
-    padding: 14,
+    gap: 6,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#E4E9EF",
   },
   sourceEyebrow: {
-    color: "#0E6B66",
+    color: "#1A73D4",
     fontSize: 11,
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
   sourceTitle: {
-    color: "#16222E",
-    fontSize: 15,
-    fontWeight: "800",
+    color: "#0F172A",
+    fontSize: 14,
+    fontWeight: "700",
   },
   sourceMeta: {
-    color: "#536070",
+    color: "#64748B",
     fontSize: 13,
   },
+  sourceLabel: {
+    color: "#64748B",
+    fontSize: 13,
+    marginTop: 2,
+  },
   sourceExcerpt: {
-    color: "#223243",
-    fontSize: 14,
+    color: "#0F172A",
+    fontSize: 13,
     lineHeight: 20,
   },
 });
