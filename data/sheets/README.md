@@ -5,6 +5,8 @@ The dataset source of truth is now the Google Sheet configured by:
 - `GOOGLE_SHEETS_SPREADSHEET_ID`
   Default: `1s2fAK0GokMk7hrWrXu6y4Av5au-cwQR0BND58ERbt9Q`
 
+TSV files ready for import are in `data/sheets/tsv/`. Each file maps to one tab.
+
 Expected tab names in that spreadsheet:
 
 - `release_metadata`
@@ -33,6 +35,8 @@ Phase 6 verification command:
 - `npm run verify:admin-fixture`
   This validates a representative admin-written fixture, including selective applicable tests and
   linked source references, against the same exporter contract used for live sheet releases.
+
+The `drugs` tab supports an optional `subclass_name_en` / `subclass_name_fr` column pair for two-level category hierarchies (e.g. PENICILLINES under BETA-LACTAMINES). Leave both cells empty for drugs that have no subcategory.
 
 For `test_entries`, `source_id` remains required on every written test row and is exported as the preferred authority for that test. `alternate_source_id` is optional and, when present, must reference a row in `sources`. Non-applicable tests may be omitted entirely.
 

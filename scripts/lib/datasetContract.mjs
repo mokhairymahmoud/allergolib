@@ -126,6 +126,7 @@ function buildSources(sourceRows) {
       year: row.year,
       version: row.version,
       status: row.status,
+      ...(row.url?.trim() ? { url: row.url.trim() } : {}),
       documentName: {
         en: row.document_name_en,
         fr: row.document_name_fr,
@@ -161,6 +162,11 @@ function buildDrugs(drugRows, aliasRows, testRows, noteRows, sources) {
     requireLocalizedColumns(row, `Drug ${row.id}`, "class_name");
     assert(!drugsById[row.id], `Duplicate drug id: ${row.id}`);
 
+    const subclassName =
+      row.subclass_name_en?.trim() || row.subclass_name_fr?.trim()
+        ? { en: row.subclass_name_en ?? "", fr: row.subclass_name_fr ?? "" }
+        : undefined;
+
     drugsById[row.id] = {
       id: row.id,
       name: {
@@ -171,6 +177,7 @@ function buildDrugs(drugRows, aliasRows, testRows, noteRows, sources) {
         en: row.class_name_en,
         fr: row.class_name_fr,
       },
+      ...(subclassName ? { subclassName } : {}),
       aliases: [],
       tests: {
         prick: emptyTestRecord(),

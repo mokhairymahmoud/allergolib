@@ -1,0 +1,101 @@
+drug_id	test_kind	concentration	max_concentration	dilutions	vehicle_en	vehicle_fr	source_id	alternate_source_id
+etomidate	prick	2 mg/ml					sfar-sfa-2025-annex-4
+etomidate	idr	0.2 mg/ml	0.2 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+ketamine	prick	10 mg/ml					sfar-sfa-2025-annex-4
+ketamine	idr	0.1 mg/ml	0.1 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+midazolam	prick	1 mg/ml					sfar-sfa-2025-annex-4
+midazolam	idr	0.01 mg/ml	0.01 mg/ml	1:20			sfar-sfa-2025-annex-4
+propofol	prick	10 mg/ml					sfar-sfa-2025-annex-4
+propofol	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4
+thiopenthal	prick	25 mg/ml					sfar-sfa-2025-annex-4
+thiopenthal	idr	2.5 mg/ml	2.5 mg/ml	1:10			sfar-sfa-2025-annex-4
+atracurium	prick	1 mg/ml					sfar-sfa-2025-annex-4
+atracurium	idr	0.01 mg/ml	0.01 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+cisatracurium	prick	2 mg/ml					sfar-sfa-2025-annex-4
+cisatracurium	idr	0.02 mg/ml	0.02 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+mivacurium	prick	0.2 mg/ml					sfar-sfa-2025-annex-4
+mivacurium	idr	0.002 mg/ml	0.002 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+rocuronium	prick	10 mg/ml					sfar-sfa-2025-annex-4
+rocuronium	idr	0.05 mg/ml	0.05 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+succinylcholine	prick	10 mg/ml					sfar-sfa-2025-annex-4
+succinylcholine	idr	0.1 mg/ml	0.1 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+fentanyl	prick	50 µg/ml					sfar-sfa-2025-annex-4
+fentanyl	idr	5 µg/ml	5 µg/ml	1:10			sfar-sfa-2025-annex-4
+alfentanil	prick	0.5 mg/ml					sfar-sfa-2025-annex-4
+alfentanil	idr	0.05 mg/ml	0.05 mg/ml	1:10			sfar-sfa-2025-annex-4
+remifentanil	prick	50 µg/ml					sfar-sfa-2025-annex-4
+remifentanil	idr	5 µg/ml	5 µg/ml	1:10			sfar-sfa-2025-annex-4
+sufentanil	prick	5 µg/ml					sfar-sfa-2025-annex-4
+sufentanil	idr	0.5 µg/ml	0.5 µg/ml	1:10			sfar-sfa-2025-annex-4
+morphine	prick	1 mg/ml					sfar-sfa-2025-annex-4
+morphine	idr	0.005 mg/ml	0.005 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+oxycodone	prick	10 mg/ml					sfar-sfa-2025-annex-4
+oxycodone	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4
+nefopam	prick	10 mg/ml					sfar-sfa-2025-annex-4
+nefopam	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4
+tramadol	prick	50 mg/ml					sfar-sfa-2025-annex-4
+tramadol	idr	5 mg/ml	5 mg/ml	1:10			sfar-sfa-2025-annex-4
+ketoprofen	prick	25 mg/ml					sfar-sfa-2025-annex-4
+ketoprofen	idr	0.25 mg/ml	0.25 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+paracetamol	prick	10 mg/ml					sfar-sfa-2025-annex-4
+paracetamol	idr	10 mg/ml	10 mg/ml	1:10			sfar-sfa-2025-annex-4
+bleu-patente-v	prick	25 mg/ml					sfar-sfa-2025-annex-4
+bleu-patente-v	idr	0.25 mg/ml	0.25 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+bleu-de-methylene	prick	5 mg/ml					sfar-sfa-2025-annex-4
+bleu-de-methylene	idr	0.05 mg/ml	0.05 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+fluorescein	prick	100 mg/ml					sfar-sfa-2025-annex-4
+fluorescein	idr	10 mg/ml	10 mg/ml	1:10			sfar-sfa-2025-annex-4
+lidocaine	prick	10 mg/ml					sfar-sfa-2025-annex-4
+lidocaine	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4
+bupivacaine	prick	2.5 mg/ml					sfar-sfa-2025-annex-4
+bupivacaine	idr	0.25 mg/ml	0.25 mg/ml	1:10			sfar-sfa-2025-annex-4
+ropivacaine	prick	10 mg/ml					sfar-sfa-2025-annex-4
+ropivacaine	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4
+mepivacaine	prick	20 mg/ml					sfar-sfa-2025-annex-4
+mepivacaine	idr	2 mg/ml	2 mg/ml	1:10			sfar-sfa-2025-annex-4
+amoxicillin	prick	20 mg/ml					sfar-sfa-2025-annex-4
+amoxicillin	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
+amoxicillin-clavulanate	prick	20 mg/ml					sfar-sfa-2025-annex-4
+amoxicillin-clavulanate	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
+piperacillin	prick	20 mg/ml					sfar-sfa-2025-annex-4
+piperacillin	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
+piperacillin-tazobactam	prick	20 mg/ml					sfar-sfa-2025-annex-4
+piperacillin-tazobactam	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
+cloxacillin	prick	20 mg/ml					sfar-sfa-2025-annex-4
+cloxacillin	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
+cefazolin	prick	20 mg/ml					sfar-sfa-2025-annex-4
+cefazolin	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
+cefuroxime	prick	20 mg/ml					sfar-sfa-2025-annex-4
+cefuroxime	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
+cefotaxime	prick	20 mg/ml					sfar-sfa-2025-annex-4
+cefotaxime	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
+ceftriaxone	prick	20 mg/ml					sfar-sfa-2025-annex-4
+ceftriaxone	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
+cefepime	prick	2 mg/ml					sfar-sfa-2025-annex-4
+cefepime	idr	2 mg/ml	2 mg/ml	1:10			sfar-sfa-2025-annex-4
+ceftazidime	prick	20 mg/ml					sfar-sfa-2025-annex-4
+ceftazidime	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
+ertapenem	prick	1 mg/ml					sfar-sfa-2025-annex-4
+ertapenem	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4
+imipenem	prick	0.05 mg/ml					sfar-sfa-2025-annex-4
+imipenem	idr	0.05 mg/ml	0.05 mg/ml	1:10			sfar-sfa-2025-annex-4
+meropenem	prick	1 mg/ml					sfar-sfa-2025-annex-4
+meropenem	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4
+aztreonam	prick	2 mg/ml					sfar-sfa-2025-annex-4
+aztreonam	idr	2 mg/ml	2 mg/ml	1:10			sfar-sfa-2025-annex-4
+atropine	prick	0.5 mg/ml					sfar-sfa-2025-annex-4
+atropine	idr	0.05 mg/ml	0.05 mg/ml	1:10			sfar-sfa-2025-annex-4
+chlorhexidine	prick	2 mg/ml					sfar-sfa-2025-annex-4
+chlorhexidine	idr	0.002 mg/ml	0.002 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+ondansetron	prick	4 mg/ml					sfar-sfa-2025-annex-4
+ondansetron	idr	0.04 mg/ml	0.04 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+protamine	prick	10 mg/ml					sfar-sfa-2025-annex-4
+protamine	idr	0.01 mg/ml	0.01 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
+sugammadex	prick	10 mg/ml					sfar-sfa-2025-annex-4
+sugammadex	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4
+dexamethasone	prick	4 mg/ml					sfar-sfa-2025-annex-4
+dexamethasone	idr	4 mg/ml	4 mg/ml	1:10			sfar-sfa-2025-annex-4
+gelatin	prick	40 mg/ml					sfar-sfa-2025-annex-4
+gelatin	idr	40 mg/ml	40 mg/ml	1:10			sfar-sfa-2025-annex-4
+vancomycin	prick	50 mg/ml					sfar-sfa-2025-annex-4
+vancomycin	idr	0.005 mg/ml	0.005 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4

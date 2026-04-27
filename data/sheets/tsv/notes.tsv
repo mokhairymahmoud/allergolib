@@ -1,0 +1,106 @@
+drug_id	test_kind	note_kind	note_en	note_fr
+etomidate	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+etomidate	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+ketamine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+ketamine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+midazolam	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+midazolam	idr	warning	Possibly irritant at the maximum concentration (Annex 4).	Possiblement irritant a la concentration maximale (annexe 4).
+propofol	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+propofol	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+thiopenthal	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+thiopenthal	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+atracurium	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+atracurium	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+cisatracurium	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+cisatracurium	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+mivacurium	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+mivacurium	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+rocuronium	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+rocuronium	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+succinylcholine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+succinylcholine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+fentanyl	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+fentanyl	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+alfentanil	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+alfentanil	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+remifentanil	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+remifentanil	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+sufentanil	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+sufentanil	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+morphine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+morphine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+oxycodone	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+oxycodone	prick	warning	Possibly irritant at the maximum concentration (Annex 4).	Possiblement irritant a la concentration maximale (annexe 4).
+oxycodone	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+oxycodone	idr	warning	Possibly irritant at the maximum concentration (Annex 4).	Possiblement irritant a la concentration maximale (annexe 4).
+nefopam	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+nefopam	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+nefopam	idr	warning	Possibly irritant at the maximum concentration (Annex 4).	Possiblement irritant a la concentration maximale (annexe 4).
+tramadol	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+tramadol	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+ketoprofen	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+ketoprofen	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+ketoprofen	idr	warning	Possibly irritant at the maximum concentration (Annex 4).	Possiblement irritant a la concentration maximale (annexe 4).
+paracetamol	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+paracetamol	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+bleu-patente-v	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+bleu-patente-v	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+bleu-de-methylene	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+bleu-de-methylene	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+fluorescein	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+fluorescein	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+lidocaine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+lidocaine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+bupivacaine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+bupivacaine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+ropivacaine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+ropivacaine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+mepivacaine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+mepivacaine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+amoxicillin	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+amoxicillin	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+amoxicillin-clavulanate	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+amoxicillin-clavulanate	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+piperacillin	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+piperacillin	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+piperacillin-tazobactam	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+piperacillin-tazobactam	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+cloxacillin	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+cloxacillin	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+cefazolin	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+cefazolin	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+cefuroxime	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+cefuroxime	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+cefotaxime	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+cefotaxime	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+ceftriaxone	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+ceftriaxone	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+cefepime	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+cefepime	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+ceftazidime	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+ceftazidime	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+ertapenem	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+ertapenem	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+imipenem	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+imipenem	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+meropenem	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+meropenem	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+aztreonam	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+aztreonam	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+atropine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+atropine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+chlorhexidine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+chlorhexidine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+ondansetron	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+ondansetron	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+ondansetron	idr	warning	Possibly irritant at the maximum concentration (Annex 4).	Possiblement irritant a la concentration maximale (annexe 4).
+protamine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+protamine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+sugammadex	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+sugammadex	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+dexamethasone	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+dexamethasone	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+gelatin	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+gelatin	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
+vancomycin	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+vancomycin	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.

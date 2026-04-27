@@ -296,6 +296,11 @@ function searchCandidates(drug: DrugRecord, language: Language): SearchCandidate
     language === "fr"
       ? [drug.className.fr, drug.className.en]
       : [drug.className.en, drug.className.fr];
+  const localeSubclasses = drug.subclassName
+    ? language === "fr"
+      ? [drug.subclassName.fr, drug.subclassName.en]
+      : [drug.subclassName.en, drug.subclassName.fr]
+    : [];
 
   return [
     { field: "name", text: localeNames[0], fieldScore: 180 },
@@ -309,6 +314,11 @@ function searchCandidates(drug: DrugRecord, language: Language): SearchCandidate
     { field: "id", text: drug.id, fieldScore: 154 },
     { field: "class", text: localeClasses[0], fieldScore: 100 },
     { field: "class", text: localeClasses[1], fieldScore: 92 },
+    ...localeSubclasses.map((text, i) => ({
+      field: "class" as const,
+      text,
+      fieldScore: 88 - i * 4,
+    })),
   ];
 }
 

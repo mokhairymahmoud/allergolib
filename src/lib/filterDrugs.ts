@@ -21,6 +21,7 @@ export function filterDrugs(drugs: DrugRecord[], query: string, language: Langua
       drug.name.fr,
       drug.className.en,
       drug.className.fr,
+      ...(drug.subclassName ? [drug.subclassName.en, drug.subclassName.fr] : []),
       ...drug.aliases,
     ].map(normalize);
 

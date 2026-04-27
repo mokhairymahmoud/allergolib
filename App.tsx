@@ -5,6 +5,7 @@ import React, { createContext, startTransition, useContext, useEffect, useMemo, 
 import {
   Animated,
   Dimensions,
+  Linking,
   PanResponder,
   Pressable,
   SafeAreaView,
@@ -64,6 +65,12 @@ export type Theme = {
   accentBadgeBg: string;
   accentBadgeText: string;
   accentCountBg: string;
+  subclassBadgeBg: string;
+  subclassBadgeText: string;
+  subclassChipBg: string;
+  subclassChipActiveBg: string;
+  subclassChipActiveText: string;
+  subclassChipActiveBorder: string;
   warningBg: string;
   warningBorder: string;
   warningAccent: string;
@@ -87,6 +94,12 @@ export const lightTheme: Theme = {
   accentBadgeBg: "#DBEAFE",
   accentBadgeText: "#1D4ED8",
   accentCountBg: "#BFDBFE",
+  subclassBadgeBg: "#CCFBF1",
+  subclassBadgeText: "#0F766E",
+  subclassChipBg: "#F0FDFA",
+  subclassChipActiveBg: "#CCFBF1",
+  subclassChipActiveText: "#0F766E",
+  subclassChipActiveBorder: "#5EEAD4",
   warningBg: "#FFFBEB",
   warningBorder: "#FCD34D",
   warningAccent: "#F59E0B",
@@ -110,6 +123,12 @@ export const darkTheme: Theme = {
   accentBadgeBg: "#1E3A5F",
   accentBadgeText: "#93C5FD",
   accentCountBg: "#1E3A5F",
+  subclassBadgeBg: "#134E4A",
+  subclassBadgeText: "#2DD4BF",
+  subclassChipBg: "#0F2927",
+  subclassChipActiveBg: "#134E4A",
+  subclassChipActiveText: "#2DD4BF",
+  subclassChipActiveBorder: "#0D9488",
   warningBg: "#1C1506",
   warningBorder: "#78350F",
   warningAccent: "#F59E0B",
@@ -342,6 +361,50 @@ function makeStyles(theme: Theme) {
     categoryChipCountTextActive: {
       color: theme.accentBadgeText,
     },
+    subclassChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      borderRadius: 999,
+      borderWidth: 1.5,
+      borderColor: theme.borderMid,
+      backgroundColor: theme.subclassChipBg,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    subclassChipActive: {
+      borderColor: theme.subclassChipActiveBorder,
+      backgroundColor: theme.subclassChipActiveBg,
+    },
+    subclassChipText: {
+      color: theme.textSecondary,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    subclassChipTextActive: {
+      color: theme.subclassChipActiveText,
+      fontWeight: "700",
+    },
+    subclassChipCount: {
+      backgroundColor: theme.border,
+      borderRadius: 999,
+      minWidth: 20,
+      height: 20,
+      paddingHorizontal: 5,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    subclassChipCountActive: {
+      backgroundColor: theme.subclassBadgeBg,
+    },
+    subclassChipCountText: {
+      color: theme.textSecondary,
+      fontSize: 11,
+      fontWeight: "700",
+    },
+    subclassChipCountTextActive: {
+      color: theme.subclassBadgeText,
+    },
     recentSection: {
       gap: 10,
     },
@@ -419,6 +482,19 @@ function makeStyles(theme: Theme) {
     },
     classBadgeText: {
       color: theme.accentBadgeText,
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+    },
+    subclassBadge: {
+      backgroundColor: theme.subclassBadgeBg,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      alignSelf: "flex-start",
+    },
+    subclassBadgeText: {
+      color: theme.subclassBadgeText,
       fontSize: 11,
       fontWeight: "700",
       textTransform: "uppercase",
@@ -742,6 +818,19 @@ function makeStyles(theme: Theme) {
       fontWeight: "700",
       textTransform: "uppercase",
     },
+    detailSubclassBadge: {
+      alignSelf: "flex-start",
+      backgroundColor: theme.subclassBadgeBg,
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    detailSubclassBadgeText: {
+      color: theme.subclassBadgeText,
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+    },
     detailIdBadge: {
       alignSelf: "flex-start",
       backgroundColor: theme.surfaceAlt,
@@ -1025,6 +1114,12 @@ function makeStyles(theme: Theme) {
       color: theme.textPrimary,
       fontSize: 13,
       lineHeight: 20,
+    },
+    sourceLink: {
+      color: theme.accent,
+      fontSize: 13,
+      marginTop: 6,
+      textDecorationLine: "underline",
     },
   });
 }
@@ -1347,6 +1442,11 @@ function DrugRow({
             <View style={styles.classBadge}>
               <Text style={styles.classBadgeText}>{result.drug.className[language]}</Text>
             </View>
+            {result.drug.subclassName ? (
+              <View style={styles.subclassBadge}>
+                <Text style={styles.subclassBadgeText}>{result.drug.subclassName[language]}</Text>
+              </View>
+            ) : null}
           </View>
           {result.drug.aliases.length > 0 ? (
             <Text style={styles.resultAlias} numberOfLines={1}>
@@ -1421,6 +1521,7 @@ function SearchScreen({
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const [activeClass, setActiveClass] = useState<string | null>(null);
+  const [activeSubclass, setActiveSubclass] = useState<string | null>(null);
   const favoriteDrugSet = new Set(favoriteDrugIds);
   const trimmedQuery = query.trim();
   const hasQuery = trimmedQuery.length > 0;
@@ -1428,14 +1529,34 @@ function SearchScreen({
   // Derive sorted unique class names from the full drug list
   const drugClasses = [...new Set(allDrugs.map((d) => d.className[language]))].sort();
 
-  // Drugs shown in browse mode (no text query): filtered by class or all, sorted A→Z
-  const browseDrugs: DrugRecord[] = (activeClass
+  // Derive sorted unique subclass names for the active class (empty when no subclasses exist)
+  const activeClassDrugs = activeClass
     ? allDrugs.filter((d) => d.className[language] === activeClass)
-    : allDrugs
+    : [];
+  const subclasses = activeClass
+    ? [...new Set(
+        activeClassDrugs
+          .map((d) => d.subclassName?.[language])
+          .filter((s): s is string => Boolean(s))
+      )].sort()
+    : [];
+
+  // Drugs shown in browse mode (no text query): filtered by class + subclass or all, sorted A→Z
+  const browseDrugs: DrugRecord[] = (
+    activeSubclass
+      ? allDrugs.filter(
+          (d) =>
+            d.className[language] === activeClass &&
+            d.subclassName?.[language] === activeSubclass
+        )
+      : activeClass
+      ? activeClassDrugs
+      : allDrugs
   ).slice().sort((a, b) => a.name[language].localeCompare(b.name[language], language));
 
   function handleClassPress(cls: string) {
     setActiveClass(cls);
+    setActiveSubclass(null);
   }
 
   const displayDrugs = hasQuery ? null : browseDrugs;
@@ -1499,7 +1620,7 @@ function SearchScreen({
             keyboardShouldPersistTaps="handled"
           >
             <Pressable
-              onPress={() => setActiveClass(null)}
+              onPress={() => { setActiveClass(null); setActiveSubclass(null); }}
               style={[styles.categoryChip, activeClass === null && styles.categoryChipActive]}
             >
               <Text style={[styles.categoryChipText, activeClass === null && styles.categoryChipTextActive]}>
@@ -1533,6 +1654,56 @@ function SearchScreen({
               );
             })}
           </ScrollView>
+
+          {/* Subclass chips — only when the active class has subcategories */}
+          {subclasses.length > 0 ? (
+            <View style={styles.categorySection}>
+              <Text style={styles.sectionLabel}>{copy(language, "search.subcategories")}</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalChipList}
+                style={styles.horizontalChipScroll}
+                keyboardShouldPersistTaps="handled"
+              >
+                <Pressable
+                  onPress={() => setActiveSubclass(null)}
+                  style={[styles.subclassChip, activeSubclass === null && styles.subclassChipActive]}
+                >
+                  <Text style={[styles.subclassChipText, activeSubclass === null && styles.subclassChipTextActive]}>
+                    {copy(language, "search.categoryAll")}
+                  </Text>
+                  <View style={[styles.subclassChipCount, activeSubclass === null && styles.subclassChipCountActive]}>
+                    <Text style={[styles.subclassChipCountText, activeSubclass === null && styles.subclassChipCountTextActive]}>
+                      {activeClassDrugs.length}
+                    </Text>
+                  </View>
+                </Pressable>
+                {subclasses.map((sub) => {
+                  const active = sub === activeSubclass;
+                  const count = activeClassDrugs.filter(
+                    (d) => d.subclassName?.[language] === sub
+                  ).length;
+                  return (
+                    <Pressable
+                      key={sub}
+                      onPress={() => setActiveSubclass(sub)}
+                      style={[styles.subclassChip, active && styles.subclassChipActive]}
+                    >
+                      <Text style={[styles.subclassChipText, active && styles.subclassChipTextActive]}>
+                        {sub}
+                      </Text>
+                      <View style={[styles.subclassChipCount, active && styles.subclassChipCountActive]}>
+                        <Text style={[styles.subclassChipCountText, active && styles.subclassChipCountTextActive]}>
+                          {count}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          ) : null}
         </View>
       </View>
 
@@ -1714,6 +1885,14 @@ function SourceCard({
       </Text>
       <Text style={styles.sourceMeta}>{source.documentName[language]}</Text>
       <Text style={styles.sourceExcerpt}>{source.excerpt[language]}</Text>
+      {source.url ? (
+        <Text
+          style={styles.sourceLink}
+          onPress={() => Linking.openURL(source.url!)}
+        >
+          {source.url}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -1966,6 +2145,11 @@ function DetailScreen({
             <View style={styles.detailClassBadge}>
               <Text style={styles.detailClassBadgeText}>{drug.className[language]}</Text>
             </View>
+            {drug.subclassName ? (
+              <View style={styles.detailSubclassBadge}>
+                <Text style={styles.detailSubclassBadgeText}>{drug.subclassName[language]}</Text>
+              </View>
+            ) : null}
             <View style={styles.detailIdBadge}>
               <Text style={styles.detailIdBadgeText}>{drug.id}</Text>
             </View>

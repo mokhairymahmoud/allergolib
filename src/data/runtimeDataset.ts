@@ -251,6 +251,7 @@ function normalizeSourceDocument(value: unknown, context: string): SourceDocumen
     year: asString(record.year, `${context}.year`),
     version: asString(record.version, `${context}.version`),
     status: asString(record.status, `${context}.status`),
+    url: asOptionalString(record.url, `${context}.url`),
     documentName: asLocalizedString(record.documentName, `${context}.documentName`),
     excerpt: asLocalizedString(record.excerpt, `${context}.excerpt`),
   };
@@ -323,10 +324,17 @@ function normalizeDataset(value: unknown, context: string): Dataset {
     const drug = asRecord(drugValue, `${context}.drugs[${index}]`);
     const testsRecord = asRecord(drug.tests, `${context}.drugs[${index}].tests`);
 
+    const subclassNameRaw = drug.subclassName;
+    const subclassName =
+      subclassNameRaw !== undefined && subclassNameRaw !== null
+        ? asLocalizedString(subclassNameRaw, `${context}.drugs[${index}].subclassName`)
+        : undefined;
+
     return {
       id: asString(drug.id, `${context}.drugs[${index}].id`),
       name: asLocalizedString(drug.name, `${context}.drugs[${index}].name`),
       className: asLocalizedString(drug.className, `${context}.drugs[${index}].className`),
+      subclassName,
       aliases: asStringArray(drug.aliases, `${context}.drugs[${index}].aliases`),
       tests: {
         prick: normalizeTestRecord(

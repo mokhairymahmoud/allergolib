@@ -13,6 +13,7 @@
       "year": "2025",
       "version": "Annex 4",
       "status": "approved",
+      "url": "https://sfa.lesallergies.fr/wp-content/uploads/2025_SFAR-SFA_RFE-Diagnostic-et-prise-en-charge-des-reactions-dhypersensibilite-immediate-perioperatoires.pdf",
       "documentName": {
         "en": "Diagnostic et prise en charge des reactions d'hypersensibilite immediate perioperatoires - Annex 4",
         "fr": "Diagnostic et prise en charge des reactions d'hypersensibilite immediate perioperatoires - Annexe 4"
@@ -25,569 +26,469 @@
   },
   "drugs": [
     {
-      "id": "rocuronium",
-      "name": {
-        "en": "Rocuronium",
-        "fr": "Rocuronium"
-      },
-      "className": {
-        "en": "NMBA",
-        "fr": "Curare"
-      },
-      "aliases": [
-        "rocuronium",
-        "esmeron"
-      ],
-      "tests": {
-        "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
-          "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.",
-                "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        },
-        "idr": {
-          "concentration": "0.05 mg/ml",
-          "maxConcentration": "0.05 mg/ml",
-          "dilutions": [
-            "1:100",
-            "1:10"
-          ],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Use the validated intradermal maximum concentration from Annex 4.",
-                "fr": "Utiliser la concentration maximale validee en IDR issue de l'annexe 4."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        },
-        "patch": {
-          "concentration": "",
-          "maxConcentration": "",
-          "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "No patch concentration is seeded from Annex 4 for rocuronium in Phase 2.",
-                "fr": "Aucune concentration de patch test n'est renseignee depuis l'annexe 4 pour le rocuronium en phase 2."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        }
-      }
-    },
-    {
-      "id": "succinylcholine",
-      "name": {
-        "en": "Succinylcholine",
-        "fr": "Succinylcholine"
-      },
-      "className": {
-        "en": "NMBA",
-        "fr": "Curare"
-      },
-      "aliases": [
-        "succinylcholine",
-        "suxamethonium",
-        "celocurine"
-      ],
-      "tests": {
-        "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
-          "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.",
-                "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        },
-        "idr": {
-          "concentration": "0.1 mg/ml",
-          "maxConcentration": "0.1 mg/ml",
-          "dilutions": [
-            "1:100",
-            "1:10"
-          ],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Use the validated intradermal maximum concentration from Annex 4.",
-                "fr": "Utiliser la concentration maximale validee en IDR issue de l'annexe 4."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        },
-        "patch": {
-          "concentration": "",
-          "maxConcentration": "",
-          "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "No patch concentration is seeded from Annex 4 for succinylcholine in Phase 2.",
-                "fr": "Aucune concentration de patch test n'est renseignee depuis l'annexe 4 pour la succinylcholine en phase 2."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        }
-      }
-    },
-    {
-      "id": "cisatracurium",
-      "name": {
-        "en": "Cisatracurium",
-        "fr": "Cis-atracurium"
-      },
-      "className": {
-        "en": "NMBA",
-        "fr": "Curare"
-      },
-      "aliases": [
-        "cisatracurium",
-        "cis-atracurium",
-        "nimbex"
-      ],
+      "id": "etomidate",
+      "name": { "en": "Etomidate", "fr": "Etomidate" },
+      "className": { "en": "Hypnotic", "fr": "Hypnotique" },
+      "aliases": ["etomidate", "hypnomidate"],
       "tests": {
         "prick": {
           "concentration": "2 mg/ml",
           "maxConcentration": "",
           "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.",
-                "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
-              }
-            }
-          ],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         },
         "idr": {
-          "concentration": "0.02 mg/ml",
-          "maxConcentration": "0.02 mg/ml",
-          "dilutions": [
-            "1:100",
-            "1:10"
-          ],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Use the validated intradermal maximum concentration from Annex 4.",
-                "fr": "Utiliser la concentration maximale validee en IDR issue de l'annexe 4."
-              }
-            }
-          ],
+          "concentration": "0.2 mg/ml",
+          "maxConcentration": "0.2 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         },
         "patch": {
           "concentration": "",
           "maxConcentration": "",
           "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "No patch concentration is seeded from Annex 4 for cisatracurium in Phase 2.",
-                "fr": "Aucune concentration de patch test n'est renseignee depuis l'annexe 4 pour le cisatracurium en phase 2."
-              }
-            }
-          ],
+          "notes": [],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         }
       }
     },
     {
-      "id": "atracurium",
-      "name": {
-        "en": "Atracurium",
-        "fr": "Atracurium"
-      },
-      "className": {
-        "en": "NMBA",
-        "fr": "Curare"
-      },
-      "aliases": [
-        "atracurium",
-        "tracrium"
-      ],
-      "tests": {
-        "prick": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "",
-          "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.",
-                "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        },
-        "idr": {
-          "concentration": "0.01 mg/ml",
-          "maxConcentration": "0.01 mg/ml",
-          "dilutions": [
-            "1:100",
-            "1:10"
-          ],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Use the validated intradermal maximum concentration from Annex 4.",
-                "fr": "Utiliser la concentration maximale validee en IDR issue de l'annexe 4."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        },
-        "patch": {
-          "concentration": "",
-          "maxConcentration": "",
-          "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "No patch concentration is seeded from Annex 4 for atracurium in Phase 2.",
-                "fr": "Aucune concentration de patch test n'est renseignee depuis l'annexe 4 pour l'atracurium en phase 2."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        }
-      }
-    },
-    {
-      "id": "cefazolin",
-      "name": {
-        "en": "Cefazolin",
-        "fr": "Cefazoline"
-      },
-      "className": {
-        "en": "Antibiotic",
-        "fr": "Beta-lactamine"
-      },
-      "aliases": [
-        "cefazolin",
-        "cefazoline",
-        "ancef"
-      ],
-      "tests": {
-        "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
-          "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.",
-                "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        },
-        "idr": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "20 mg/ml",
-          "dilutions": [
-            "1:10"
-          ],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "The same validated maximum concentration is listed for prick and intradermal testing in Annex 4.",
-                "fr": "La meme concentration maximale validee est listee pour le prick test et l'IDR dans l'annexe 4."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        },
-        "patch": {
-          "concentration": "",
-          "maxConcentration": "",
-          "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "No patch concentration is seeded from Annex 4 for cefazolin in Phase 2.",
-                "fr": "Aucune concentration de patch test n'est renseignee depuis l'annexe 4 pour la cefazoline en phase 2."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        }
-      }
-    },
-    {
-      "id": "amoxicillin",
-      "name": {
-        "en": "Amoxicillin",
-        "fr": "Amoxicilline"
-      },
-      "className": {
-        "en": "Antibiotic",
-        "fr": "Beta-lactamine"
-      },
-      "aliases": [
-        "amoxicillin",
-        "amoxicilline",
-        "amox"
-      ],
-      "tests": {
-        "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
-          "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.",
-                "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        },
-        "idr": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "20 mg/ml",
-          "dilutions": [
-            "1:10"
-          ],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "The same validated maximum concentration is listed for prick and intradermal testing in Annex 4.",
-                "fr": "La meme concentration maximale validee est listee pour le prick test et l'IDR dans l'annexe 4."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        },
-        "patch": {
-          "concentration": "",
-          "maxConcentration": "",
-          "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "No patch concentration is seeded from Annex 4 for amoxicillin in Phase 2.",
-                "fr": "Aucune concentration de patch test n'est renseignee depuis l'annexe 4 pour l'amoxicilline en phase 2."
-              }
-            }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
-        }
-      }
-    },
-    {
-      "id": "propofol",
-      "name": {
-        "en": "Propofol",
-        "fr": "Propofol"
-      },
-      "className": {
-        "en": "Hypnotic",
-        "fr": "Hypnotique"
-      },
-      "aliases": [
-        "propofol",
-        "diprivan"
-      ],
+      "id": "ketamine",
+      "name": { "en": "Ketamine", "fr": "Ketamine" },
+      "className": { "en": "Hypnotic", "fr": "Hypnotique" },
+      "aliases": ["ketamine", "ketalar"],
       "tests": {
         "prick": {
           "concentration": "10 mg/ml",
           "maxConcentration": "",
           "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.",
-                "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
-              }
-            }
-          ],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         },
         "idr": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "1 mg/ml",
-          "dilutions": [
-            "1:10"
-          ],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Use the validated intradermal maximum concentration from Annex 4.",
-                "fr": "Utiliser la concentration maximale validee en IDR issue de l'annexe 4."
-              }
-            }
-          ],
+          "concentration": "0.1 mg/ml",
+          "maxConcentration": "0.1 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         },
         "patch": {
           "concentration": "",
           "maxConcentration": "",
           "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "No patch concentration is seeded from Annex 4 for propofol in Phase 2.",
-                "fr": "Aucune concentration de patch test n'est renseignee depuis l'annexe 4 pour le propofol en phase 2."
-              }
-            }
-          ],
+          "notes": [],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         }
       }
     },
     {
       "id": "midazolam",
-      "name": {
-        "en": "Midazolam",
-        "fr": "Midazolam"
-      },
-      "className": {
-        "en": "Hypnotic",
-        "fr": "Hypnotique"
-      },
-      "aliases": [
-        "midazolam",
-        "hypnovel",
-        "versed"
-      ],
+      "name": { "en": "Midazolam", "fr": "Midazolam" },
+      "className": { "en": "Hypnotic", "fr": "Hypnotique" },
+      "aliases": ["midazolam", "hypnovel", "versed"],
       "tests": {
         "prick": {
           "concentration": "1 mg/ml",
           "maxConcentration": "",
           "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.",
-                "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
-              }
-            }
-          ],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         },
         "idr": {
           "concentration": "0.01 mg/ml",
           "maxConcentration": "0.01 mg/ml",
-          "dilutions": [
-            "1:20"
-          ],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Marked as possibly irritant at the maximum concentration in Annex 4.",
-                "fr": "Signale comme possiblement irritant a la concentration maximale dans l'annexe 4."
-              }
-            }
-          ],
+          "dilutions": ["1:20"],
+          "notes": [{ "kind": "warning", "value": { "en": "Possibly irritant at the maximum concentration (Annex 4).", "fr": "Possiblement irritant a la concentration maximale (annexe 4)." } }],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         },
         "patch": {
           "concentration": "",
           "maxConcentration": "",
           "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "No patch concentration is seeded from Annex 4 for midazolam in Phase 2.",
-                "fr": "Aucune concentration de patch test n'est renseignee depuis l'annexe 4 pour le midazolam en phase 2."
-              }
-            }
-          ],
+          "notes": [],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         }
       }
     },
     {
-      "id": "midazolam3",
-      "name": {
-        "en": "Midazolam3",
-        "fr": "Midazolam3"
-      },
-      "className": {
-        "en": "Hypnotic",
-        "fr": "Hypnotique"
-      },
-      "aliases": [
-        "versed2"
-      ],
+      "id": "propofol",
+      "name": { "en": "Propofol", "fr": "Propofol" },
+      "className": { "en": "Hypnotic", "fr": "Hypnotique" },
+      "aliases": ["propofol", "diprivan"],
+      "tests": {
+        "prick": {
+          "concentration": "10 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "1 mg/ml",
+          "maxConcentration": "1 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "thiopenthal",
+      "name": { "en": "Thiopenthal", "fr": "Thiopenthal" },
+      "className": { "en": "Hypnotic", "fr": "Hypnotique" },
+      "aliases": ["thiopenthal", "thiopental", "pentothal"],
+      "tests": {
+        "prick": {
+          "concentration": "25 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "2.5 mg/ml",
+          "maxConcentration": "2.5 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "atracurium",
+      "name": { "en": "Atracurium", "fr": "Atracurium" },
+      "className": { "en": "NMBA", "fr": "Curare" },
+      "aliases": ["atracurium", "tracrium"],
       "tests": {
         "prick": {
           "concentration": "1 mg/ml",
           "maxConcentration": "",
           "dilutions": [],
-          "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.",
-                "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
-              }
-            }
-          ],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         },
         "idr": {
           "concentration": "0.01 mg/ml",
           "maxConcentration": "0.01 mg/ml",
-          "dilutions": [
-            "1:20"
-          ],
+          "dilutions": ["1:100", "1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "cisatracurium",
+      "name": { "en": "Cisatracurium", "fr": "Cis-atracurium" },
+      "className": { "en": "NMBA", "fr": "Curare" },
+      "aliases": ["cisatracurium", "cis-atracurium", "nimbex"],
+      "tests": {
+        "prick": {
+          "concentration": "2 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.02 mg/ml",
+          "maxConcentration": "0.02 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "mivacurium",
+      "name": { "en": "Mivacurium", "fr": "Mivacurium" },
+      "className": { "en": "NMBA", "fr": "Curare" },
+      "aliases": ["mivacurium", "mivacron"],
+      "tests": {
+        "prick": {
+          "concentration": "0.2 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.002 mg/ml",
+          "maxConcentration": "0.002 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "rocuronium",
+      "name": { "en": "Rocuronium", "fr": "Rocuronium" },
+      "className": { "en": "NMBA", "fr": "Curare" },
+      "aliases": ["rocuronium", "esmeron"],
+      "tests": {
+        "prick": {
+          "concentration": "10 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.05 mg/ml",
+          "maxConcentration": "0.05 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "succinylcholine",
+      "name": { "en": "Succinylcholine", "fr": "Succinylcholine" },
+      "className": { "en": "NMBA", "fr": "Curare" },
+      "aliases": ["succinylcholine", "suxamethonium", "celocurine"],
+      "tests": {
+        "prick": {
+          "concentration": "10 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.1 mg/ml",
+          "maxConcentration": "0.1 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "fentanyl",
+      "name": { "en": "Fentanyl", "fr": "Fentanyl" },
+      "className": { "en": "Opioid & Analgesic", "fr": "Morphinique & Antalgique" },
+      "subclassName": { "en": "Anesthesia Opioid", "fr": "Morphinique d'Anesthesie" },
+      "aliases": ["fentanyl", "fentanil"],
+      "tests": {
+        "prick": {
+          "concentration": "50 µg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "5 µg/ml",
+          "maxConcentration": "5 µg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "alfentanil",
+      "name": { "en": "Alfentanil", "fr": "Alfentanil" },
+      "className": { "en": "Opioid & Analgesic", "fr": "Morphinique & Antalgique" },
+      "subclassName": { "en": "Anesthesia Opioid", "fr": "Morphinique d'Anesthesie" },
+      "aliases": ["alfentanil", "rapifen"],
+      "tests": {
+        "prick": {
+          "concentration": "0.5 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.05 mg/ml",
+          "maxConcentration": "0.05 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "remifentanil",
+      "name": { "en": "Remifentanil", "fr": "Remifentanil" },
+      "className": { "en": "Opioid & Analgesic", "fr": "Morphinique & Antalgique" },
+      "subclassName": { "en": "Anesthesia Opioid", "fr": "Morphinique d'Anesthesie" },
+      "aliases": ["remifentanil", "ultiva"],
+      "tests": {
+        "prick": {
+          "concentration": "50 µg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "5 µg/ml",
+          "maxConcentration": "5 µg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "sufentanil",
+      "name": { "en": "Sufentanil", "fr": "Sufentanil" },
+      "className": { "en": "Opioid & Analgesic", "fr": "Morphinique & Antalgique" },
+      "subclassName": { "en": "Anesthesia Opioid", "fr": "Morphinique d'Anesthesie" },
+      "aliases": ["sufentanil", "sufenta"],
+      "tests": {
+        "prick": {
+          "concentration": "5 µg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.5 µg/ml",
+          "maxConcentration": "0.5 µg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "morphine",
+      "name": { "en": "Morphine", "fr": "Morphine" },
+      "className": { "en": "Opioid & Analgesic", "fr": "Morphinique & Antalgique" },
+      "subclassName": { "en": "Strong Opioid (Step 3)", "fr": "Opioide Palier 3" },
+      "aliases": ["morphine", "morphina"],
+      "tests": {
+        "prick": {
+          "concentration": "1 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.005 mg/ml",
+          "maxConcentration": "0.005 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "oxycodone",
+      "name": { "en": "Oxycodone", "fr": "Oxycodone" },
+      "className": { "en": "Opioid & Analgesic", "fr": "Morphinique & Antalgique" },
+      "subclassName": { "en": "Strong Opioid (Step 3)", "fr": "Opioide Palier 3" },
+      "aliases": ["oxycodone", "oxycontin"],
+      "tests": {
+        "prick": {
+          "concentration": "10 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
           "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "Marked as possibly irritant at the maximum concentration in Annex 4.",
-                "fr": "Signale comme possiblement irritant a la concentration maximale dans l'annexe 4."
-              }
-            }
+            { "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } },
+            { "kind": "warning", "value": { "en": "Possibly irritant at the maximum concentration (Annex 4).", "fr": "Possiblement irritant a la concentration maximale (annexe 4)." } }
+          ],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "1 mg/ml",
+          "maxConcentration": "1 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [
+            { "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } },
+            { "kind": "warning", "value": { "en": "Possibly irritant at the maximum concentration (Annex 4).", "fr": "Possiblement irritant a la concentration maximale (annexe 4)." } }
           ],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         },
@@ -595,15 +496,1021 @@
           "concentration": "",
           "maxConcentration": "",
           "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "nefopam",
+      "name": { "en": "Nefopam", "fr": "Nefopam" },
+      "className": { "en": "Opioid & Analgesic", "fr": "Morphinique & Antalgique" },
+      "subclassName": { "en": "Analgesic (Step 1 & 2)", "fr": "Antalgique Palier 1 & 2" },
+      "aliases": ["nefopam", "acupan"],
+      "tests": {
+        "prick": {
+          "concentration": "10 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "1 mg/ml",
+          "maxConcentration": "1 mg/ml",
+          "dilutions": ["1:10"],
           "notes": [
-            {
-              "kind": "info",
-              "value": {
-                "en": "No patch concentration is seeded from Annex 4 for midazolam in Phase 3.",
-                "fr": "Aucune concentration de patch test n'est renseignee depuis l'annexe 4 pour le midazolam en phase 3."
-              }
-            }
+            { "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } },
+            { "kind": "warning", "value": { "en": "Possibly irritant at the maximum concentration (Annex 4).", "fr": "Possiblement irritant a la concentration maximale (annexe 4)." } }
           ],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "tramadol",
+      "name": { "en": "Tramadol", "fr": "Tramadol" },
+      "className": { "en": "Opioid & Analgesic", "fr": "Morphinique & Antalgique" },
+      "subclassName": { "en": "Analgesic (Step 1 & 2)", "fr": "Antalgique Palier 1 & 2" },
+      "aliases": ["tramadol", "topalgic", "contramal"],
+      "tests": {
+        "prick": {
+          "concentration": "50 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "5 mg/ml",
+          "maxConcentration": "5 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "ketoprofen",
+      "name": { "en": "Ketoprofen", "fr": "Ketoprofene" },
+      "className": { "en": "Opioid & Analgesic", "fr": "Morphinique & Antalgique" },
+      "subclassName": { "en": "Analgesic (Step 1 & 2)", "fr": "Antalgique Palier 1 & 2" },
+      "aliases": ["ketoprofen", "ketoprofene", "profenid"],
+      "tests": {
+        "prick": {
+          "concentration": "25 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.25 mg/ml",
+          "maxConcentration": "0.25 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [
+            { "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } },
+            { "kind": "warning", "value": { "en": "Possibly irritant at the maximum concentration (Annex 4).", "fr": "Possiblement irritant a la concentration maximale (annexe 4)." } }
+          ],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "paracetamol",
+      "name": { "en": "Paracetamol", "fr": "Paracetamol" },
+      "className": { "en": "Opioid & Analgesic", "fr": "Morphinique & Antalgique" },
+      "subclassName": { "en": "Analgesic (Step 1 & 2)", "fr": "Antalgique Palier 1 & 2" },
+      "aliases": ["paracetamol", "acetaminophen", "perfalgan"],
+      "tests": {
+        "prick": {
+          "concentration": "10 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "10 mg/ml",
+          "maxConcentration": "10 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "bleu-patente-v",
+      "name": { "en": "Patent Blue V", "fr": "Bleu patente V" },
+      "className": { "en": "Dye", "fr": "Colorant" },
+      "aliases": ["bleu patente v", "patent blue v", "patent blue"],
+      "tests": {
+        "prick": {
+          "concentration": "25 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.25 mg/ml",
+          "maxConcentration": "0.25 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "bleu-de-methylene",
+      "name": { "en": "Methylene Blue", "fr": "Bleu de methylene" },
+      "className": { "en": "Dye", "fr": "Colorant" },
+      "aliases": ["bleu de methylene", "methylene blue", "methylthioninium"],
+      "tests": {
+        "prick": {
+          "concentration": "5 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.05 mg/ml",
+          "maxConcentration": "0.05 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "fluorescein",
+      "name": { "en": "Fluorescein", "fr": "Fluoresceine" },
+      "className": { "en": "Dye", "fr": "Colorant" },
+      "aliases": ["fluorescein", "fluoresceine"],
+      "tests": {
+        "prick": {
+          "concentration": "100 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "10 mg/ml",
+          "maxConcentration": "10 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "lidocaine",
+      "name": { "en": "Lidocaine", "fr": "Lidocaine" },
+      "className": { "en": "Local Anesthetic", "fr": "Anesthesique Local" },
+      "aliases": ["lidocaine", "lignocaine", "xylocaine"],
+      "tests": {
+        "prick": {
+          "concentration": "10 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "1 mg/ml",
+          "maxConcentration": "1 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "bupivacaine",
+      "name": { "en": "Bupivacaine", "fr": "Bupivacaine" },
+      "className": { "en": "Local Anesthetic", "fr": "Anesthesique Local" },
+      "aliases": ["bupivacaine", "marcaine"],
+      "tests": {
+        "prick": {
+          "concentration": "2.5 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.25 mg/ml",
+          "maxConcentration": "0.25 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "ropivacaine",
+      "name": { "en": "Ropivacaine", "fr": "Ropivacaine" },
+      "className": { "en": "Local Anesthetic", "fr": "Anesthesique Local" },
+      "aliases": ["ropivacaine", "naropeine"],
+      "tests": {
+        "prick": {
+          "concentration": "10 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "1 mg/ml",
+          "maxConcentration": "1 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "mepivacaine",
+      "name": { "en": "Mepivacaine", "fr": "Mepivacaine" },
+      "className": { "en": "Local Anesthetic", "fr": "Anesthesique Local" },
+      "aliases": ["mepivacaine", "carbocaine"],
+      "tests": {
+        "prick": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "2 mg/ml",
+          "maxConcentration": "2 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "amoxicillin",
+      "name": { "en": "Amoxicillin", "fr": "Amoxicilline" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Penicillin", "fr": "Penicilline" },
+      "aliases": ["amoxicillin", "amoxicilline", "amox"],
+      "tests": {
+        "prick": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "20 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "amoxicillin-clavulanate",
+      "name": { "en": "Amoxicillin + Clavulanate", "fr": "Amoxicilline + Ac clavulanique" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Penicillin", "fr": "Penicilline" },
+      "aliases": ["amoxicilline clavulanate", "amoxicillin clavulanate", "augmentin"],
+      "tests": {
+        "prick": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "20 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "piperacillin",
+      "name": { "en": "Piperacillin", "fr": "Piperacilline" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Penicillin", "fr": "Penicilline" },
+      "aliases": ["piperacillin", "piperacilline"],
+      "tests": {
+        "prick": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "20 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "piperacillin-tazobactam",
+      "name": { "en": "Piperacillin + Tazobactam", "fr": "Piperacilline + Tazobactam" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Penicillin", "fr": "Penicilline" },
+      "aliases": ["piperacilline tazobactam", "piperacillin tazobactam", "tazocin"],
+      "tests": {
+        "prick": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "20 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "cloxacillin",
+      "name": { "en": "Cloxacillin", "fr": "Cloxacilline" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Penicillin", "fr": "Penicilline" },
+      "aliases": ["cloxacillin", "cloxacilline", "orbénine"],
+      "tests": {
+        "prick": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "20 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "cefazolin",
+      "name": { "en": "Cefazolin", "fr": "Cefazoline" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Cephalosporin", "fr": "Cephalosporine" },
+      "aliases": ["cefazolin", "cefazoline", "ancef"],
+      "tests": {
+        "prick": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "20 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "cefuroxime",
+      "name": { "en": "Cefuroxime", "fr": "Cefuroxime" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Cephalosporin", "fr": "Cephalosporine" },
+      "aliases": ["cefuroxime", "zinnat", "zinacef"],
+      "tests": {
+        "prick": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "20 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "cefotaxime",
+      "name": { "en": "Cefotaxime", "fr": "Cefotaxime" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Cephalosporin", "fr": "Cephalosporine" },
+      "aliases": ["cefotaxime", "claforan"],
+      "tests": {
+        "prick": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "20 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "ceftriaxone",
+      "name": { "en": "Ceftriaxone", "fr": "Ceftriaxone" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Cephalosporin", "fr": "Cephalosporine" },
+      "aliases": ["ceftriaxone", "rocephin"],
+      "tests": {
+        "prick": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "20 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "cefepime",
+      "name": { "en": "Cefepime", "fr": "Cefepime" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Cephalosporin", "fr": "Cephalosporine" },
+      "aliases": ["cefepime", "maxipime"],
+      "tests": {
+        "prick": {
+          "concentration": "2 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "2 mg/ml",
+          "maxConcentration": "2 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "ceftazidime",
+      "name": { "en": "Ceftazidime", "fr": "Ceftazidime" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Cephalosporin", "fr": "Cephalosporine" },
+      "aliases": ["ceftazidime", "fortum"],
+      "tests": {
+        "prick": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "20 mg/ml",
+          "maxConcentration": "20 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "ertapenem",
+      "name": { "en": "Ertapenem", "fr": "Ertapenem" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Carbapenem", "fr": "Carbapenem" },
+      "aliases": ["ertapenem", "invanz"],
+      "tests": {
+        "prick": {
+          "concentration": "1 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "1 mg/ml",
+          "maxConcentration": "1 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "imipenem",
+      "name": { "en": "Imipenem", "fr": "Imipenem" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Carbapenem", "fr": "Carbapenem" },
+      "aliases": ["imipenem", "tienam"],
+      "tests": {
+        "prick": {
+          "concentration": "0.05 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.05 mg/ml",
+          "maxConcentration": "0.05 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "meropenem",
+      "name": { "en": "Meropenem", "fr": "Meropenem" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Carbapenem", "fr": "Carbapenem" },
+      "aliases": ["meropenem", "meronem"],
+      "tests": {
+        "prick": {
+          "concentration": "1 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "1 mg/ml",
+          "maxConcentration": "1 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "aztreonam",
+      "name": { "en": "Aztreonam", "fr": "Aztreonam" },
+      "className": { "en": "Antibiotic", "fr": "Beta-lactamine" },
+      "subclassName": { "en": "Monobactam", "fr": "Monobactam" },
+      "aliases": ["aztreonam", "azactam"],
+      "tests": {
+        "prick": {
+          "concentration": "2 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "2 mg/ml",
+          "maxConcentration": "2 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "atropine",
+      "name": { "en": "Atropine", "fr": "Atropine" },
+      "className": { "en": "Miscellaneous", "fr": "Divers" },
+      "aliases": ["atropine"],
+      "tests": {
+        "prick": {
+          "concentration": "0.5 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.05 mg/ml",
+          "maxConcentration": "0.05 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "chlorhexidine",
+      "name": { "en": "Chlorhexidine", "fr": "Chlorhexidine" },
+      "className": { "en": "Miscellaneous", "fr": "Divers" },
+      "aliases": ["chlorhexidine", "hibitane"],
+      "tests": {
+        "prick": {
+          "concentration": "2 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.002 mg/ml",
+          "maxConcentration": "0.002 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "ondansetron",
+      "name": { "en": "Ondansetron", "fr": "Ondansetron" },
+      "className": { "en": "Miscellaneous", "fr": "Divers" },
+      "aliases": ["ondansetron", "zofran"],
+      "tests": {
+        "prick": {
+          "concentration": "4 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.04 mg/ml",
+          "maxConcentration": "0.04 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [
+            { "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } },
+            { "kind": "warning", "value": { "en": "Possibly irritant at the maximum concentration (Annex 4).", "fr": "Possiblement irritant a la concentration maximale (annexe 4)." } }
+          ],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "protamine",
+      "name": { "en": "Protamine", "fr": "Protamine" },
+      "className": { "en": "Miscellaneous", "fr": "Divers" },
+      "aliases": ["protamine"],
+      "tests": {
+        "prick": {
+          "concentration": "10 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.01 mg/ml",
+          "maxConcentration": "0.01 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "sugammadex",
+      "name": { "en": "Sugammadex", "fr": "Sugammadex" },
+      "className": { "en": "Miscellaneous", "fr": "Divers" },
+      "aliases": ["sugammadex", "bridion"],
+      "tests": {
+        "prick": {
+          "concentration": "10 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "1 mg/ml",
+          "maxConcentration": "1 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "dexamethasone",
+      "name": { "en": "Dexamethasone", "fr": "Dexamethasone" },
+      "className": { "en": "Miscellaneous", "fr": "Divers" },
+      "aliases": ["dexamethasone", "dectancyl"],
+      "tests": {
+        "prick": {
+          "concentration": "4 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "4 mg/ml",
+          "maxConcentration": "4 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "gelatin",
+      "name": { "en": "Fluid Gelatin", "fr": "Gelatine fluide" },
+      "className": { "en": "Miscellaneous", "fr": "Divers" },
+      "aliases": ["gelatine fluide", "fluid gelatin", "gelofusine", "plasmion"],
+      "tests": {
+        "prick": {
+          "concentration": "40 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "40 mg/ml",
+          "maxConcentration": "40 mg/ml",
+          "dilutions": ["1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Same validated maximum concentration for prick and IDR (Annex 4).", "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        }
+      }
+    },
+    {
+      "id": "vancomycin",
+      "name": { "en": "Vancomycin", "fr": "Vancomycine" },
+      "className": { "en": "Miscellaneous", "fr": "Divers" },
+      "aliases": ["vancomycin", "vancomycine", "vancocin"],
+      "tests": {
+        "prick": {
+          "concentration": "50 mg/ml",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "idr": {
+          "concentration": "0.005 mg/ml",
+          "maxConcentration": "0.005 mg/ml",
+          "dilutions": ["1:100", "1:10"],
+          "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
+          "preferredSourceId": "sfar-sfa-2025-annex-4"
+        },
+        "patch": {
+          "concentration": "",
+          "maxConcentration": "",
+          "dilutions": [],
+          "notes": [],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         }
       }

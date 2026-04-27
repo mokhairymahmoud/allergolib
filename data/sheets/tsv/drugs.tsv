@@ -1,0 +1,51 @@
+id	name_en	name_fr	class_name_en	class_name_fr	subclass_name_en	subclass_name_fr
+etomidate	Etomidate	Etomidate	Hypnotic	Hypnotique
+ketamine	Ketamine	Ketamine	Hypnotic	Hypnotique
+midazolam	Midazolam	Midazolam	Hypnotic	Hypnotique
+propofol	Propofol	Propofol	Hypnotic	Hypnotique
+thiopenthal	Thiopenthal	Thiopenthal	Hypnotic	Hypnotique
+atracurium	Atracurium	Atracurium	NMBA	Curare
+cisatracurium	Cisatracurium	Cis-atracurium	NMBA	Curare
+mivacurium	Mivacurium	Mivacurium	NMBA	Curare
+rocuronium	Rocuronium	Rocuronium	NMBA	Curare
+succinylcholine	Succinylcholine	Succinylcholine	NMBA	Curare
+fentanyl	Fentanyl	Fentanyl	Opioid & Analgesic	Morphinique & Antalgique	Anesthesia Opioid	Morphinique d'Anesthesie
+alfentanil	Alfentanil	Alfentanil	Opioid & Analgesic	Morphinique & Antalgique	Anesthesia Opioid	Morphinique d'Anesthesie
+remifentanil	Remifentanil	Remifentanil	Opioid & Analgesic	Morphinique & Antalgique	Anesthesia Opioid	Morphinique d'Anesthesie
+sufentanil	Sufentanil	Sufentanil	Opioid & Analgesic	Morphinique & Antalgique	Anesthesia Opioid	Morphinique d'Anesthesie
+morphine	Morphine	Morphine	Opioid & Analgesic	Morphinique & Antalgique	Strong Opioid (Step 3)	Opioide Palier 3
+oxycodone	Oxycodone	Oxycodone	Opioid & Analgesic	Morphinique & Antalgique	Strong Opioid (Step 3)	Opioide Palier 3
+nefopam	Nefopam	Nefopam	Opioid & Analgesic	Morphinique & Antalgique	Analgesic (Step 1 & 2)	Antalgique Palier 1 & 2
+tramadol	Tramadol	Tramadol	Opioid & Analgesic	Morphinique & Antalgique	Analgesic (Step 1 & 2)	Antalgique Palier 1 & 2
+ketoprofen	Ketoprofen	Ketoprofene	Opioid & Analgesic	Morphinique & Antalgique	Analgesic (Step 1 & 2)	Antalgique Palier 1 & 2
+paracetamol	Paracetamol	Paracetamol	Opioid & Analgesic	Morphinique & Antalgique	Analgesic (Step 1 & 2)	Antalgique Palier 1 & 2
+bleu-patente-v	Patent Blue V	Bleu patente V	Dye	Colorant
+bleu-de-methylene	Methylene Blue	Bleu de methylene	Dye	Colorant
+fluorescein	Fluorescein	Fluoresceine	Dye	Colorant
+lidocaine	Lidocaine	Lidocaine	Local Anesthetic	Anesthesique Local
+bupivacaine	Bupivacaine	Bupivacaine	Local Anesthetic	Anesthesique Local
+ropivacaine	Ropivacaine	Ropivacaine	Local Anesthetic	Anesthesique Local
+mepivacaine	Mepivacaine	Mepivacaine	Local Anesthetic	Anesthesique Local
+amoxicillin	Amoxicillin	Amoxicilline	Antibiotic	Beta-lactamine	Penicillin	Penicilline
+amoxicillin-clavulanate	Amoxicillin + Clavulanate	Amoxicilline + Ac clavulanique	Antibiotic	Beta-lactamine	Penicillin	Penicilline
+piperacillin	Piperacillin	Piperacilline	Antibiotic	Beta-lactamine	Penicillin	Penicilline
+piperacillin-tazobactam	Piperacillin + Tazobactam	Piperacilline + Tazobactam	Antibiotic	Beta-lactamine	Penicillin	Penicilline
+cloxacillin	Cloxacillin	Cloxacilline	Antibiotic	Beta-lactamine	Penicillin	Penicilline
+cefazolin	Cefazolin	Cefazoline	Antibiotic	Beta-lactamine	Cephalosporin	Cephalosporine
+cefuroxime	Cefuroxime	Cefuroxime	Antibiotic	Beta-lactamine	Cephalosporin	Cephalosporine
+cefotaxime	Cefotaxime	Cefotaxime	Antibiotic	Beta-lactamine	Cephalosporin	Cephalosporine
+ceftriaxone	Ceftriaxone	Ceftriaxone	Antibiotic	Beta-lactamine	Cephalosporin	Cephalosporine
+cefepime	Cefepime	Cefepime	Antibiotic	Beta-lactamine	Cephalosporin	Cephalosporine
+ceftazidime	Ceftazidime	Ceftazidime	Antibiotic	Beta-lactamine	Cephalosporin	Cephalosporine
+ertapenem	Ertapenem	Ertapenem	Antibiotic	Beta-lactamine	Carbapenem	Carbapenem
+imipenem	Imipenem	Imipenem	Antibiotic	Beta-lactamine	Carbapenem	Carbapenem
+meropenem	Meropenem	Meropenem	Antibiotic	Beta-lactamine	Carbapenem	Carbapenem
+aztreonam	Aztreonam	Aztreonam	Antibiotic	Beta-lactamine	Monobactam	Monobactam
+atropine	Atropine	Atropine	Miscellaneous	Divers
+chlorhexidine	Chlorhexidine	Chlorhexidine	Miscellaneous	Divers
+ondansetron	Ondansetron	Ondansetron	Miscellaneous	Divers
+protamine	Protamine	Protamine	Miscellaneous	Divers
+sugammadex	Sugammadex	Sugammadex	Miscellaneous	Divers
+dexamethasone	Dexamethasone	Dexamethasone	Miscellaneous	Divers
+gelatin	Fluid Gelatin	Gelatine fluide	Miscellaneous	Divers
+vancomycin	Vancomycin	Vancomycine	Miscellaneous	Divers

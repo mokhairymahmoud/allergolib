@@ -26,6 +26,7 @@ export type SourceDocument = {
   year: string;
   version: string;
   status: string;
+  url?: string;
   documentName: LocalizedString;
   excerpt: LocalizedString;
 };
@@ -49,6 +50,7 @@ export type DrugRecord = {
   id: string;
   name: LocalizedString;
   className: LocalizedString;
+  subclassName?: LocalizedString;
   aliases: string[];
   tests: Record<TestKind, TestRecord>;
 };
