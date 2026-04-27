@@ -1422,6 +1422,7 @@ function SearchScreen({
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const [activeClass, setActiveClass] = useState<string | null>(null);
   const [inputFocused, setInputFocused] = useState(false);
+  const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recentFadeAnim = useRef(new Animated.Value(0)).current;
   const recentHeightAnim = useRef(new Animated.Value(0)).current;
   const favoriteDrugSet = new Set(favoriteDrugIds);
@@ -1508,8 +1509,13 @@ function SearchScreen({
           <TextInput
             autoCapitalize="none"
             autoCorrect={false}
-            onFocus={() => setInputFocused(true)}
-            onBlur={() => setInputFocused(false)}
+            onFocus={() => {
+              if (blurTimerRef.current) clearTimeout(blurTimerRef.current);
+              setInputFocused(true);
+            }}
+            onBlur={() => {
+              blurTimerRef.current = setTimeout(() => setInputFocused(false), 150);
+            }}
             onChangeText={(v) => { onChangeQuery(v); setActiveClass(null); }}
             placeholder={copy(language, "search.placeholder")}
             placeholderTextColor={theme.textDisabled}
