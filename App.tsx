@@ -45,6 +45,26 @@ const HOME_TABS = ["search", "favorites", "info"] as const;
 
 type HomeTab = (typeof HOME_TABS)[number];
 
+function homeTabIcon(tab: HomeTab, selected: boolean) {
+  if (tab === "favorites") {
+    return selected ? "♥" : "♡";
+  }
+
+  if (tab === "info") {
+    return "ⓘ";
+  }
+
+  return "⌕";
+}
+
+function homeTabIconStyle(tab: HomeTab) {
+  if (tab === "search") {
+    return styles.topLevelTabIconSearch;
+  }
+
+  return null;
+}
+
 function hasDisplayableTestContent(test: TestRecord) {
   return Boolean(
     test.concentration ||
@@ -1022,50 +1042,63 @@ export default function App() {
           </View>
         </View>
 
-        <View style={styles.topLevelTabs}>
-          {HOME_TABS.map((tab) => {
-            const selected = tab === homeTab;
+        <View style={styles.mainContent}>
+          {homeTab === "search" ? (
+            <SearchScreen
+              favoriteDrugIds={favoriteDrugIds}
+              language={language}
+              onChangeQuery={setQuery}
+              onOpenDrug={openDrug}
+              query={query}
+              recentDrugs={recentDrugs}
+              searchResults={searchResults}
+            />
+          ) : null}
 
-            return (
+          {homeTab === "favorites" ? (
+            <FavoritesScreen
+              favoriteDrugIds={favoriteDrugIds}
+              favoriteDrugs={favoriteDrugs}
+              language={language}
+              onOpenDrug={openDrug}
+            />
+          ) : null}
+
+          {homeTab === "info" ? (
+            <InfoScreen activeDataset={activeDataset} language={language} />
+          ) : null}
+        </View>
+
+        <View style={styles.footer}>
+          <View style={styles.topLevelTabs}>
+            {HOME_TABS.map((tab) => {
+              const selected = tab === homeTab;
+
+              return (
               <Pressable
                 key={tab}
                 onPress={() => setHomeTab(tab)}
                 style={[styles.topLevelTab, selected && styles.topLevelTabSelected]}
               >
                 <Text
+                  style={[
+                    styles.topLevelTabIcon,
+                    homeTabIconStyle(tab),
+                    selected && styles.topLevelTabIconSelected,
+                  ]}
+                >
+                  {homeTabIcon(tab, selected)}
+                </Text>
+                <Text
                   style={[styles.topLevelTabText, selected && styles.topLevelTabTextSelected]}
                 >
                   {copy(language, homeTabLabelKey(tab))}
                 </Text>
-              </Pressable>
-            );
-          })}
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
-
-        {homeTab === "search" ? (
-          <SearchScreen
-            favoriteDrugIds={favoriteDrugIds}
-            language={language}
-            onChangeQuery={setQuery}
-            onOpenDrug={openDrug}
-            query={query}
-            recentDrugs={recentDrugs}
-            searchResults={searchResults}
-          />
-        ) : null}
-
-        {homeTab === "favorites" ? (
-          <FavoritesScreen
-            favoriteDrugIds={favoriteDrugIds}
-            favoriteDrugs={favoriteDrugs}
-            language={language}
-            onOpenDrug={openDrug}
-          />
-        ) : null}
-
-        {homeTab === "info" ? (
-          <InfoScreen activeDataset={activeDataset} language={language} />
-        ) : null}
       </View>
     </SafeAreaView>
   );
@@ -1140,32 +1173,55 @@ const styles = StyleSheet.create({
   languageButtonTextSelected: {
     color: "#FCFBF7",
   },
+  footer: {
+    paddingHorizontal: 14,
+    paddingTop: 8,
+    paddingBottom: 12,
+    backgroundColor: "#EEF3F8",
+    borderTopWidth: 1,
+    borderTopColor: "#D5DEE7",
+  },
   topLevelTabs: {
     flexDirection: "row",
-    paddingHorizontal: 20,
-    paddingBottom: 8,
-    gap: 10,
+    padding: 10,
+    backgroundColor: "#F8FBFD",
+    borderRadius: 26,
+    borderWidth: 1,
+    borderColor: "#D5DEE7",
+  },
+  mainContent: {
+    flex: 1,
   },
   topLevelTab: {
     flex: 1,
-    backgroundColor: "#F7FAFC",
     borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#D5DEE7",
-    paddingVertical: 13,
+    paddingVertical: 8,
     alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
   },
   topLevelTabSelected: {
-    backgroundColor: "#16353D",
-    borderColor: "#16353D",
+    backgroundColor: "#E7F3F0",
+  },
+  topLevelTabIcon: {
+    color: "#6E7B8A",
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 2,
+  },
+  topLevelTabIconSearch: {
+    fontSize: 23,
+  },
+  topLevelTabIconSelected: {
+    color: "#0E6B66",
   },
   topLevelTabText: {
-    color: "#536070",
-    fontSize: 13,
-    fontWeight: "800",
+    color: "#6E7B8A",
+    fontSize: 11,
+    fontWeight: "700",
   },
   topLevelTabTextSelected: {
-    color: "#F7F9FB",
+    color: "#0E6B66",
   },
   screenContent: {
     paddingHorizontal: 20,
