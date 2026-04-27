@@ -2022,11 +2022,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   calculatorRow: {
-    flexDirection: "row",
     gap: 12,
   },
   calculatorField: {
-    flex: 1,
     gap: 6,
   },
   calcInput: {
