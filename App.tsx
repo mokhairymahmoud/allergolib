@@ -1263,6 +1263,7 @@ const styles = StyleSheet.create({
   topLevelTabs: {
     flexDirection: "row",
     height: 56,
+    paddingBottom: 12,
   },
   topLevelTab: {
     flex: 1,
