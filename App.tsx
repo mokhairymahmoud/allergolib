@@ -334,13 +334,13 @@ function SearchScreen({
   // Derive sorted unique class names from the full drug list
   const drugClasses = [...new Set(allDrugs.map((d) => d.className[language]))].sort();
 
-  // When a category is active and there's no text query, filter by class
+  // Drugs shown in browse mode (no text query): filtered by class or all
   const browseDrugs: DrugRecord[] = activeClass
     ? allDrugs.filter((d) => d.className[language] === activeClass)
-    : [];
+    : allDrugs;
 
   function handleClassPress(cls: string) {
-    setActiveClass((current) => (current === cls ? null : cls));
+    setActiveClass(cls);
   }
 
   return (
@@ -393,22 +393,43 @@ function SearchScreen({
       {/* Category filter chips — always visible */}
       <View style={styles.categorySection}>
         <Text style={styles.sectionLabel}>{copy(language, "search.categories")}</Text>
-      <View style={styles.categoryChips}>
-        {drugClasses.map((cls) => {
-          const active = cls === activeClass;
-          return (
-            <Pressable
-              key={cls}
-              onPress={() => handleClassPress(cls)}
-              style={[styles.categoryChip, active && styles.categoryChipActive]}
-            >
-              <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>
-                {cls}
+        <View style={styles.categoryChips}>
+          {/* "All" chip */}
+          <Pressable
+            onPress={() => setActiveClass(null)}
+            style={[styles.categoryChip, activeClass === null && styles.categoryChipActive]}
+          >
+            <Text style={[styles.categoryChipText, activeClass === null && styles.categoryChipTextActive]}>
+              {copy(language, "search.categoryAll")}
+            </Text>
+            <View style={[styles.categoryChipCount, activeClass === null && styles.categoryChipCountActive]}>
+              <Text style={[styles.categoryChipCountText, activeClass === null && styles.categoryChipCountTextActive]}>
+                {allDrugs.length}
               </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+            </View>
+          </Pressable>
+
+          {drugClasses.map((cls) => {
+            const active = cls === activeClass;
+            const count = allDrugs.filter((d) => d.className[language] === cls).length;
+            return (
+              <Pressable
+                key={cls}
+                onPress={() => handleClassPress(cls)}
+                style={[styles.categoryChip, active && styles.categoryChipActive]}
+              >
+                <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>
+                  {cls}
+                </Text>
+                <View style={[styles.categoryChipCount, active && styles.categoryChipCountActive]}>
+                  <Text style={[styles.categoryChipCountText, active && styles.categoryChipCountTextActive]}>
+                    {count}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
 
       {hasQuery ? (
@@ -437,7 +458,7 @@ function SearchScreen({
             </View>
           )}
         </>
-      ) : activeClass ? (
+      ) : (
         <>
           <Text style={styles.resultCount}>
             {browseDrugs.length} {copy(language, "search.results")}
@@ -455,7 +476,7 @@ function SearchScreen({
             ))}
           </View>
         </>
-      ) : null}
+      )}
 
       <ComplianceBanner language={language} />
     </ScrollView>
@@ -1496,11 +1517,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   categoryChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     borderRadius: 999,
     borderWidth: 1.5,
     borderColor: "#CBD5E1",
     backgroundColor: "#FFFFFF",
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
   },
   categoryChipActive: {
@@ -1515,6 +1539,26 @@ const styles = StyleSheet.create({
   categoryChipTextActive: {
     color: "#1A73D4",
     fontWeight: "700",
+  },
+  categoryChipCount: {
+    backgroundColor: "#E4E9EF",
+    borderRadius: 999,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  categoryChipCountActive: {
+    backgroundColor: "#BFDBFE",
+  },
+  categoryChipCountText: {
+    color: "#64748B",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  categoryChipCountTextActive: {
+    color: "#1D4ED8",
   },
   recentSection: {
     gap: 10,
