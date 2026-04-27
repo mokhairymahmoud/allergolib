@@ -383,6 +383,7 @@ function emptyDrugForm_(defaultSourceId) {
     className: { en: "", fr: "" },
     aliases: [""],
     applicableTests: [],
+    sources: [],
     tests,
   };
 }
@@ -416,8 +417,7 @@ function normalizeSourceDrafts_(drafts, options) {
   const errors = [];
   const existingSourceIds = new Set(options.existingSourceIds || []);
   const seenDraftIds = {};
-
-  return (Array.isArray(drafts) ? drafts : [])
+  const normalized = (Array.isArray(drafts) ? drafts : [])
     .map((draft) => {
       const source = emptySourceForm_();
 
@@ -462,14 +462,13 @@ function normalizeSourceDrafts_(drafts, options) {
 
       return source;
     })
-    .filter((source) => source)
-    .map((source) => {
-      if (errors.length) {
-        return source;
-      }
+    .filter((source) => source);
 
-      return source;
-    });
+  if (errors.length) {
+    throw new Error(errors.join("\n"));
+  }
+
+  return normalized;
 }
 
 function normalizeDrugPayload_(payload, options) {

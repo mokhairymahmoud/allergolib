@@ -11,6 +11,7 @@
   --accent-strong: #084d7d;
   --success: #1d7d5e;
   --danger: #b54b4b;
+  --danger-soft: rgba(181, 75, 75, 0.08);
   --shadow: 0 18px 45px rgba(24, 49, 74, 0.08);
   --radius-lg: 24px;
   --radius-md: 16px;
@@ -36,6 +37,10 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+code {
+  font-family: "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
 }
 
 .appShell {
@@ -102,7 +107,8 @@ h3 {
 .lookupMeta,
 .emptyState,
 .statusBanner,
-.sectionIntro {
+.sectionIntro,
+.sourceReferenceMeta {
   color: var(--text-muted);
 }
 
@@ -138,14 +144,29 @@ h3 {
   outline: none;
 }
 
+.textField.hasError,
+.textArea.hasError,
+.selectField.hasError {
+  border-color: var(--danger);
+  background: rgba(181, 75, 75, 0.03);
+}
+
 .fieldBlock {
   min-width: 0;
+}
+
+.fieldError {
+  margin-top: 8px;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .lookupActions,
 .inlineActions,
 .cardActions,
-.actionBar {
+.actionBar,
+.actionRow {
   display: flex;
   gap: 12px;
   align-items: center;
@@ -190,6 +211,15 @@ h3 {
 .ghostButton:hover,
 .dangerButton:hover {
   transform: translateY(-1px);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.ghostButton:disabled,
+.dangerButton:disabled {
+  cursor: wait;
+  opacity: 0.7;
+  transform: none;
 }
 
 .lookupResults {
@@ -237,10 +267,16 @@ h3 {
   font-weight: 700;
 }
 
+.dangerPill {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
 .sectionCard,
 .testCard,
 .noteRow,
-.aliasRow {
+.aliasRow,
+.sourceCard {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -273,7 +309,10 @@ h3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.testGrid {
+.testGrid,
+.aliasList,
+.noteList,
+.sourceList {
   display: grid;
   gap: 16px;
 }
@@ -283,7 +322,8 @@ h3 {
   background: linear-gradient(180deg, rgba(246, 249, 252, 0.82), #ffffff 100%);
 }
 
-.testTitleRow {
+.testTitleRow,
+.sourceRowHead {
   display: flex;
   justify-content: space-between;
   gap: 16px;
@@ -291,14 +331,9 @@ h3 {
   margin-bottom: 16px;
 }
 
-.aliasList,
-.noteList {
-  display: grid;
-  gap: 12px;
-}
-
 .aliasRow,
-.noteRow {
+.noteRow,
+.sourceCard {
   padding: 14px;
 }
 
@@ -312,6 +347,50 @@ h3 {
 .noteRow {
   display: grid;
   gap: 12px;
+}
+
+.toggleList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.toggleItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-muted);
+  padding: 10px 14px;
+  font-weight: 700;
+}
+
+.toggleItem input {
+  accent-color: var(--accent);
+}
+
+.sourceReferenceMeta {
+  margin-bottom: 16px;
+}
+
+.validationSummary {
+  border-color: rgba(181, 75, 75, 0.35);
+  background: rgba(255, 249, 249, 0.95);
+}
+
+.validationSummary ul {
+  margin: 14px 0 0;
+  padding-left: 20px;
+}
+
+.dangerSection {
+  border-color: rgba(181, 75, 75, 0.32);
+  background: linear-gradient(180deg, rgba(255, 248, 248, 0.96), #ffffff 100%);
+}
+
+.dangerActions {
+  margin-top: 16px;
 }
 
 .statusBanner {
@@ -357,7 +436,6 @@ h3 {
     padding: 22px;
   }
 }
-</style>
 
 @media (max-width: 720px) {
   .grid2,
@@ -367,6 +445,7 @@ h3 {
 
   .actionBar,
   .testTitleRow,
+  .sourceRowHead,
   .sectionHead,
   .lookupItemTitle {
     flex-direction: column;
@@ -377,3 +456,4 @@ h3 {
     grid-template-columns: 1fr;
   }
 }
+</style>

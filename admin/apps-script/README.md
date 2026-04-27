@@ -1,14 +1,17 @@
-# Apps Script Admin Skeleton
+# Apps Script Admin Curation App
 
-This folder contains the Phase 4 Google Apps Script web app for admin curation.
+This folder contains the Google Apps Script web app for admin curation.
 
 ## What it supports
 
 - desktop-first web app shell
 - lookup by `id`, French name, English name, and class
-- unified create/edit form for `drugs`, `aliases`, `test_entries`, and `notes`
+- unified create/edit form for `drugs`, `aliases`, `test_entries`, `notes`, and inline source drafts
 - save directly into the normalized sheet tabs
 - reuse of existing preferred and alternate sources
+- strict bilingual and required-field validation before save
+- selective applicable-test writes instead of forcing all three test rows
+- typed-confirm permanent delete for a drug and its linked child rows
 
 This slice intentionally does **not** publish a dataset after save. It only updates the sheet.
 
@@ -22,11 +25,8 @@ The app writes against the same normalized tabs used by [`scripts/export-dataset
 - `notes`
 - `sources`
 
-Phase 4 keeps compatibility with the current exporter by persisting one `test_entries` row for each of:
-
-- `prick`
-- `idr`
-- `patch`
+The app keeps compatibility with the current exporter by writing only the applicable `test_entries`
+rows that the admin selected for the drug.
 
 ## Deployment
 
@@ -69,5 +69,6 @@ Internally this wrapper maps the local `open` alias to the upstream `clasp open-
 ## Notes
 
 - The script preserves the current export contract and current sheet headers.
-- `alternate_source_id` and `note_kind` are supported when those columns exist, but the current production sheet does not yet expose them.
-- Delete flow, inline source creation, and stricter phase-specific validation belong to Phase 5.
+- `alternate_source_id` and `note_kind` are supported when those columns exist.
+- Delete does not remove rows from `sources`; it only removes the drug row and linked `aliases`,
+  `test_entries`, and `notes` rows.
