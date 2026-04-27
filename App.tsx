@@ -369,12 +369,7 @@ function SearchScreen({
       </View>
 
       {/* Category filter chips — always visible */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryChips}
-        keyboardShouldPersistTaps="handled"
-      >
+      <View style={styles.categoryChips}>
         {drugClasses.map((cls) => {
           const active = cls === activeClass;
           return (
@@ -389,7 +384,7 @@ function SearchScreen({
             </Pressable>
           );
         })}
-      </ScrollView>
+      </View>
 
       {hasQuery ? (
         <>
@@ -1496,9 +1491,9 @@ const styles = StyleSheet.create({
 
   // ─── Recent searches ─────────────────────────────────────────────────
   categoryChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
-    paddingRight: 16,
-    alignItems: "center",
   },
   categoryChip: {
     borderRadius: 999,
