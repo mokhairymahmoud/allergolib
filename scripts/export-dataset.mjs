@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { GoogleAuth } from "google-auth-library";
@@ -25,7 +25,76 @@ const REQUIRED_METADATA_KEYS = [
   "minSupportedAppVersion",
   "approvedBy",
 ];
-const DILUTION_PATTERN = /^1:\d+$/;
+const DILUTION_PATTERN = /^\d+:\d+$/;
+
+function gcd(a, b) {
+  let x = Math.abs(a);
+  let y = Math.abs(b);
+
+  while (y !== 0) {
+    const remainder = x % y;
+    x = y;
+    y = remainder;
+  }
+
+  return x || 1;
+}
+
+function normalizeDilution(value) {
+  const [leftRaw, rightRaw] = value.split(":");
+  const left = Number.parseInt(leftRaw, 10);
+  const right = Number.parseInt(rightRaw, 10);
+
+  assert(Number.isInteger(left) && left > 0, `Invalid dilution numerator "${leftRaw}" in ${value}.`);
+  assert(Number.isInteger(right) && right > 0, `Invalid dilution denominator "${rightRaw}" in ${value}.`);
+
+  const divisor = gcd(left, right);
+  return `${left / divisor}:${right / divisor}`;
+}
+
+function loadEnvFile(filename) {
+  const filePath = join(rootDir, filename);
+
+  if (!existsSync(filePath)) {
+    return;
+  }
+
+  const content = readFileSync(filePath, "utf8");
+
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim();
+
+    if (!line || line.startsWith("#")) {
+      continue;
+    }
+
+    const separatorIndex = line.indexOf("=");
+
+    if (separatorIndex === -1) {
+      continue;
+    }
+
+    const key = line.slice(0, separatorIndex).trim();
+
+    if (!key || process.env[key] !== undefined) {
+      continue;
+    }
+
+    let value = line.slice(separatorIndex + 1).trim();
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[key] = value;
+  }
+}
+
+loadEnvFile(".env");
+loadEnvFile(".env.local");
 
 function fail(message) {
   throw new Error(message);
@@ -218,11 +287,14 @@ function buildDrugs(drugRows, aliasRows, testRows, noteRows, sources) {
       ? row.dilutions.split(";").map((value) => value.trim()).filter(Boolean)
       : [];
 
+    const normalizedDilutions = [];
+
     for (const dilution of dilutions) {
       assert(
         DILUTION_PATTERN.test(dilution),
         `Invalid dilution "${dilution}" for ${row.drug_id}/${row.test_kind}.`
       );
+      normalizedDilutions.push(normalizeDilution(dilution));
     }
 
     if (row.vehicle_en || row.vehicle_fr) {
@@ -232,7 +304,7 @@ function buildDrugs(drugRows, aliasRows, testRows, noteRows, sources) {
     drugsById[row.drug_id].tests[row.test_kind] = {
       concentration: row.concentration,
       maxConcentration: row.max_concentration,
-      dilutions,
+      dilutions: normalizedDilutions,
       vehicle: row.vehicle_en || row.vehicle_fr ? { en: row.vehicle_en, fr: row.vehicle_fr } : undefined,
       notes: [],
       sourceId: row.source_id,
