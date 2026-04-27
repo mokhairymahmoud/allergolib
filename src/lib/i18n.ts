@@ -121,7 +121,7 @@ export const dictionary = {
     "search.title": "Recherche de medicament",
     "search.placeholder": "Rechercher rocuronium, cefazoline, propofol...",
     "search.results": "medicaments correspondants",
-    "search.categories": "Categories",
+    "search.categories": "Catégories",
     "search.recentTitle": "Recherches recentes",
     "search.recentBody": "Rouvrez un medicament consulte recemment sans retaper la requete.",
     "search.emptyRecentTitle": "Pas encore de recherches recentes",
