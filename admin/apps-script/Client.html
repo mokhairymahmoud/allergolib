@@ -1,0 +1,1516 @@
+<script>
+(function () {
+  const state = {
+    defaultSourceId: "",
+    deleteConfirmation: "",
+    form: null,
+    lookups: [],
+    mode: "create",
+    noteKinds: ["info", "warning", "cross-reactivity"],
+    originalId: "",
+    query: "",
+    sources: [],
+    testKinds: ["prick", "idr", "patch"],
+    validation: emptyValidation(),
+  };
+
+  const elements = {};
+
+  document.addEventListener("DOMContentLoaded", init);
+
+  function init() {
+    elements.lookupQuery = document.getElementById("lookupQuery");
+    elements.lookupResults = document.getElementById("lookupResults");
+    elements.lookupMeta = document.getElementById("lookupMeta");
+    elements.formSections = document.getElementById("formSections");
+    elements.statusBanner = document.getElementById("statusBanner");
+    elements.modeTitle = document.getElementById("modeTitle");
+    elements.newDrugButton = document.getElementById("newDrugButton");
+    elements.drugForm = document.getElementById("drugForm");
+    elements.saveButton = document.getElementById("saveButton");
+
+    elements.lookupQuery.addEventListener("input", handleLookupInput);
+    elements.newDrugButton.addEventListener("click", handleNewDrug);
+    elements.lookupResults.addEventListener("click", handleLookupClick);
+    elements.formSections.addEventListener("click", handleFormClick);
+    elements.formSections.addEventListener("change", handleFormChange);
+    elements.drugForm.addEventListener("submit", handleSave);
+
+    setStatus("Loading spreadsheet data…", "info");
+
+    google.script.run
+      .withSuccessHandler(handleBootstrapSuccess)
+      .withFailureHandler(handleServerError)
+      .bootstrapAdminApp();
+  }
+
+  function handleBootstrapSuccess(payload) {
+    state.defaultSourceId = payload.defaultSourceId || "";
+    state.lookups = payload.lookups || [];
+    state.mode = "create";
+    state.noteKinds = payload.noteKinds || state.noteKinds;
+    state.originalId = "";
+    state.query = "";
+    state.sources = payload.sources || [];
+    state.testKinds = payload.testKinds || state.testKinds;
+    state.form = emptyDrug(state.defaultSourceId);
+    state.validation = emptyValidation();
+    state.deleteConfirmation = "";
+
+    setStatus(
+      "Connected to " + payload.spreadsheetName + ". Save updates the sheet only.",
+      "success"
+    );
+    renderLookupResults();
+    renderForm();
+  }
+
+  function handleServerError(error) {
+    const message =
+      error && error.message ? error.message : "The admin app could not complete the request.";
+    setStatus(message, "error");
+  }
+
+  function handleLookupInput(event) {
+    state.query = event.target.value;
+    renderLookupResults();
+  }
+
+  function handleNewDrug() {
+    syncFormFromDom();
+    state.mode = "create";
+    state.originalId = "";
+    state.form = emptyDrug(state.defaultSourceId);
+    state.validation = emptyValidation();
+    state.deleteConfirmation = "";
+    setStatus("Create mode ready.", "info");
+    renderLookupResults();
+    renderForm();
+    elements.lookupQuery.focus();
+  }
+
+  function handleLookupClick(event) {
+    const button = event.target.closest("[data-load-drug]");
+
+    if (!button) {
+      return;
+    }
+
+    syncFormFromDom();
+    const drugId = button.getAttribute("data-load-drug");
+    setStatus("Loading " + drugId + "…", "info");
+
+    google.script.run
+      .withSuccessHandler(function (payload) {
+        state.mode = payload.mode;
+        state.originalId = payload.originalId;
+        state.form = normalizeLoadedDrug(payload.drug);
+        state.validation = emptyValidation();
+        state.deleteConfirmation = "";
+        setStatus("Loaded " + payload.originalId + ".", "success");
+        renderLookupResults();
+        renderForm();
+      })
+      .withFailureHandler(handleServerError)
+      .loadDrugForAdmin(drugId);
+  }
+
+  function handleFormClick(event) {
+    const action = event.target.getAttribute("data-action");
+
+    if (!action) {
+      return;
+    }
+
+    syncFormFromDom();
+
+    if (action === "add-alias") {
+      state.form.aliases.push("");
+      renderForm();
+      return;
+    }
+
+    if (action === "remove-alias") {
+      const index = Number(event.target.getAttribute("data-index"));
+      state.form.aliases.splice(index, 1);
+
+      if (!state.form.aliases.length) {
+        state.form.aliases.push("");
+      }
+
+      renderForm();
+      return;
+    }
+
+    if (action === "add-note") {
+      const testKind = event.target.getAttribute("data-test-kind");
+      state.form.tests[testKind].notes.push({
+        kind: "info",
+        value: { en: "", fr: "" },
+      });
+      renderForm();
+      return;
+    }
+
+    if (action === "remove-note") {
+      const testKind = event.target.getAttribute("data-test-kind");
+      const index = Number(event.target.getAttribute("data-index"));
+      state.form.tests[testKind].notes.splice(index, 1);
+      renderForm();
+      return;
+    }
+
+    if (action === "add-source") {
+      state.form.sources.push(emptySource());
+      renderForm();
+      return;
+    }
+
+    if (action === "remove-source") {
+      const index = Number(event.target.getAttribute("data-index"));
+      state.form.sources.splice(index, 1);
+      renderForm();
+      return;
+    }
+
+    if (action === "delete-drug") {
+      handleDelete();
+    }
+  }
+
+  function handleFormChange(event) {
+    const target = event.target;
+
+    if (!target) {
+      return;
+    }
+
+    if (
+      target.matches("[data-test-enabled]") ||
+      target.matches("[data-source-field]") ||
+      target.matches("[data-source-select]")
+    ) {
+      syncFormFromDom();
+      renderForm();
+    }
+  }
+
+  function handleSave(event) {
+    event.preventDefault();
+    syncFormFromDom();
+    state.validation = validateForm(state.form);
+    renderForm();
+
+    if (hasValidationErrors(state.validation)) {
+      setStatus("Fix the validation issues before saving.", "error");
+      return;
+    }
+
+    elements.saveButton.disabled = true;
+    setStatus("Saving to Google Sheets…", "info");
+
+    google.script.run
+      .withSuccessHandler(function (payload) {
+        state.lookups = payload.lookups || state.lookups;
+        state.sources = payload.sources || state.sources;
+        state.mode = payload.record.mode;
+        state.originalId = payload.record.originalId;
+        state.form = normalizeLoadedDrug(payload.record.drug);
+        state.validation = emptyValidation();
+        state.deleteConfirmation = "";
+        elements.saveButton.disabled = false;
+        setStatus(payload.message, "success");
+        renderLookupResults();
+        renderForm();
+      })
+      .withFailureHandler(function (error) {
+        elements.saveButton.disabled = false;
+        handleServerError(error);
+      })
+      .saveDrugFromAdmin({
+        originalId: state.originalId,
+        drug: sanitizeDrugForSave(state.form),
+        sources: sanitizeSourcesForSave(state.form.sources),
+      });
+  }
+
+  function handleDelete() {
+    syncFormFromDom();
+
+    if (state.mode !== "edit" || !state.originalId) {
+      return;
+    }
+
+    if (state.deleteConfirmation !== state.originalId) {
+      state.validation.fields["delete-confirmation"] =
+        "Type the current drug id exactly before deleting.";
+      renderForm();
+      setStatus("Delete confirmation does not match the current drug id.", "error");
+      return;
+    }
+
+    state.validation = emptyValidation();
+    renderForm();
+    setStatus("Deleting from Google Sheets…", "info");
+
+    google.script.run
+      .withSuccessHandler(function (payload) {
+        state.lookups = payload.lookups || state.lookups;
+        state.sources = payload.sources || state.sources;
+        state.mode = payload.record.mode;
+        state.originalId = payload.record.originalId;
+        state.form = normalizeLoadedDrug(payload.record.drug);
+        state.validation = emptyValidation();
+        state.deleteConfirmation = "";
+        setStatus(payload.message, "success");
+        renderLookupResults();
+        renderForm();
+      })
+      .withFailureHandler(handleServerError)
+      .deleteDrugFromAdmin({
+        drugId: state.originalId,
+        confirmation: state.deleteConfirmation,
+      });
+  }
+
+  function syncFormFromDom() {
+    if (!state.form || !document.getElementById("drug-id")) {
+      return;
+    }
+
+    const nextForm = cloneDrug(state.form);
+    nextForm.id = readValue("drug-id");
+    nextForm.name.fr = readValue("name-fr");
+    nextForm.name.en = readValue("name-en");
+    nextForm.className.fr = readValue("class-fr");
+    nextForm.className.en = readValue("class-en");
+    nextForm.aliases = Array.from(document.querySelectorAll("[data-alias-row]")).map(function (row) {
+      const input = row.querySelector("input");
+      return input ? input.value : "";
+    });
+
+    nextForm.applicableTests = state.testKinds.filter(function (testKind) {
+      const input = document.getElementById("test-enabled-" + testKind);
+      return input ? input.checked : nextForm.applicableTests.indexOf(testKind) >= 0;
+    });
+
+    state.testKinds.forEach(function (testKind) {
+      nextForm.tests[testKind] = cloneTest(nextForm.tests[testKind] || emptyTest(state.defaultSourceId));
+
+      const concentration = document.getElementById("test-" + testKind + "-concentration");
+      const max = document.getElementById("test-" + testKind + "-max");
+      const dilutions = document.getElementById("test-" + testKind + "-dilutions");
+      const vehicleFr = document.getElementById("test-" + testKind + "-vehicle-fr");
+      const vehicleEn = document.getElementById("test-" + testKind + "-vehicle-en");
+      const source = document.getElementById("test-" + testKind + "-source");
+      const alternateSource = document.getElementById("test-" + testKind + "-alternate-source");
+
+      if (concentration) {
+        nextForm.tests[testKind].concentration = concentration.value;
+      }
+
+      if (max) {
+        nextForm.tests[testKind].maxConcentration = max.value;
+      }
+
+      if (dilutions) {
+        nextForm.tests[testKind].dilutions = dilutions.value;
+      }
+
+      if (vehicleFr) {
+        nextForm.tests[testKind].vehicle.fr = vehicleFr.value;
+      }
+
+      if (vehicleEn) {
+        nextForm.tests[testKind].vehicle.en = vehicleEn.value;
+      }
+
+      if (source) {
+        nextForm.tests[testKind].sourceId = source.value;
+      }
+
+      if (alternateSource) {
+        nextForm.tests[testKind].alternateSourceId = alternateSource.value;
+      }
+
+      nextForm.tests[testKind].notes = Array.from(
+        document.querySelectorAll('[data-note-kind-row="' + testKind + '"]')
+      ).map(function (row) {
+        return {
+          kind: readNestedField(row, '[data-note-field="kind"]'),
+          value: {
+            fr: readNestedField(row, '[data-note-field="fr"]'),
+            en: readNestedField(row, '[data-note-field="en"]'),
+          },
+        };
+      });
+    });
+
+    nextForm.sources = Array.from(document.querySelectorAll("[data-source-row]")).map(function (row) {
+      return {
+        id: readNestedField(row, '[data-source-field="id"]'),
+        label: readNestedField(row, '[data-source-field="label"]'),
+        organization: readNestedField(row, '[data-source-field="organization"]'),
+        year: readNestedField(row, '[data-source-field="year"]'),
+        version: readNestedField(row, '[data-source-field="version"]'),
+        status: readNestedField(row, '[data-source-field="status"]'),
+        documentName: {
+          fr: readNestedField(row, '[data-source-field="document-name-fr"]'),
+          en: readNestedField(row, '[data-source-field="document-name-en"]'),
+        },
+        excerpt: {
+          fr: readNestedField(row, '[data-source-field="excerpt-fr"]'),
+          en: readNestedField(row, '[data-source-field="excerpt-en"]'),
+        },
+      };
+    });
+
+    state.form = nextForm;
+    state.deleteConfirmation = readValue("delete-confirmation");
+  }
+
+  function renderLookupResults() {
+    const normalizedQuery = normalize(state.query);
+    const items = filteredLookups(normalizedQuery);
+
+    elements.lookupMeta.textContent =
+      items.length + " result" + (items.length === 1 ? "" : "s") + " in the local lookup index";
+
+    if (!items.length) {
+      elements.lookupResults.innerHTML =
+        '<div class="emptyState">No drug matched that id or localized name.</div>';
+      return;
+    }
+
+    elements.lookupResults.innerHTML = items
+      .map(function (item) {
+        const selected =
+          state.mode === "edit" && state.form && state.form.id === item.id ? " isSelected" : "";
+
+        return (
+          '<button type="button" class="lookupItem' +
+          selected +
+          '" data-load-drug="' +
+          escapeHtml(item.id) +
+          '">' +
+          '<div class="lookupItemTitle">' +
+          "<span>" +
+          escapeHtml(item.name.fr || item.name.en || item.id) +
+          "</span>" +
+          '<span class="pill">' +
+          escapeHtml(item.id) +
+          "</span>" +
+          "</div>" +
+          '<div class="lookupItemMeta">' +
+          escapeHtml(item.name.en || "") +
+          (item.className.fr ? " · " + escapeHtml(item.className.fr) : "") +
+          "</div>" +
+          "</button>"
+        );
+      })
+      .join("");
+  }
+
+  function renderForm() {
+    if (!state.form) {
+      return;
+    }
+
+    elements.modeTitle.textContent =
+      state.mode === "edit" ? "Edit " + state.originalId : "Create a new drug";
+
+    elements.formSections.innerHTML =
+      renderValidationSummary() +
+      renderCoreSection() +
+      renderAliasesSection() +
+      renderApplicableTestsSection() +
+      renderTestsSection() +
+      renderSourcesSection() +
+      renderDeleteSection();
+  }
+
+  function renderValidationSummary() {
+    const messages = validationMessages();
+
+    if (!messages.length) {
+      return "";
+    }
+
+    return (
+      '<section class="sectionCard validationSummary">' +
+      "<h3>Validation summary</h3>" +
+      "<ul>" +
+      messages
+        .map(function (message) {
+          return "<li>" + escapeHtml(message) + "</li>";
+        })
+        .join("") +
+      "</ul>" +
+      "</section>"
+    );
+  }
+
+  function renderCoreSection() {
+    return (
+      '<section class="sectionCard">' +
+      '<div class="sectionHead">' +
+      "<div>" +
+      "<h3>Core drug info</h3>" +
+      '<p class="sectionIntro">French remains the primary authoring path, but both languages are required before save.</p>' +
+      "</div>" +
+      '<span class="pill">' +
+      escapeHtml(state.mode === "edit" ? "Edit mode" : "Create mode") +
+      "</span>" +
+      "</div>" +
+      '<div class="grid2">' +
+      field("Drug id", "drug-id", state.form.id, "text") +
+      field("French name", "name-fr", state.form.name.fr, "text") +
+      field("English name", "name-en", state.form.name.en, "text") +
+      field("French class", "class-fr", state.form.className.fr, "text") +
+      field("English class", "class-en", state.form.className.en, "text") +
+      "</div>" +
+      "</section>"
+    );
+  }
+
+  function renderAliasesSection() {
+    return (
+      '<section class="sectionCard">' +
+      '<div class="sectionHead">' +
+      "<div>" +
+      "<h3>Aliases</h3>" +
+      '<p class="sectionIntro">At least one alias is required. One row per alias writes to <code>aliases</code>.</p>' +
+      "</div>" +
+      '<button type="button" class="ghostButton" data-action="add-alias">Add alias</button>' +
+      "</div>" +
+      '<div class="aliasList">' +
+      state.form.aliases
+        .map(function (alias, index) {
+          return (
+            '<div class="aliasRow" data-alias-row>' +
+            field("Alias " + (index + 1), "alias-" + index, alias, "text") +
+            '<button type="button" class="dangerButton" data-action="remove-alias" data-index="' +
+            index +
+            '">Remove</button>' +
+            "</div>"
+          );
+        })
+        .join("") +
+      "</div>" +
+      "</section>"
+    );
+  }
+
+  function renderApplicableTestsSection() {
+    const error = state.validation.fields["applicable-tests"];
+
+    return (
+      '<section class="sectionCard">' +
+      '<div class="sectionHead">' +
+      "<div>" +
+      "<h3>Applicable test types</h3>" +
+      '<p class="sectionIntro">Select only the test kinds that exist for this drug. At least one is required.</p>' +
+      "</div>" +
+      "</div>" +
+      '<div class="toggleList">' +
+      state.testKinds
+        .map(function (testKind) {
+          const checked = state.form.applicableTests.indexOf(testKind) >= 0 ? ' checked="checked"' : "";
+          return (
+            '<label class="toggleItem">' +
+            '<input id="test-enabled-' +
+            escapeHtml(testKind) +
+            '" data-test-enabled="' +
+            escapeHtml(testKind) +
+            '" type="checkbox"' +
+            checked +
+            " />" +
+            "<span>" +
+            escapeHtml(testKind.toUpperCase()) +
+            "</span>" +
+            "</label>"
+          );
+        })
+        .join("") +
+      "</div>" +
+      (error ? '<div class="fieldError">' + escapeHtml(error) + "</div>" : "") +
+      "</section>"
+    );
+  }
+
+  function renderTestsSection() {
+    if (!state.form.applicableTests.length) {
+      return (
+        '<section class="sectionCard">' +
+        '<div class="sectionHead">' +
+        "<div>" +
+        "<h3>Test sections</h3>" +
+        '<p class="sectionIntro">Each selected test must include meaningful clinical content and a valid preferred source.</p>' +
+        "</div>" +
+        "</div>" +
+        '<div class="emptyState">Select one or more applicable test types to enter concentrations, dilutions, vehicles, notes, and sources.</div>' +
+        "</section>"
+      );
+    }
+
+    return (
+      '<section class="sectionCard">' +
+      '<div class="sectionHead">' +
+      "<div>" +
+      "<h3>Test sections</h3>" +
+      '<p class="sectionIntro">Only selected test kinds will be written to <code>test_entries</code> and <code>notes</code>.</p>' +
+      "</div>" +
+      "</div>" +
+      '<div class="testGrid">' +
+      state.form.applicableTests
+        .map(function (testKind) {
+          return renderTestCard(testKind, state.form.tests[testKind]);
+        })
+        .join("") +
+      "</div>" +
+      "</section>"
+    );
+  }
+
+  function renderTestCard(testKind, test) {
+    return (
+      '<article class="testCard">' +
+      '<div class="testTitleRow">' +
+      "<div>" +
+      "<h3>" +
+      escapeHtml(testKind.toUpperCase()) +
+      "</h3>" +
+      '<div class="fieldHint">Add at least one clinical field or note for this selected test.</div>' +
+      "</div>" +
+      '<button type="button" class="ghostButton" data-action="add-note" data-test-kind="' +
+      escapeHtml(testKind) +
+      '">Add note</button>' +
+      "</div>" +
+      '<div class="grid3">' +
+      field(
+        "Preferred source",
+        "test-" + testKind + "-source",
+        sourceOptions(test.sourceId),
+        "select",
+        "",
+        'data-source-select="preferred"'
+      ) +
+      field(
+        "Alternate source",
+        "test-" + testKind + "-alternate-source",
+        sourceOptions(test.alternateSourceId, true),
+        "select",
+        "",
+        'data-source-select="alternate"'
+      ) +
+      field(
+        "Dilutions",
+        "test-" + testKind + "-dilutions",
+        test.dilutions,
+        "text",
+        "Use semicolons, for example 1:10; 1:100"
+      ) +
+      field("Concentration", "test-" + testKind + "-concentration", test.concentration, "text") +
+      field("Max concentration", "test-" + testKind + "-max", test.maxConcentration, "text") +
+      field("Vehicle (FR)", "test-" + testKind + "-vehicle-fr", test.vehicle.fr, "text") +
+      field("Vehicle (EN)", "test-" + testKind + "-vehicle-en", test.vehicle.en, "text") +
+      "</div>" +
+      renderNotes(testKind, test.notes) +
+      "</article>"
+    );
+  }
+
+  function renderNotes(testKind, notes) {
+    if (!notes.length) {
+      return '<div class="emptyState">No notes yet for ' + escapeHtml(testKind) + ".</div>";
+    }
+
+    return (
+      '<div class="noteList">' +
+      notes
+        .map(function (note, index) {
+          return (
+            '<div class="noteRow" data-note-kind-row="' +
+            escapeHtml(testKind) +
+            '">' +
+            '<div class="grid3">' +
+            field(
+              "Note type",
+              "test-" + testKind + "-note-kind-" + index,
+              noteKindOptions(note.kind),
+              "select",
+              "",
+              'data-note-field="kind"'
+            ) +
+            field(
+              "French note",
+              "test-" + testKind + "-note-fr-" + index,
+              note.value.fr,
+              "textarea",
+              "",
+              'data-note-field="fr"'
+            ) +
+            field(
+              "English note",
+              "test-" + testKind + "-note-en-" + index,
+              note.value.en,
+              "textarea",
+              "",
+              'data-note-field="en"'
+            ) +
+            "</div>" +
+            '<div class="cardActions">' +
+            '<button type="button" class="dangerButton" data-action="remove-note" data-test-kind="' +
+            escapeHtml(testKind) +
+            '" data-index="' +
+            index +
+            '">Remove note</button>' +
+            "</div>" +
+            "</div>"
+          );
+        })
+        .join("") +
+      "</div>"
+    );
+  }
+
+  function renderSourcesSection() {
+    return (
+      '<section class="sectionCard">' +
+      '<div class="sectionHead">' +
+      "<div>" +
+      "<h3>Sources</h3>" +
+      '<p class="sectionIntro">Reuse existing source ids from the test dropdowns or create a new source inline before save.</p>' +
+      "</div>" +
+      '<button type="button" class="ghostButton" data-action="add-source">Add new source</button>' +
+      "</div>" +
+      '<div class="sourceReferenceMeta">Existing reusable sources: ' +
+      escapeHtml(String(state.sources.length)) +
+      "</div>" +
+      (state.form.sources.length
+        ? '<div class="sourceList">' +
+          state.form.sources
+            .map(function (source, index) {
+              return renderSourceCard(source, index);
+            })
+            .join("") +
+          "</div>"
+        : '<div class="emptyState">No new inline sources yet. Existing sources remain available in the test source dropdowns.</div>') +
+      "</section>"
+    );
+  }
+
+  function renderSourceCard(source, index) {
+    return (
+      '<article class="sourceCard" data-source-row>' +
+      '<div class="sourceRowHead">' +
+      "<h3>New source " +
+      escapeHtml(String(index + 1)) +
+      "</h3>" +
+      '<button type="button" class="dangerButton" data-action="remove-source" data-index="' +
+      index +
+      '">Remove source</button>' +
+      "</div>" +
+      '<div class="grid3">' +
+      sourceField("Source id", "source-id-" + index, source.id, "text", index, "id") +
+      sourceField("Label", "source-label-" + index, source.label, "text", index, "label") +
+      sourceField(
+        "Organization",
+        "source-organization-" + index,
+        source.organization,
+        "text",
+        index,
+        "organization"
+      ) +
+      sourceField("Year", "source-year-" + index, source.year, "text", index, "year") +
+      sourceField("Version", "source-version-" + index, source.version, "text", index, "version") +
+      sourceField("Status", "source-status-" + index, source.status, "text", index, "status") +
+      sourceField(
+        "Document name (FR)",
+        "source-document-name-fr-" + index,
+        source.documentName.fr,
+        "text",
+        index,
+        "document-name-fr"
+      ) +
+      sourceField(
+        "Document name (EN)",
+        "source-document-name-en-" + index,
+        source.documentName.en,
+        "text",
+        index,
+        "document-name-en"
+      ) +
+      sourceField(
+        "Excerpt (FR)",
+        "source-excerpt-fr-" + index,
+        source.excerpt.fr,
+        "textarea",
+        index,
+        "excerpt-fr"
+      ) +
+      sourceField(
+        "Excerpt (EN)",
+        "source-excerpt-en-" + index,
+        source.excerpt.en,
+        "textarea",
+        index,
+        "excerpt-en"
+      ) +
+      "</div>" +
+      "</article>"
+    );
+  }
+
+  function renderDeleteSection() {
+    if (state.mode !== "edit" || !state.originalId) {
+      return "";
+    }
+
+    return (
+      '<section class="sectionCard dangerSection">' +
+      '<div class="sectionHead">' +
+      "<div>" +
+      "<h3>Delete</h3>" +
+      '<p class="sectionIntro">This permanently deletes the drug row and its linked aliases, test entries, and notes. Sources stay in place.</p>' +
+      "</div>" +
+      '<span class="pill dangerPill">Permanent</span>' +
+      "</div>" +
+      field(
+        'Type "' + state.originalId + '" to confirm',
+        "delete-confirmation",
+        state.deleteConfirmation,
+        "text"
+      ) +
+      '<div class="actionRow dangerActions">' +
+      '<button type="button" class="dangerButton" data-action="delete-drug">Delete drug</button>' +
+      "</div>" +
+      "</section>"
+    );
+  }
+
+  function field(label, id, value, kind, hint, extraAttributes) {
+    const attributes = extraAttributes ? " " + extraAttributes : "";
+    const hintMarkup = hint ? '<div class="fieldHint">' + escapeHtml(hint) + "</div>" : "";
+    const error = state.validation.fields[id];
+    const controlClass = error ? " hasError" : "";
+    const errorMarkup = error ? '<div class="fieldError">' + escapeHtml(error) + "</div>" : "";
+
+    if (kind === "select") {
+      return (
+        '<div class="fieldBlock">' +
+        '<label class="fieldLabel" for="' +
+        escapeHtml(id) +
+        '">' +
+        escapeHtml(label) +
+        "</label>" +
+        '<select id="' +
+        escapeHtml(id) +
+        '" class="selectField' +
+        controlClass +
+        '"' +
+        attributes +
+        ">" +
+        value +
+        "</select>" +
+        hintMarkup +
+        errorMarkup +
+        "</div>"
+      );
+    }
+
+    if (kind === "textarea") {
+      return (
+        '<div class="fieldBlock">' +
+        '<label class="fieldLabel" for="' +
+        escapeHtml(id) +
+        '">' +
+        escapeHtml(label) +
+        "</label>" +
+        '<textarea id="' +
+        escapeHtml(id) +
+        '" class="textArea' +
+        controlClass +
+        '"' +
+        attributes +
+        ">" +
+        escapeHtml(value || "") +
+        "</textarea>" +
+        hintMarkup +
+        errorMarkup +
+        "</div>"
+      );
+    }
+
+    return (
+      '<div class="fieldBlock">' +
+      '<label class="fieldLabel" for="' +
+      escapeHtml(id) +
+      '">' +
+      escapeHtml(label) +
+      "</label>" +
+      '<input id="' +
+      escapeHtml(id) +
+      '" class="textField' +
+      controlClass +
+      '" type="' +
+      escapeHtml(kind || "text") +
+      '" value="' +
+      escapeHtml(value || "") +
+      '"' +
+      attributes +
+      " />" +
+      hintMarkup +
+      errorMarkup +
+      "</div>"
+    );
+  }
+
+  function sourceField(label, id, value, kind, index, sourceFieldName) {
+    return field(
+      label,
+      id,
+      value,
+      kind,
+      "",
+      'data-source-field="' + escapeHtml(sourceFieldName) + '" data-source-index="' + index + '"'
+    );
+  }
+
+  function sourceOptions(selectedId, includeBlank) {
+    const options = [];
+    const sources = combinedSources();
+
+    if (includeBlank) {
+      options.push('<option value="">None</option>');
+    }
+
+    sources.forEach(function (source) {
+      const selected = source.id === selectedId ? ' selected="selected"' : "";
+      const label =
+        source.id +
+        " · " +
+        (source.label || source.documentName.fr || source.documentName.en || source.organization);
+
+      options.push(
+        '<option value="' +
+          escapeHtml(source.id) +
+          '"' +
+          selected +
+          ">" +
+          escapeHtml(label) +
+          "</option>"
+      );
+    });
+
+    return options.join("");
+  }
+
+  function noteKindOptions(selectedValue) {
+    return state.noteKinds
+      .map(function (kind) {
+        const selected = kind === selectedValue ? ' selected="selected"' : "";
+        return (
+          '<option value="' +
+          escapeHtml(kind) +
+          '"' +
+          selected +
+          ">" +
+          escapeHtml(kind) +
+          "</option>"
+        );
+      })
+      .join("");
+  }
+
+  function filteredLookups(normalizedQuery) {
+    const items = state.lookups.slice();
+
+    if (!normalizedQuery) {
+      return items.slice(0, 30);
+    }
+
+    return items
+      .map(function (item) {
+        return {
+          item: item,
+          score: scoreLookup(item, normalizedQuery),
+        };
+      })
+      .filter(function (entry) {
+        return entry.score > 0;
+      })
+      .sort(function (left, right) {
+        if (right.score !== left.score) {
+          return right.score - left.score;
+        }
+
+        return (left.item.name.fr || left.item.id).localeCompare(right.item.name.fr || right.item.id);
+      })
+      .slice(0, 30)
+      .map(function (entry) {
+        return entry.item;
+      });
+  }
+
+  function scoreLookup(item, normalizedQuery) {
+    const names = [
+      { value: normalize(item.id), score: 180 },
+      { value: normalize(item.name.fr), score: 170 },
+      { value: normalize(item.name.en), score: 160 },
+      { value: normalize(item.className.fr), score: 90 },
+      { value: normalize(item.className.en), score: 80 },
+    ];
+
+    let best = 0;
+
+    names.forEach(function (candidate) {
+      if (!candidate.value) {
+        return;
+      }
+
+      if (candidate.value === normalizedQuery) {
+        best = Math.max(best, 300 + candidate.score);
+        return;
+      }
+
+      if (candidate.value.indexOf(normalizedQuery) === 0) {
+        best = Math.max(best, 200 + candidate.score);
+        return;
+      }
+
+      if (candidate.value.indexOf(normalizedQuery) >= 0) {
+        best = Math.max(best, 100 + candidate.score);
+      }
+    });
+
+    return best;
+  }
+
+  function validateForm(form) {
+    const validation = emptyValidation();
+    const existingDrugIds = new Set(
+      state.lookups.map(function (lookup) {
+        return lookup.id;
+      })
+    );
+    const applicableTests = form.applicableTests.slice();
+    const draftSourceResult = validateDraftSources(form.sources);
+    const availableSourceIds = new Set(
+      combinedSources()
+        .map(function (source) {
+          return source.id;
+        })
+        .filter(Boolean)
+    );
+    const usedSourceIds = {};
+
+    Object.assign(validation.fields, draftSourceResult.fields);
+
+    if (!form.id.trim()) {
+      validation.fields["drug-id"] = "Drug id is required.";
+    } else if (form.id !== state.originalId && existingDrugIds.has(form.id)) {
+      validation.fields["drug-id"] = "Drug id already exists.";
+    }
+
+    if (!form.name.fr.trim()) {
+      validation.fields["name-fr"] = "French name is required.";
+    }
+
+    if (!form.name.en.trim()) {
+      validation.fields["name-en"] = "English name is required.";
+    }
+
+    if (!form.className.fr.trim()) {
+      validation.fields["class-fr"] = "French class is required.";
+    }
+
+    if (!form.className.en.trim()) {
+      validation.fields["class-en"] = "English class is required.";
+    }
+
+    const aliasValues = form.aliases
+      .map(function (alias) {
+        return alias.trim();
+      })
+      .filter(Boolean);
+
+    if (!aliasValues.length) {
+      validation.fields["alias-0"] = "At least one alias is required.";
+    }
+
+    if (!applicableTests.length) {
+      validation.fields["applicable-tests"] = "Select at least one applicable test type.";
+    }
+
+    applicableTests.forEach(function (testKind) {
+      const test = form.tests[testKind];
+      const contentError =
+        "Add at least one clinical field, dilution, bilingual vehicle, or note for " +
+        testKind.toUpperCase() +
+        ".";
+
+      if (!hasMeaningfulTestContent(test)) {
+        validation.fields["test-" + testKind + "-concentration"] = contentError;
+      }
+
+      if (!test.sourceId) {
+        validation.fields["test-" + testKind + "-source"] = "Preferred source is required.";
+      } else if (!availableSourceIds.has(test.sourceId)) {
+        validation.fields["test-" + testKind + "-source"] =
+          "Preferred source id is not available in the source catalog.";
+      } else {
+        usedSourceIds[test.sourceId] = true;
+      }
+
+      if (test.alternateSourceId) {
+        if (!availableSourceIds.has(test.alternateSourceId)) {
+          validation.fields["test-" + testKind + "-alternate-source"] =
+            "Alternate source id is not available in the source catalog.";
+        } else {
+          usedSourceIds[test.alternateSourceId] = true;
+        }
+
+        if (test.alternateSourceId === test.sourceId) {
+          validation.fields["test-" + testKind + "-alternate-source"] =
+            "Alternate source must differ from the preferred source.";
+        }
+      }
+
+      if (Boolean(test.vehicle.fr.trim()) !== Boolean(test.vehicle.en.trim())) {
+        validation.fields["test-" + testKind + "-vehicle-fr"] =
+          "Vehicle must be provided in French and English.";
+        validation.fields["test-" + testKind + "-vehicle-en"] =
+          "Vehicle must be provided in French and English.";
+      }
+
+      if (test.dilutions.trim()) {
+        const dilutions = test.dilutions
+          .split(";")
+          .map(function (item) {
+            return item.trim();
+          })
+          .filter(Boolean);
+
+        const invalidDilution = dilutions.find(function (dilution) {
+          return !/^[1-9]\d*:[1-9]\d*$/.test(dilution);
+        });
+
+        if (invalidDilution) {
+          validation.fields["test-" + testKind + "-dilutions"] =
+            'Dilutions must use positive ratios like "1:10".';
+        }
+      }
+
+      test.notes.forEach(function (note, index) {
+        if (state.noteKinds.indexOf(note.kind) === -1) {
+          validation.fields["test-" + testKind + "-note-kind-" + index] = "Invalid note type.";
+        }
+
+        const hasFrench = note.value.fr.trim().length > 0;
+        const hasEnglish = note.value.en.trim().length > 0;
+
+        if (hasFrench !== hasEnglish) {
+          validation.fields["test-" + testKind + "-note-fr-" + index] =
+            "Notes must be bilingual.";
+          validation.fields["test-" + testKind + "-note-en-" + index] =
+            "Notes must be bilingual.";
+        }
+      });
+    });
+
+    if (!Object.keys(usedSourceIds).length) {
+      validation.form.push("At least one valid source must be attached to a selected test.");
+    }
+
+    return validation;
+  }
+
+  function validateDraftSources(sources) {
+    const result = { fields: {}, valid: [] };
+    const existingSourceIds = new Set(
+      state.sources.map(function (source) {
+        return source.id;
+      })
+    );
+    const seenDraftIds = {};
+
+    sources.forEach(function (source, index) {
+      if (isBlankSource(source)) {
+        return;
+      }
+
+      const prefix = "source-";
+
+      if (!source.id.trim()) {
+        result.fields[prefix + "id-" + index] = "Source id is required.";
+      } else if (existingSourceIds.has(source.id.trim())) {
+        result.fields[prefix + "id-" + index] = "Source id already exists.";
+      } else if (seenDraftIds[source.id.trim()]) {
+        result.fields[prefix + "id-" + index] = "Source id is duplicated in this draft.";
+      } else {
+        seenDraftIds[source.id.trim()] = true;
+      }
+
+      if (!source.label.trim()) {
+        result.fields[prefix + "label-" + index] = "Label is required.";
+      }
+
+      if (!source.organization.trim()) {
+        result.fields[prefix + "organization-" + index] = "Organization is required.";
+      }
+
+      if (!source.year.trim()) {
+        result.fields[prefix + "year-" + index] = "Year is required.";
+      }
+
+      if (!source.version.trim()) {
+        result.fields[prefix + "version-" + index] = "Version is required.";
+      }
+
+      if (!source.status.trim()) {
+        result.fields[prefix + "status-" + index] = "Status is required.";
+      }
+
+      if (!source.documentName.fr.trim()) {
+        result.fields[prefix + "document-name-fr-" + index] =
+          "French document name is required.";
+      }
+
+      if (!source.documentName.en.trim()) {
+        result.fields[prefix + "document-name-en-" + index] =
+          "English document name is required.";
+      }
+
+      if (!source.excerpt.fr.trim()) {
+        result.fields[prefix + "excerpt-fr-" + index] = "French excerpt is required.";
+      }
+
+      if (!source.excerpt.en.trim()) {
+        result.fields[prefix + "excerpt-en-" + index] = "English excerpt is required.";
+      }
+
+      result.valid.push(source);
+    });
+
+    return result;
+  }
+
+  function hasValidationErrors(validation) {
+    return Boolean(validation.form.length || Object.keys(validation.fields).length);
+  }
+
+  function validationMessages() {
+    const messages = state.validation.form.slice();
+
+    Object.keys(state.validation.fields).forEach(function (fieldId) {
+      const message = state.validation.fields[fieldId];
+      if (messages.indexOf(message) === -1) {
+        messages.push(message);
+      }
+    });
+
+    return messages;
+  }
+
+  function combinedSources() {
+    const existing = state.sources.slice();
+    const draftSources = state.form
+      ? state.form.sources.filter(function (source) {
+          return source.id && !isBlankSource(source);
+        })
+      : [];
+    const seen = {};
+
+    return existing
+      .concat(draftSources)
+      .filter(function (source) {
+        if (!source.id || seen[source.id]) {
+          return false;
+        }
+
+        seen[source.id] = true;
+        return true;
+      });
+  }
+
+  function sanitizeDrugForSave(form) {
+    return {
+      id: form.id.trim(),
+      name: {
+        fr: form.name.fr.trim(),
+        en: form.name.en.trim(),
+      },
+      className: {
+        fr: form.className.fr.trim(),
+        en: form.className.en.trim(),
+      },
+      aliases: form.aliases.slice(),
+      applicableTests: form.applicableTests.slice(),
+      tests: Object.fromEntries(
+        state.testKinds.map(function (testKind) {
+          return [
+            testKind,
+            {
+              concentration: form.tests[testKind].concentration,
+              maxConcentration: form.tests[testKind].maxConcentration,
+              dilutions: form.tests[testKind].dilutions,
+              vehicle: {
+                fr: form.tests[testKind].vehicle.fr,
+                en: form.tests[testKind].vehicle.en,
+              },
+              sourceId: form.tests[testKind].sourceId,
+              alternateSourceId: form.tests[testKind].alternateSourceId,
+              notes: form.tests[testKind].notes.map(function (note) {
+                return {
+                  kind: note.kind,
+                  value: {
+                    fr: note.value.fr,
+                    en: note.value.en,
+                  },
+                };
+              }),
+            },
+          ];
+        })
+      ),
+    };
+  }
+
+  function sanitizeSourcesForSave(sources) {
+    return sources.filter(function (source) {
+      return !isBlankSource(source);
+    });
+  }
+
+  function normalizeLoadedDrug(drug) {
+    const normalized = emptyDrug(state.defaultSourceId);
+
+    if (!drug) {
+      return normalized;
+    }
+
+    normalized.id = drug.id || "";
+    normalized.name.fr = (drug.name && drug.name.fr) || "";
+    normalized.name.en = (drug.name && drug.name.en) || "";
+    normalized.className.fr = (drug.className && drug.className.fr) || "";
+    normalized.className.en = (drug.className && drug.className.en) || "";
+    normalized.aliases = Array.isArray(drug.aliases) && drug.aliases.length ? drug.aliases.slice() : [""];
+    normalized.applicableTests =
+      Array.isArray(drug.applicableTests) && drug.applicableTests.length
+        ? drug.applicableTests.filter(function (testKind) {
+            return state.testKinds.indexOf(testKind) >= 0;
+          })
+        : [];
+    normalized.sources = [];
+
+    state.testKinds.forEach(function (testKind) {
+      const loadedTest = drug.tests && drug.tests[testKind] ? drug.tests[testKind] : emptyTest(state.defaultSourceId);
+      normalized.tests[testKind] = {
+        concentration: loadedTest.concentration || "",
+        maxConcentration: loadedTest.maxConcentration || "",
+        dilutions: loadedTest.dilutions || "",
+        vehicle: {
+          fr: (loadedTest.vehicle && loadedTest.vehicle.fr) || "",
+          en: (loadedTest.vehicle && loadedTest.vehicle.en) || "",
+        },
+        sourceId: loadedTest.sourceId || state.defaultSourceId || "",
+        alternateSourceId: loadedTest.alternateSourceId || "",
+        notes: Array.isArray(loadedTest.notes)
+          ? loadedTest.notes.map(function (note) {
+              return {
+                kind: note.kind || "info",
+                value: {
+                  fr: (note.value && note.value.fr) || "",
+                  en: (note.value && note.value.en) || "",
+                },
+              };
+            })
+          : [],
+      };
+    });
+
+    return normalized;
+  }
+
+  function emptyDrug(defaultSourceId) {
+    const tests = {};
+
+    state.testKinds.forEach(function (testKind) {
+      tests[testKind] = emptyTest(defaultSourceId);
+    });
+
+    return {
+      id: "",
+      name: { en: "", fr: "" },
+      className: { en: "", fr: "" },
+      aliases: [""],
+      applicableTests: [],
+      sources: [],
+      tests: tests,
+    };
+  }
+
+  function emptyTest(defaultSourceId) {
+    return {
+      concentration: "",
+      maxConcentration: "",
+      dilutions: "",
+      vehicle: { en: "", fr: "" },
+      sourceId: defaultSourceId || "",
+      alternateSourceId: "",
+      notes: [],
+    };
+  }
+
+  function emptySource() {
+    return {
+      id: "",
+      label: "",
+      organization: "",
+      year: "",
+      version: "",
+      status: "",
+      documentName: { en: "", fr: "" },
+      excerpt: { en: "", fr: "" },
+    };
+  }
+
+  function emptyValidation() {
+    return {
+      fields: {},
+      form: [],
+    };
+  }
+
+  function cloneDrug(drug) {
+    return {
+      id: drug.id,
+      name: { fr: drug.name.fr, en: drug.name.en },
+      className: { fr: drug.className.fr, en: drug.className.en },
+      aliases: drug.aliases.slice(),
+      applicableTests: drug.applicableTests.slice(),
+      sources: drug.sources.map(cloneSource),
+      tests: Object.fromEntries(
+        state.testKinds.map(function (testKind) {
+          return [testKind, cloneTest(drug.tests[testKind])];
+        })
+      ),
+    };
+  }
+
+  function cloneTest(test) {
+    return {
+      concentration: test.concentration,
+      maxConcentration: test.maxConcentration,
+      dilutions: test.dilutions,
+      vehicle: {
+        fr: test.vehicle.fr,
+        en: test.vehicle.en,
+      },
+      sourceId: test.sourceId,
+      alternateSourceId: test.alternateSourceId,
+      notes: test.notes.map(function (note) {
+        return {
+          kind: note.kind,
+          value: {
+            fr: note.value.fr,
+            en: note.value.en,
+          },
+        };
+      }),
+    };
+  }
+
+  function cloneSource(source) {
+    return {
+      id: source.id,
+      label: source.label,
+      organization: source.organization,
+      year: source.year,
+      version: source.version,
+      status: source.status,
+      documentName: {
+        fr: source.documentName.fr,
+        en: source.documentName.en,
+      },
+      excerpt: {
+        fr: source.excerpt.fr,
+        en: source.excerpt.en,
+      },
+    };
+  }
+
+  function hasMeaningfulTestContent(test) {
+    return Boolean(
+      test.concentration.trim() ||
+        test.maxConcentration.trim() ||
+        test.dilutions.trim() ||
+        (test.vehicle.fr.trim() && test.vehicle.en.trim()) ||
+        test.notes.some(function (note) {
+          return note.value.fr.trim() && note.value.en.trim();
+        })
+    );
+  }
+
+  function isBlankSource(source) {
+    return !(
+      source.id.trim() ||
+      source.label.trim() ||
+      source.organization.trim() ||
+      source.year.trim() ||
+      source.version.trim() ||
+      source.status.trim() ||
+      source.documentName.fr.trim() ||
+      source.documentName.en.trim() ||
+      source.excerpt.fr.trim() ||
+      source.excerpt.en.trim()
+    );
+  }
+
+  function readValue(id) {
+    const input = document.getElementById(id);
+    return input ? input.value : "";
+  }
+
+  function readNestedField(parent, selector) {
+    const input = parent.querySelector(selector);
+    return input ? input.value : "";
+  }
+
+  function setStatus(message, kind) {
+    elements.statusBanner.textContent = message || "";
+    elements.statusBanner.className = "statusBanner";
+
+    if (!message) {
+      elements.statusBanner.classList.add("isHidden");
+      return;
+    }
+
+    if (kind === "success") {
+      elements.statusBanner.classList.add("isSuccess");
+    } else if (kind === "error") {
+      elements.statusBanner.classList.add("isError");
+    }
+  }
+
+  function normalize(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+})();
+</script>

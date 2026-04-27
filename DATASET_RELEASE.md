@@ -102,10 +102,11 @@ Before promoting a dataset to `latest/`, complete the manual beta checklist in [
 
 Minimum gate for a limited clinician beta:
 
-1. `npm run build:dataset` succeeds against the source sheet.
-2. `npm run typecheck` succeeds on the app bundle that will ship to testers.
-3. The generated dataset contains preferred-source provenance for every seeded test that surfaces recommendation content.
-4. Offline launch, background rollover, and failed-update fallback have been exercised on real iOS and Android beta devices.
+1. `npm run verify:admin-fixture` succeeds so the exporter contract still accepts representative admin-written rows.
+2. `npm run build:dataset` succeeds against the source sheet.
+3. `npm run typecheck` succeeds on the app bundle that will ship to testers.
+4. The generated dataset contains preferred-source provenance for every seeded test that surfaces recommendation content.
+5. Offline launch, background rollover, and failed-update fallback have been exercised on real iOS and Android beta devices.
 
 ## Operational Notes
 

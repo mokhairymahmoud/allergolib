@@ -12,6 +12,7 @@
     "admin:clasp:push": "node ./scripts/run-admin-clasp.mjs push",
     "admin:clasp:status": "node ./scripts/run-admin-clasp.mjs status",
     "build:dataset": "node ./scripts/export-dataset.mjs",
+    "verify:admin-fixture": "node ./scripts/verify-admin-fixture.mjs",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",

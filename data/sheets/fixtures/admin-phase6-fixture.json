@@ -1,0 +1,90 @@
+{
+  "release_metadata": [
+    ["key", "value"],
+    ["version", "fixture-phase6"],
+    ["releasedAt", "2026-04-27T09:30:00Z"],
+    ["minSupportedAppVersion", "0.1.0"],
+    ["approvedBy", "Phase 6 Fixture"]
+  ],
+  "sources": [
+    [
+      "id",
+      "label",
+      "organization",
+      "year",
+      "version",
+      "status",
+      "document_name_en",
+      "document_name_fr",
+      "excerpt_en",
+      "excerpt_fr"
+    ],
+    [
+      "phase6-local-source",
+      "Phase 6 local protocol",
+      "Allergolib",
+      "2026",
+      "1",
+      "active",
+      "Local cefazolin protocol",
+      "Protocole local cefazoline",
+      "Validated local IDR concentration for cefazolin.",
+      "Concentration IDR locale validee pour la cefazoline."
+    ],
+    [
+      "phase6-reference-source",
+      "Reference society note",
+      "SFAR/SFA",
+      "2025",
+      "4",
+      "active",
+      "Reference beta-lactam guidance",
+      "Reference beta-lactamines",
+      "Used as alternate context for beta-lactam interpretation.",
+      "Utilise comme contexte alternatif pour l'interpretation beta-lactamine."
+    ]
+  ],
+  "drugs": [
+    ["id", "name_en", "name_fr", "class_name_en", "class_name_fr"],
+    ["cefazoline", "Cefazolin", "Cefazoline", "Beta-lactam", "Beta-lactamine"]
+  ],
+  "aliases": [
+    ["drug_id", "alias"],
+    ["cefazoline", "cefazoline"],
+    ["cefazoline", "kefzol"]
+  ],
+  "test_entries": [
+    [
+      "drug_id",
+      "test_kind",
+      "concentration",
+      "max_concentration",
+      "dilutions",
+      "vehicle_en",
+      "vehicle_fr",
+      "source_id",
+      "alternate_source_id"
+    ],
+    [
+      "cefazoline",
+      "idr",
+      "2 mg/ml",
+      "2 mg/ml",
+      "1:100; 1:10",
+      "saline",
+      "serum physiologique",
+      "phase6-local-source",
+      "phase6-reference-source"
+    ]
+  ],
+  "notes": [
+    ["drug_id", "test_kind", "note_kind", "note_en", "note_fr"],
+    [
+      "cefazoline",
+      "idr",
+      "warning",
+      "Stop immediately if systemic symptoms occur.",
+      "Arreter immediatement si des symptomes systemiques apparaissent."
+    ]
+  ]
+}

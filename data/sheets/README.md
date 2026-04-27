@@ -28,7 +28,13 @@ The build script reads these tabs through the Google Sheets API and generates:
 - `src/data/generated/dataset.json`
 - `src/data/generated/manifest.json`
 
-For `test_entries`, `source_id` remains required and is exported as the preferred authority for that test. `alternate_source_id` is optional and, when present, must reference a row in `sources`.
+Phase 6 verification command:
+
+- `npm run verify:admin-fixture`
+  This validates a representative admin-written fixture, including selective applicable tests and
+  linked source references, against the same exporter contract used for live sheet releases.
+
+For `test_entries`, `source_id` remains required on every written test row and is exported as the preferred authority for that test. `alternate_source_id` is optional and, when present, must reference a row in `sources`. Non-applicable tests may be omitted entirely.
 
 Phase 5 beta hardening rules:
 
