@@ -23,6 +23,8 @@ The runtime app fetches `manifest.json`, then resolves `dataset.json` relative t
 
 The GitHub Actions workflow is [publish-dataset.yml](./.github/workflows/publish-dataset.yml).
 
+It is configured to run automatically every day at `05:17 UTC`, and it can also be started manually from the Actions tab.
+
 It does the following:
 
 1. Checks out the repo.
@@ -91,6 +93,8 @@ Inputs:
   Keep this enabled for normal releases so beta users move to the new dataset automatically.
 - `dry_run`
   Enable this to validate export/build without uploading anything.
+
+For scheduled runs, GitHub Actions uses UTC cron scheduling and executes the workflow from the default branch.
 
 ## Operational Notes
 
