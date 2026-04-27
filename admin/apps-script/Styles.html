@@ -181,9 +181,11 @@ h3 {
 .ghostButton,
 .dangerButton {
   border-radius: 999px;
-  padding: 11px 18px;
+  padding: 11px 22px;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
 }
 
@@ -417,12 +419,19 @@ h3 {
 .actionBar {
   justify-content: space-between;
   padding-top: 8px;
+  gap: 24px;
+}
+
+.actionNote {
+  flex: 1;
+  min-width: 0;
 }
 
 .buttonGroup {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .emptyState {
