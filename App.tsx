@@ -1428,10 +1428,11 @@ function SearchScreen({
   // Derive sorted unique class names from the full drug list
   const drugClasses = [...new Set(allDrugs.map((d) => d.className[language]))].sort();
 
-  // Drugs shown in browse mode (no text query): filtered by class or all
-  const browseDrugs: DrugRecord[] = activeClass
+  // Drugs shown in browse mode (no text query): filtered by class or all, sorted A→Z
+  const browseDrugs: DrugRecord[] = (activeClass
     ? allDrugs.filter((d) => d.className[language] === activeClass)
-    : allDrugs;
+    : allDrugs
+  ).slice().sort((a, b) => a.name[language].localeCompare(b.name[language], language));
 
   function handleClassPress(cls: string) {
     setActiveClass(cls);
@@ -2237,7 +2238,8 @@ export default function App() {
   const searchResults = hasQuery ? searchDrugs(activeDataset.dataset.drugs, query, language) : [];
   const favoriteDrugs = favoriteDrugIds
     .map((drugId) => activeDataset.dataset.drugs.find((drug) => drug.id === drugId) ?? null)
-    .filter((drug): drug is DrugRecord => Boolean(drug));
+    .filter((drug): drug is DrugRecord => Boolean(drug))
+    .sort((a, b) => a.name[language].localeCompare(b.name[language], language));
   const recentDrugs = recentDrugIds
     .map((drugId) => activeDataset.dataset.drugs.find((drug) => drug.id === drugId) ?? null)
     .filter((drug): drug is DrugRecord => Boolean(drug));
