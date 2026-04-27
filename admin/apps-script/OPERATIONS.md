@@ -19,7 +19,9 @@ Script admin app.
 9. Review the validation summary and field errors.
 10. Save to sheet.
 
-The admin app writes only to the normalized tabs. It does not publish a mobile dataset release.
+The admin app always writes to the normalized tabs first. If GitHub dispatch-on-save is enabled in
+Apps Script script properties, save may then trigger the repo workflow as a dry run or publish
+action.
 
 ## Delete Flow
 
@@ -58,6 +60,12 @@ If the admin app cannot access the spreadsheet:
 - confirm the current user still has spreadsheet access
 - reload the web app after fixing project configuration
 
+If the sheet save succeeds but the GitHub workflow trigger fails:
+
+- treat the row changes as saved unless the banner says the sheet write itself failed
+- read the returned dispatch error for missing properties, bad token scope, or wrong repo/ref values
+- fix the Apps Script script properties and save again only if you want a new workflow run
+
 If the export pipeline rejects sheet data after an admin save:
 
 1. Run `npm run verify:admin-fixture` to confirm the local contract checker is healthy.
@@ -73,3 +81,4 @@ After curation is complete:
 2. Run `npm run build:dataset`.
 3. Run `npm run typecheck`.
 4. Review [DATASET_RELEASE.md](/Users/mohamedkhairy/dev/allergolib/DATASET_RELEASE.md:1) and [BETA_READINESS.md](/Users/mohamedkhairy/dev/allergolib/BETA_READINESS.md:1) before promoting a dataset release.
+5. If save already triggers a GitHub dry run, review that run before doing a manual publish.
