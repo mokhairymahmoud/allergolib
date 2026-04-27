@@ -1,0 +1,140 @@
+name: Publish Dataset
+
+on:
+  workflow_dispatch:
+    inputs:
+      promote_latest:
+        description: "Also publish the release to the stable latest/ path"
+        required: false
+        default: true
+        type: boolean
+      dry_run:
+        description: "Build and validate the dataset without uploading"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: dataset-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_ID }}
+      GOOGLE_SHEETS_API_KEY: ${{ secrets.GOOGLE_SHEETS_API_KEY }}
+      GOOGLE_SHEETS_CLIENT_EMAIL: ${{ secrets.GOOGLE_SHEETS_CLIENT_EMAIL }}
+      GOOGLE_SHEETS_PRIVATE_KEY: ${{ secrets.GOOGLE_SHEETS_PRIVATE_KEY }}
+      DATASET_S3_BUCKET: ${{ vars.DATASET_S3_BUCKET }}
+      DATASET_S3_REGION: ${{ vars.DATASET_S3_REGION }}
+      DATASET_S3_ENDPOINT_URL: ${{ vars.DATASET_S3_ENDPOINT_URL }}
+      DATASET_S3_PREFIX: ${{ vars.DATASET_S3_PREFIX }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.DATASET_S3_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DATASET_S3_SECRET_ACCESS_KEY }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build dataset from Google Sheets
+        run: npm run build:dataset
+
+      - name: Capture release metadata
+        id: release
+        run: |
+          node <<'NODE' >> "$GITHUB_OUTPUT"
+          const fs = require("node:fs");
+          const manifest = JSON.parse(fs.readFileSync("src/data/generated/manifest.json", "utf8"));
+          console.log(`version=${manifest.version}`);
+          console.log(`checksum=${manifest.checksum}`);
+          console.log(`drug_count=${manifest.drugCount}`);
+          NODE
+
+      - name: Upload generated artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dataset-${{ steps.release.outputs.version }}
+          path: |
+            src/data/generated/dataset.json
+            src/data/generated/manifest.json
+
+      - name: Validate publish configuration
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          : "${DATASET_S3_BUCKET:?Set repository variable DATASET_S3_BUCKET}"
+          : "${DATASET_S3_REGION:?Set repository variable DATASET_S3_REGION}"
+          : "${AWS_ACCESS_KEY_ID:?Set repository secret DATASET_S3_ACCESS_KEY_ID}"
+          : "${AWS_SECRET_ACCESS_KEY:?Set repository secret DATASET_S3_SECRET_ACCESS_KEY}"
+          if [ -z "${DATASET_S3_PREFIX}" ]; then
+            echo "DATASET_S3_PREFIX=datasets" >> "$GITHUB_ENV"
+          fi
+
+      - name: Publish versioned release
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          version="${{ steps.release.outputs.version }}"
+          prefix="${DATASET_S3_PREFIX:-datasets}"
+          base_uri="s3://${DATASET_S3_BUCKET}/${prefix}/${version}"
+
+          endpoint_args=()
+          if [ -n "${DATASET_S3_ENDPOINT_URL}" ]; then
+            endpoint_args+=(--endpoint-url "${DATASET_S3_ENDPOINT_URL}")
+          fi
+
+          aws "${endpoint_args[@]}" s3 cp src/data/generated/dataset.json "${base_uri}/dataset.json" \
+            --region "${DATASET_S3_REGION}" \
+            --content-type application/json \
+            --cache-control "public, max-age=31536000, immutable"
+
+          aws "${endpoint_args[@]}" s3 cp src/data/generated/manifest.json "${base_uri}/manifest.json" \
+            --region "${DATASET_S3_REGION}" \
+            --content-type application/json \
+            --cache-control "public, max-age=60, must-revalidate"
+
+      - name: Promote stable latest release
+        if: ${{ !inputs.dry_run && inputs.promote_latest }}
+        run: |
+          set -euo pipefail
+          prefix="${DATASET_S3_PREFIX:-datasets}"
+          latest_uri="s3://${DATASET_S3_BUCKET}/${prefix}/latest"
+
+          endpoint_args=()
+          if [ -n "${DATASET_S3_ENDPOINT_URL}" ]; then
+            endpoint_args+=(--endpoint-url "${DATASET_S3_ENDPOINT_URL}")
+          fi
+
+          aws "${endpoint_args[@]}" s3 cp src/data/generated/dataset.json "${latest_uri}/dataset.json" \
+            --region "${DATASET_S3_REGION}" \
+            --content-type application/json \
+            --cache-control "public, max-age=60, must-revalidate"
+
+          aws "${endpoint_args[@]}" s3 cp src/data/generated/manifest.json "${latest_uri}/manifest.json" \
+            --region "${DATASET_S3_REGION}" \
+            --content-type application/json \
+            --cache-control "public, max-age=60, must-revalidate"
+
+      - name: Summarize release
+        run: |
+          {
+            echo "## Dataset Release"
+            echo ""
+            echo "- Version: \`${{ steps.release.outputs.version }}\`"
+            echo "- Checksum: \`${{ steps.release.outputs.checksum }}\`"
+            echo "- Drugs: \`${{ steps.release.outputs.drug_count }}\`"
+            echo "- Dry run: \`${{ inputs.dry_run }}\`"
+            echo "- Promoted latest: \`${{ inputs.promote_latest }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
