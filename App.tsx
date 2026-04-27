@@ -266,9 +266,14 @@ function DrugRow({
       <View style={styles.resultHeader}>
         <View style={styles.resultTitleColumn}>
           <Text style={styles.resultName}>{result.drug.name[language]}</Text>
-          <Text style={styles.resultAlias}>
-            {copy(language, "search.aliases")}: {result.drug.aliases.join(", ")}
-          </Text>
+          <View style={styles.resultMetaRow}>
+            <View style={styles.idBadge}>
+              <Text style={styles.idBadgeText}>{result.drug.id}</Text>
+            </View>
+            <Text style={styles.resultAlias}>
+              {copy(language, "search.aliases")}: {result.drug.aliases.join(", ")}
+            </Text>
+          </View>
         </View>
         <View style={styles.resultHeaderBadges}>
           {isSaved ? <SavePill language={language} isSaved /> : null}
@@ -1398,6 +1403,9 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 6,
   },
+  resultMetaRow: {
+    gap: 8,
+  },
   resultHeaderBadges: {
     alignItems: "flex-end",
     gap: 8,
@@ -1419,6 +1427,18 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "800",
     textTransform: "uppercase",
+  },
+  idBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#EEF2F5",
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+  idBadgeText: {
+    color: "#536070",
+    fontSize: 11,
+    fontWeight: "700",
   },
   savePill: {
     borderRadius: 999,
