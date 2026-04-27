@@ -7,7 +7,19 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, "..");
 const adminDir = join(rootDir, "admin", "apps-script");
 const configPath = join(adminDir, ".clasp.json");
-const args = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
+
+const COMMAND_ALIASES = {
+  open: "open-script",
+};
+
+const args = rawArgs.map((arg, index) => {
+  if (index !== 0) {
+    return arg;
+  }
+
+  return COMMAND_ALIASES[arg] || arg;
+});
 
 if (!args.length) {
   console.error("Usage: node ./scripts/run-admin-clasp.mjs <clasp args>");

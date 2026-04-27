@@ -64,6 +64,8 @@ Other useful commands:
 
 The repo keeps a template at [admin/apps-script/.clasp.json.example](/Users/mohamedkhairy/dev/allergolib/admin/apps-script/.clasp.json.example:1). Your real `admin/apps-script/.clasp.json` stays local and is ignored by git.
 
+Internally this wrapper maps the local `open` alias to the upstream `clasp open-script` command used by `@google/clasp` 3.x.
+
 ## Notes
 
 - The script preserves the current export contract and current sheet headers.
