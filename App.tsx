@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { startTransition, useDeferredValue, useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import {
   Pressable,
   SafeAreaView,
@@ -23,6 +23,12 @@ import {
 } from "./src/lib/dilutionCalculator";
 import { loadFavoriteDrugIds, persistFavoriteDrugIds, sanitizeFavoriteDrugIds } from "./src/lib/favorites";
 import { copy } from "./src/lib/i18n";
+import {
+  loadRecentDrugIds,
+  persistRecentDrugIds,
+  recordRecentDrugId,
+  sanitizeRecentDrugIds,
+} from "./src/lib/recentSearches";
 import { searchDrugs, type DrugSearchResult } from "./src/lib/drugSearch";
 import type {
   DrugRecord,
@@ -35,6 +41,9 @@ import type {
 } from "./src/types";
 
 const TAB_ORDER: TestKind[] = ["prick", "idr", "patch"];
+const HOME_TABS = ["search", "favorites", "info"] as const;
+
+type HomeTab = (typeof HOME_TABS)[number];
 
 function hasDisplayableTestContent(test: TestRecord) {
   return Boolean(
@@ -72,6 +81,18 @@ function datasetOriginLabelKey(origin: DatasetOrigin) {
   }
 
   return "home.datasetOriginUpdated";
+}
+
+function homeTabLabelKey(tab: HomeTab) {
+  if (tab === "favorites") {
+    return "home.tabFavorites";
+  }
+
+  if (tab === "info") {
+    return "home.tabInfo";
+  }
+
+  return "home.tabSearch";
 }
 
 function matchLabel(language: Language, result: DrugSearchResult) {
@@ -242,6 +263,220 @@ function DrugRow({
         </Text>
       ) : null}
     </Pressable>
+  );
+}
+
+function SectionIntro({
+  title,
+  body,
+}: {
+  title: string;
+  body: string;
+}) {
+  return (
+    <View style={styles.sectionIntro}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={styles.panelBody}>{body}</Text>
+    </View>
+  );
+}
+
+function NeutralEmptyCard({
+  title,
+  body,
+}: {
+  title: string;
+  body: string;
+}) {
+  return (
+    <View style={styles.neutralEmptyCard}>
+      <Text style={styles.neutralEmptyTitle}>{title}</Text>
+      <Text style={styles.neutralEmptyBody}>{body}</Text>
+    </View>
+  );
+}
+
+function SearchScreen({
+  language,
+  query,
+  searchResults,
+  recentDrugs,
+  favoriteDrugIds,
+  onChangeQuery,
+  onOpenDrug,
+}: {
+  language: Language;
+  query: string;
+  searchResults: DrugSearchResult[];
+  recentDrugs: DrugRecord[];
+  favoriteDrugIds: string[];
+  onChangeQuery: (value: string) => void;
+  onOpenDrug: (drugId: string) => void;
+}) {
+  const favoriteDrugSet = new Set(favoriteDrugIds);
+  const trimmedQuery = query.trim();
+  const hasQuery = trimmedQuery.length > 0;
+
+  return (
+    <ScrollView contentContainerStyle={styles.screenContent}>
+      <View style={styles.searchHeroCard}>
+        <Text style={styles.searchHeroTitle}>{copy(language, "search.heroTitle")}</Text>
+        <Text style={styles.searchHeroBody}>{copy(language, "search.heroBody")}</Text>
+        <View style={styles.searchInputWrap}>
+          <Text style={styles.metricLabel}>{copy(language, "search.title")}</Text>
+          <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            onChangeText={onChangeQuery}
+            placeholder={copy(language, "search.placeholder")}
+            placeholderTextColor="#6B7888"
+            style={styles.searchInput}
+            value={query}
+          />
+        </View>
+        {hasQuery ? (
+          <Text style={styles.searchSummary}>
+            {searchResults.length} {copy(language, "search.results")}
+          </Text>
+        ) : null}
+      </View>
+
+      {hasQuery ? (
+        <>
+          {searchResults.length ? (
+            <View style={styles.resultsList}>
+              {searchResults.map((result) => (
+                <DrugRow
+                  key={result.drug.id}
+                  isSaved={favoriteDrugSet.has(result.drug.id)}
+                  language={language}
+                  onPress={() => onOpenDrug(result.drug.id)}
+                  result={result}
+                />
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
+              <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
+            </View>
+          )}
+        </>
+      ) : (
+        <View style={styles.panel}>
+          <SectionIntro
+            title={copy(language, "search.recentTitle")}
+            body={copy(language, "search.recentBody")}
+          />
+          {recentDrugs.length ? (
+            <View style={styles.resultsList}>
+              {recentDrugs.map((drug) => (
+                <DrugRow
+                  key={`recent-${drug.id}`}
+                  isSaved={favoriteDrugSet.has(drug.id)}
+                  language={language}
+                  onPress={() => onOpenDrug(drug.id)}
+                  result={{
+                    drug,
+                    score: Number.MAX_SAFE_INTEGER,
+                  }}
+                />
+              ))}
+            </View>
+          ) : (
+            <NeutralEmptyCard
+              title={copy(language, "search.emptyRecentTitle")}
+              body={copy(language, "search.emptyRecentBody")}
+            />
+          )}
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+function FavoritesScreen({
+  language,
+  favoriteDrugs,
+  favoriteDrugIds,
+  onOpenDrug,
+}: {
+  language: Language;
+  favoriteDrugs: DrugRecord[];
+  favoriteDrugIds: string[];
+  onOpenDrug: (drugId: string) => void;
+}) {
+  return (
+    <ScrollView contentContainerStyle={styles.screenContent}>
+      <View style={styles.panel}>
+        <SectionIntro
+          title={copy(language, "favorites.title")}
+          body={copy(language, "favorites.body")}
+        />
+        {favoriteDrugs.length ? (
+          <View style={styles.resultsList}>
+            {favoriteDrugs.map((drug) => (
+              <DrugRow
+                key={`favorite-${drug.id}`}
+                isSaved={favoriteDrugIds.includes(drug.id)}
+                language={language}
+                onPress={() => onOpenDrug(drug.id)}
+                result={{
+                  drug,
+                  score: Number.MAX_SAFE_INTEGER,
+                }}
+              />
+            ))}
+          </View>
+        ) : (
+          <NeutralEmptyCard
+            title={copy(language, "favorites.emptyTitle")}
+            body={copy(language, "favorites.emptyBody")}
+          />
+        )}
+      </View>
+    </ScrollView>
+  );
+}
+
+function InfoScreen({
+  activeDataset,
+  language,
+}: {
+  activeDataset: ReturnType<typeof getBundledActiveDataset>;
+  language: Language;
+}) {
+  return (
+    <ScrollView contentContainerStyle={styles.screenContent}>
+      <View style={styles.panel}>
+        <SectionIntro
+          title={copy(language, "info.title")}
+          body={copy(language, "info.body")}
+        />
+      </View>
+
+      <View style={styles.heroCard}>
+        <Text style={styles.heroMeta}>{copy(language, "info.releaseCardTitle")}</Text>
+        <Text style={styles.heroTitle}>{copy(language, "home.heroTitle")}</Text>
+        <Text style={styles.heroBody}>{copy(language, "home.heroBody")}</Text>
+        <Text style={styles.heroMetaSecondary}>
+          {copy(language, "home.release")}: {activeDataset.manifest.version}
+        </Text>
+        <Text style={styles.heroMetaSecondary}>
+          {copy(language, "home.datasetOrigin")}:{" "}
+          {copy(language, datasetOriginLabelKey(activeDataset.origin))}
+        </Text>
+        <Text style={styles.heroMetaSecondary}>
+          {copy(language, "home.approvedBy")}: {activeDataset.manifest.approvedBy}
+        </Text>
+        <Text style={styles.heroMetaSecondary}>
+          {copy(language, "home.releasedAt")}:{" "}
+          {formatReleaseDate(activeDataset.manifest.releasedAt, language)}
+        </Text>
+      </View>
+
+      <ComplianceCard language={language} />
+    </ScrollView>
   );
 }
 
@@ -592,35 +827,37 @@ function DetailScreen({
 
 export default function App() {
   const [activeDataset, setActiveDataset] = useState(() => getBundledActiveDataset());
-  const [language, setLanguage] = useState<Language>("en");
+  const [language, setLanguage] = useState<Language>("fr");
+  const [homeTab, setHomeTab] = useState<HomeTab>("search");
   const [query, setQuery] = useState("");
   const [selectedDrugId, setSelectedDrugId] = useState<string | null>(null);
   const [favoriteDrugIds, setFavoriteDrugIds] = useState<string[]>([]);
+  const [recentDrugIds, setRecentDrugIds] = useState<string[]>([]);
   const [favoritesHydrated, setFavoritesHydrated] = useState(false);
-  const deferredQuery = useDeferredValue(query);
+  const [recentHydrated, setRecentHydrated] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     async function hydrate() {
-      const [storedDataset, storedFavorites] = await Promise.all([
+      const [storedDataset, storedFavorites, storedRecents] = await Promise.all([
         loadActiveDataset(),
         loadFavoriteDrugIds(),
+        loadRecentDrugIds(),
       ]);
 
       if (cancelled) {
         return;
       }
 
+      const validDrugIds = storedDataset.dataset.drugs.map((drug) => drug.id);
+
       startTransition(() => {
         setActiveDataset(storedDataset);
-        setFavoriteDrugIds(
-          sanitizeFavoriteDrugIds(
-            storedFavorites,
-            storedDataset.dataset.drugs.map((drug) => drug.id)
-          )
-        );
+        setFavoriteDrugIds(sanitizeFavoriteDrugIds(storedFavorites, validDrugIds));
+        setRecentDrugIds(sanitizeRecentDrugIds(storedRecents, validDrugIds));
         setFavoritesHydrated(true);
+        setRecentHydrated(true);
       });
 
       const syncResult = await syncDatasetInBackground(storedDataset.manifest);
@@ -664,12 +901,38 @@ export default function App() {
     void persistFavoriteDrugIds(favoriteDrugIds);
   }, [favoriteDrugIds, favoritesHydrated]);
 
+  useEffect(() => {
+    if (!recentHydrated) {
+      return;
+    }
+
+    const sanitized = sanitizeRecentDrugIds(
+      recentDrugIds,
+      activeDataset.dataset.drugs.map((drug) => drug.id)
+    );
+
+    if (!arraysEqual(sanitized, recentDrugIds)) {
+      setRecentDrugIds(sanitized);
+    }
+  }, [activeDataset.dataset.drugs, recentDrugIds, recentHydrated]);
+
+  useEffect(() => {
+    if (!recentHydrated) {
+      return;
+    }
+
+    void persistRecentDrugIds(recentDrugIds);
+  }, [recentDrugIds, recentHydrated]);
+
   const selectedDrug = selectedDrugId
     ? activeDataset.dataset.drugs.find((drug) => drug.id === selectedDrugId) ?? null
     : null;
-  const searchResults = searchDrugs(activeDataset.dataset.drugs, deferredQuery, language);
-  const favoriteDrugSet = new Set(favoriteDrugIds);
+  const hasQuery = query.trim().length > 0;
+  const searchResults = hasQuery ? searchDrugs(activeDataset.dataset.drugs, query, language) : [];
   const favoriteDrugs = favoriteDrugIds
+    .map((drugId) => activeDataset.dataset.drugs.find((drug) => drug.id === drugId) ?? null)
+    .filter((drug): drug is DrugRecord => Boolean(drug));
+  const recentDrugs = recentDrugIds
     .map((drugId) => activeDataset.dataset.drugs.find((drug) => drug.id === drugId) ?? null)
     .filter((drug): drug is DrugRecord => Boolean(drug));
 
@@ -693,46 +956,21 @@ export default function App() {
     });
   }
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
-        <View style={styles.topBar}>
-          <View>
-            <Text style={styles.eyebrow}>{copy(language, "home.eyebrow")}</Text>
-            <Text style={styles.title}>{copy(language, "home.title")}</Text>
-          </View>
-          <View style={styles.languageToggle}>
-            {(["en", "fr"] as Language[]).map((nextLanguage) => {
-              const selected = nextLanguage === language;
+  function openDrug(drugId: string) {
+    startTransition(() => {
+      setSelectedDrugId(drugId);
+      setRecentDrugIds((current) => recordRecentDrugId(current, drugId));
+    });
+  }
 
-              return (
-                <Pressable
-                  key={nextLanguage}
-                  onPress={() => setLanguage(nextLanguage)}
-                  style={[
-                    styles.languageButton,
-                    selected && styles.languageButtonSelected,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.languageButtonText,
-                      selected && styles.languageButtonTextSelected,
-                    ]}
-                  >
-                    {nextLanguage.toUpperCase()}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        {selectedDrug ? (
+  if (selectedDrug) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        <View style={styles.container}>
           <DetailScreen
             drug={selectedDrug}
-            isSaved={favoriteDrugSet.has(selectedDrug.id)}
+            isSaved={favoriteDrugIds.includes(selectedDrug.id)}
             language={language}
             onBack={() => {
               startTransition(() => setSelectedDrugId(null));
@@ -740,90 +978,94 @@ export default function App() {
             onToggleFavorite={() => toggleFavorite(selectedDrug.id)}
             sources={activeDataset.dataset.sources}
           />
-        ) : (
-          <ScrollView contentContainerStyle={styles.screenContent}>
-            <View style={styles.heroCard}>
-              <Text style={styles.heroTitle}>{copy(language, "home.heroTitle")}</Text>
-              <Text style={styles.heroBody}>{copy(language, "home.heroBody")}</Text>
-              <Text style={styles.heroMeta}>
-                {copy(language, "home.release")}: {activeDataset.manifest.version}
-              </Text>
-              <Text style={styles.heroMetaSecondary}>
-                {copy(language, "home.datasetOrigin")}:{" "}
-                {copy(language, datasetOriginLabelKey(activeDataset.origin))}
-              </Text>
-              <Text style={styles.heroMetaSecondary}>
-                {copy(language, "home.approvedBy")}: {activeDataset.manifest.approvedBy}
-              </Text>
-              <Text style={styles.heroMetaSecondary}>
-                {copy(language, "home.releasedAt")}:{" "}
-                {formatReleaseDate(activeDataset.manifest.releasedAt, language)}
-              </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" />
+      <View style={styles.container}>
+        <View style={styles.topBar}>
+          <View style={styles.titleBlock}>
+            <Text style={styles.eyebrow}>{copy(language, "home.eyebrow")}</Text>
+            <Text style={styles.title}>{copy(language, "home.title")}</Text>
+          </View>
+          <View style={styles.topBarBody}>
+            <Text style={styles.topBarLabel}>{copy(language, "home.language")}</Text>
+            <View style={styles.languageToggle}>
+              {(["fr", "en"] as Language[]).map((nextLanguage) => {
+                const selected = nextLanguage === language;
+
+                return (
+                  <Pressable
+                    key={nextLanguage}
+                    onPress={() => setLanguage(nextLanguage)}
+                    style={[
+                      styles.languageButton,
+                      selected && styles.languageButtonSelected,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.languageButtonText,
+                        selected && styles.languageButtonTextSelected,
+                      ]}
+                    >
+                      {nextLanguage.toUpperCase()}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
+          </View>
+        </View>
 
-            <ComplianceCard language={language} />
+        <View style={styles.topLevelTabs}>
+          {HOME_TABS.map((tab) => {
+            const selected = tab === homeTab;
 
-            {favoriteDrugs.length ? (
-              <View style={styles.panel}>
-                <Text style={styles.sectionTitle}>{copy(language, "home.favoritesTitle")}</Text>
-                <Text style={styles.panelBody}>{copy(language, "home.favoritesBody")}</Text>
-                <View style={styles.resultsList}>
-                  {favoriteDrugs.map((drug) => (
-                    <DrugRow
-                      key={`favorite-${drug.id}`}
-                      isSaved
-                      language={language}
-                      onPress={() => {
-                        startTransition(() => setSelectedDrugId(drug.id));
-                      }}
-                      result={{
-                        drug,
-                        score: Number.MAX_SAFE_INTEGER,
-                      }}
-                    />
-                  ))}
-                </View>
-              </View>
-            ) : null}
+            return (
+              <Pressable
+                key={tab}
+                onPress={() => setHomeTab(tab)}
+                style={[styles.topLevelTab, selected && styles.topLevelTabSelected]}
+              >
+                <Text
+                  style={[styles.topLevelTabText, selected && styles.topLevelTabTextSelected]}
+                >
+                  {copy(language, homeTabLabelKey(tab))}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
 
-            <View style={styles.searchCard}>
-              <Text style={styles.sectionTitle}>{copy(language, "search.title")}</Text>
-              <TextInput
-                autoCapitalize="none"
-                autoCorrect={false}
-                onChangeText={setQuery}
-                placeholder={copy(language, "search.placeholder")}
-                placeholderTextColor="#6D7B8A"
-                style={styles.searchInput}
-                value={query}
-              />
-              <Text style={styles.searchSummary}>
-                {searchResults.length} {copy(language, "search.results")}
-              </Text>
-            </View>
+        {homeTab === "search" ? (
+          <SearchScreen
+            favoriteDrugIds={favoriteDrugIds}
+            language={language}
+            onChangeQuery={setQuery}
+            onOpenDrug={openDrug}
+            query={query}
+            recentDrugs={recentDrugs}
+            searchResults={searchResults}
+          />
+        ) : null}
 
-            <View style={styles.resultsList}>
-              {searchResults.map((result) => (
-                <DrugRow
-                  key={result.drug.id}
-                  isSaved={favoriteDrugSet.has(result.drug.id)}
-                  language={language}
-                  onPress={() => {
-                    startTransition(() => setSelectedDrugId(result.drug.id));
-                  }}
-                  result={result}
-                />
-              ))}
-            </View>
+        {homeTab === "favorites" ? (
+          <FavoritesScreen
+            favoriteDrugIds={favoriteDrugIds}
+            favoriteDrugs={favoriteDrugs}
+            language={language}
+            onOpenDrug={openDrug}
+          />
+        ) : null}
 
-            {!searchResults.length ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
-                <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
-              </View>
-            ) : null}
-          </ScrollView>
-        )}
+        {homeTab === "info" ? (
+          <InfoScreen activeDataset={activeDataset} language={language} />
+        ) : null}
       </View>
     </SafeAreaView>
   );
@@ -832,20 +1074,23 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F3F0E8",
+    backgroundColor: "#EEF3F8",
   },
   container: {
     flex: 1,
-    backgroundColor: "#F3F0E8",
+    backgroundColor: "#EEF3F8",
   },
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 12,
-    gap: 12,
+    paddingTop: 18,
+    paddingBottom: 10,
+    gap: 16,
+  },
+  titleBlock: {
+    flex: 1,
   },
   eyebrow: {
     color: "#0E6B66",
@@ -859,6 +1104,17 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "800",
     marginTop: 4,
+  },
+  topBarBody: {
+    alignItems: "flex-end",
+    gap: 8,
+  },
+  topBarLabel: {
+    color: "#536070",
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
   languageToggle: {
     flexDirection: "row",
@@ -884,10 +1140,60 @@ const styles = StyleSheet.create({
   languageButtonTextSelected: {
     color: "#FCFBF7",
   },
+  topLevelTabs: {
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    gap: 10,
+  },
+  topLevelTab: {
+    flex: 1,
+    backgroundColor: "#F7FAFC",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#D5DEE7",
+    paddingVertical: 13,
+    alignItems: "center",
+  },
+  topLevelTabSelected: {
+    backgroundColor: "#16353D",
+    borderColor: "#16353D",
+  },
+  topLevelTabText: {
+    color: "#536070",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  topLevelTabTextSelected: {
+    color: "#F7F9FB",
+  },
   screenContent: {
     paddingHorizontal: 20,
+    paddingTop: 10,
     paddingBottom: 28,
     gap: 16,
+  },
+  sectionIntro: {
+    gap: 6,
+  },
+  searchHeroCard: {
+    backgroundColor: "#16353D",
+    borderRadius: 28,
+    padding: 22,
+    gap: 16,
+  },
+  searchHeroTitle: {
+    color: "#F7F3EA",
+    fontSize: 24,
+    fontWeight: "800",
+  },
+  searchHeroBody: {
+    color: "#D7E6E2",
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  searchInputWrap: {
+    gap: 8,
   },
   heroCard: {
     backgroundColor: "#16353D",
@@ -951,6 +1257,22 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   panelBody: {
+    color: "#536070",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  neutralEmptyCard: {
+    backgroundColor: "#F4F7FA",
+    borderRadius: 18,
+    padding: 16,
+    gap: 8,
+  },
+  neutralEmptyTitle: {
+    color: "#16222E",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  neutralEmptyBody: {
     color: "#536070",
     fontSize: 14,
     lineHeight: 20,
