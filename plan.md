@@ -74,17 +74,27 @@ Add remote manifest checking, dataset download, local caching, and safe activati
 
 ## Phase 4: Clinical Utility Features
 
+**Status**: Done
+
 **User stories**: find drugs faster, calculate dilutions, save frequent entries, use bilingual medical content
 
 ### What to build
 Add the features that make the app practical in workflow: alias-aware search, favorites, dilution calculator, and richer note presentation. This phase should feel like the first clinically useful beta.
 
 ### Acceptance criteria
-- [ ] Search supports canonical names plus curated aliases and spelling variants.
-- [ ] Favorites persist locally across app restarts and are accessible from the home screen.
-- [ ] The dilution calculator works offline for common ratios such as `1:10` and `1:100`.
-- [ ] Drug detail clearly distinguishes test-type data, warnings, and source provenance.
-- [ ] English and French content render correctly for curated medical entries.
+- [x] Search supports canonical names plus curated aliases and spelling variants.
+- [x] Favorites persist locally across app restarts and are accessible from the home screen.
+- [x] The dilution calculator works offline for common ratios such as `1:10` and `1:100`.
+- [x] Drug detail clearly distinguishes test-type data, warnings, and source provenance.
+- [x] English and French content render correctly for curated medical entries.
+
+### Implementation notes
+- Ranked alias-aware search is now implemented in the mobile UI, with visible match hints for names, aliases, classes, and ids.
+- Favorites are stored locally on-device and surfaced from the home screen for one-tap access.
+- Drug detail now includes an offline dilution calculator driven by the seeded dilution ratios plus common fallback ratios `1:10` and `1:100`.
+- Test detail presentation is now split into validated data, warnings or clinical notes, and expandable source provenance.
+- The dataset contract now supports optional note categorization for future curator exports while remaining backward-compatible with the current bundled dataset.
+- `npm run typecheck` passes after the Phase 4 implementation changes.
 
 ---
 
