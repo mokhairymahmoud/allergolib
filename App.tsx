@@ -1187,7 +1187,7 @@ const styles = StyleSheet.create({
   // ─── Layout ──────────────────────────────────────────────────────────
   safeArea: {
     flex: 1,
-    backgroundColor: "#F4F6F9",
+    backgroundColor: "#FFFFFF",
   },
   container: {
     flex: 1,
