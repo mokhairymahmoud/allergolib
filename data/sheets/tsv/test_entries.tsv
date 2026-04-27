@@ -1,125 +1,171 @@
-drug_id	test_kind	concentration	max_concentration	dilutions	vehicle_en	vehicle_fr	source_id	alternate_source_id
-etomidate	prick	2 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-etomidate	idr	0.2 mg/ml	0.2 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-ketamine	prick	10 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-ketamine	idr	0.1 mg/ml	0.1 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-midazolam	prick	1 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-midazolam	idr	0.01 mg/ml	0.01 mg/ml	1:20			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-propofol	prick	10 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-propofol	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-thiopenthal	prick	25 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-thiopenthal	idr	2.5 mg/ml	2.5 mg/ml	1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-atracurium	prick	1 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-atracurium	idr	0.01 mg/ml	0.01 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-cisatracurium	prick	2 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-cisatracurium	idr	0.02 mg/ml	0.02 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-mivacurium	prick	0.2 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-mivacurium	idr	0.002 mg/ml	0.002 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-rocuronium	prick	10 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-rocuronium	idr	0.05 mg/ml	0.05 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-succinylcholine	prick	10 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-succinylcholine	idr	0.1 mg/ml	0.1 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-fentanyl	prick	50 µg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-fentanyl	idr	5 µg/ml	5 µg/ml	1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-alfentanil	prick	0.5 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-alfentanil	idr	0.05 mg/ml	0.05 mg/ml	1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-remifentanil	prick	50 µg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-remifentanil	idr	5 µg/ml	5 µg/ml	1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-sufentanil	prick	5 µg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-sufentanil	idr	0.5 µg/ml	0.5 µg/ml	1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-morphine	prick	1 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-morphine	idr	0.005 mg/ml	0.005 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-oxycodone	prick	10 mg/ml					sfar-sfa-2025-annex-4
-oxycodone	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4
-nefopam	prick	10 mg/ml					sfar-sfa-2025-annex-4
-nefopam	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4
-tramadol	prick	50 mg/ml					sfar-sfa-2025-annex-4
-tramadol	idr	5 mg/ml	5 mg/ml	1:10			sfar-sfa-2025-annex-4
-ketoprofen	prick	25 mg/ml					sfar-sfa-2025-annex-4
-ketoprofen	idr	0.25 mg/ml	0.25 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
-paracetamol	prick	10 mg/ml					sfar-sfa-2025-annex-4
-paracetamol	idr	10 mg/ml	10 mg/ml	1:10			sfar-sfa-2025-annex-4
-bleu-patente-v	prick	25 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-bleu-patente-v	idr	0.25 mg/ml	0.25 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-bleu-de-methylene	prick	5 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-bleu-de-methylene	idr	0.05 mg/ml	0.05 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-fluorescein	prick	100 mg/ml					sfar-sfa-2025-annex-4
-fluorescein	idr	10 mg/ml	10 mg/ml	1:10			sfar-sfa-2025-annex-4
-lidocaine	prick	10 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-lidocaine	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-bupivacaine	prick	2.5 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-bupivacaine	idr	0.25 mg/ml	0.25 mg/ml	1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-ropivacaine	prick	10 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-ropivacaine	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-mepivacaine	prick	20 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-mepivacaine	idr	2 mg/ml	2 mg/ml	1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-amoxicillin	prick	20 mg/ml					sfar-sfa-2025-annex-4
-amoxicillin	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
-amoxicillin-clavulanate	prick	20 mg/ml					sfar-sfa-2025-annex-4
-amoxicillin-clavulanate	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
-piperacillin	prick	20 mg/ml					sfar-sfa-2025-annex-4
-piperacillin	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
-piperacillin-tazobactam	prick	20 mg/ml					sfar-sfa-2025-annex-4
-piperacillin-tazobactam	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
-cloxacillin	prick	20 mg/ml					sfar-sfa-2025-annex-4
-cloxacillin	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
-cefazolin	prick	20 mg/ml					sfar-sfa-2025-annex-4
-cefazolin	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
-cefuroxime	prick	20 mg/ml					sfar-sfa-2025-annex-4
-cefuroxime	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
-cefotaxime	prick	20 mg/ml					sfar-sfa-2025-annex-4
-cefotaxime	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
-ceftriaxone	prick	20 mg/ml					sfar-sfa-2025-annex-4
-ceftriaxone	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
-cefepime	prick	2 mg/ml					sfar-sfa-2025-annex-4
-cefepime	idr	2 mg/ml	2 mg/ml	1:10			sfar-sfa-2025-annex-4
-ceftazidime	prick	20 mg/ml					sfar-sfa-2025-annex-4
-ceftazidime	idr	20 mg/ml	20 mg/ml	1:10			sfar-sfa-2025-annex-4
-ertapenem	prick	1 mg/ml					sfar-sfa-2025-annex-4
-ertapenem	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4
-imipenem	prick	0.05 mg/ml					sfar-sfa-2025-annex-4
-imipenem	idr	0.05 mg/ml	0.05 mg/ml	1:10			sfar-sfa-2025-annex-4
-meropenem	prick	1 mg/ml					sfar-sfa-2025-annex-4
-meropenem	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4
-aztreonam	prick	2 mg/ml					sfar-sfa-2025-annex-4
-aztreonam	idr	2 mg/ml	2 mg/ml	1:10			sfar-sfa-2025-annex-4
-atropine	prick	0.5 mg/ml					sfar-sfa-2025-annex-4
-atropine	idr	0.05 mg/ml	0.05 mg/ml	1:10			sfar-sfa-2025-annex-4
-chlorhexidine	prick	2 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-chlorhexidine	idr	0.002 mg/ml	0.002 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-ondansetron	prick	4 mg/ml					sfar-sfa-2025-annex-4
-ondansetron	idr	0.04 mg/ml	0.04 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
-protamine	prick	10 mg/ml					sfar-sfa-2025-annex-4
-protamine	idr	0.01 mg/ml	0.01 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
-sugammadex	prick	10 mg/ml					sfar-sfa-2025-annex-4	eaaci-2019-table-4
-sugammadex	idr	1 mg/ml	1 mg/ml	1:10			sfar-sfa-2025-annex-4	eaaci-2019-table-4
-dexamethasone	prick	4 mg/ml					sfar-sfa-2025-annex-4
-dexamethasone	idr	4 mg/ml	4 mg/ml	1:10			sfar-sfa-2025-annex-4
-gelatin	prick	40 mg/ml					sfar-sfa-2025-annex-4
-gelatin	idr	40 mg/ml	40 mg/ml	1:10			sfar-sfa-2025-annex-4
-vancomycin	prick	50 mg/ml					sfar-sfa-2025-annex-4
-vancomycin	idr	0.005 mg/ml	0.005 mg/ml	1:100; 1:10			sfar-sfa-2025-annex-4
-vecuronium	prick	4 mg/ml					eaaci-2019-table-4
-vecuronium	idr	0.04 mg/ml	0.04 mg/ml	1:100; 1:10			eaaci-2019-table-4
-pancuronium	prick	2 mg/ml					eaaci-2019-table-4
-pancuronium	idr	0.02 mg/ml	0.02 mg/ml	1:100; 1:10			eaaci-2019-table-4
-s-ketamine	prick	25 mg/ml					eaaci-2019-table-4
-s-ketamine	idr	0.25 mg/ml	0.25 mg/ml	1:100; 1:10			eaaci-2019-table-4
-articaine	prick	20 mg/ml					eaaci-2019-table-4
-articaine	idr	2 mg/ml	2 mg/ml	1:10			eaaci-2019-table-4
-prilocaine	prick	20 mg/ml					eaaci-2019-table-4
-prilocaine	idr	2 mg/ml	2 mg/ml	1:10			eaaci-2019-table-4
-levobupivacaine	prick	7.5 mg/ml					eaaci-2019-table-4
-levobupivacaine	idr	0.75 mg/ml	0.75 mg/ml	1:10			eaaci-2019-table-4
-chloroprocaine	prick	10 mg/ml					eaaci-2019-table-4
-chloroprocaine	idr	1 mg/ml	1 mg/ml	1:10			eaaci-2019-table-4
-povidone-iodine	prick	100 mg/ml					eaaci-2019-table-4
-dextran	prick						eaaci-2019-table-4
-hydroxyethyl-starch	prick	60 mg/ml					eaaci-2019-table-4
-hydroxyethyl-starch	idr	6 mg/ml	6 mg/ml	1:10			eaaci-2019-table-4
-peg-macrogol-300	prick	undiluted					eaaci-2019-table-4
-peg-macrogol-3000	prick	50% w/v					eaaci-2019-table-4
-peg-macrogol-6000	prick	50% w/v					eaaci-2019-table-4
-polysorbate-80	prick	20% w/v					eaaci-2019-table-4
-poloxamer-407	prick	10% w/v					eaaci-2019-table-4
-carboxymethyl-cellulose	prick	1% w/v					eaaci-2019-table-4
+drug_id	test_kind	source_id	is_preferred	concentration	max_concentration	dilutions	vehicle_en	vehicle_fr
+etomidate	prick	sfar-sfa-2025-annex-4	true	2 mg/ml				
+etomidate	prick	eaaci-2019-table-4	false					
+etomidate	idr	sfar-sfa-2025-annex-4	true	0.2 mg/ml	0.2 mg/ml	1:100; 1:10		
+etomidate	idr	eaaci-2019-table-4	false					
+ketamine	prick	sfar-sfa-2025-annex-4	true	10 mg/ml				
+ketamine	prick	eaaci-2019-table-4	false	100 mg/ml				
+ketamine	idr	sfar-sfa-2025-annex-4	true	0.1 mg/ml	0.1 mg/ml	1:100; 1:10		
+ketamine	idr	eaaci-2019-table-4	false					
+midazolam	prick	sfar-sfa-2025-annex-4	true	1 mg/ml				
+midazolam	prick	eaaci-2019-table-4	false	5 mg/ml				
+midazolam	idr	sfar-sfa-2025-annex-4	true	0.01 mg/ml	0.01 mg/ml	1:20		
+midazolam	idr	eaaci-2019-table-4	false	0.05 mg/ml	0.05 mg/ml			
+propofol	prick	sfar-sfa-2025-annex-4	true	10 mg/ml				
+propofol	prick	eaaci-2019-table-4	false					
+propofol	idr	sfar-sfa-2025-annex-4	true	1 mg/ml	1 mg/ml	1:10		
+propofol	idr	eaaci-2019-table-4	false					
+thiopenthal	prick	sfar-sfa-2025-annex-4	true	25 mg/ml				
+thiopenthal	prick	eaaci-2019-table-4	false					
+thiopenthal	idr	sfar-sfa-2025-annex-4	true	2.5 mg/ml	2.5 mg/ml	1:10		
+thiopenthal	idr	eaaci-2019-table-4	false					
+atracurium	prick	sfar-sfa-2025-annex-4	true	1 mg/ml				
+atracurium	prick	eaaci-2019-table-4	false					
+atracurium	idr	sfar-sfa-2025-annex-4	true	0.01 mg/ml	0.01 mg/ml	1:100; 1:10		
+atracurium	idr	eaaci-2019-table-4	false					
+cisatracurium	prick	sfar-sfa-2025-annex-4	true	2 mg/ml				
+cisatracurium	prick	eaaci-2019-table-4	false					
+cisatracurium	idr	sfar-sfa-2025-annex-4	true	0.02 mg/ml	0.02 mg/ml	1:100; 1:10		
+cisatracurium	idr	eaaci-2019-table-4	false					
+mivacurium	prick	sfar-sfa-2025-annex-4	true	0.2 mg/ml				
+mivacurium	prick	eaaci-2019-table-4	false					
+mivacurium	idr	sfar-sfa-2025-annex-4	true	0.002 mg/ml	0.002 mg/ml	1:100; 1:10		
+mivacurium	idr	eaaci-2019-table-4	false					
+rocuronium	prick	sfar-sfa-2025-annex-4	true	10 mg/ml				
+rocuronium	prick	eaaci-2019-table-4	false					
+rocuronium	idr	sfar-sfa-2025-annex-4	true	0.05 mg/ml	0.05 mg/ml	1:100; 1:10		
+rocuronium	idr	eaaci-2019-table-4	false					
+succinylcholine	prick	sfar-sfa-2025-annex-4	true	10 mg/ml				
+succinylcholine	prick	eaaci-2019-table-4	false					
+succinylcholine	idr	sfar-sfa-2025-annex-4	true	0.1 mg/ml	0.1 mg/ml	1:100; 1:10		
+succinylcholine	idr	eaaci-2019-table-4	false					
+fentanyl	prick	sfar-sfa-2025-annex-4	true	50 µg/ml				
+fentanyl	prick	eaaci-2019-table-4	false					
+fentanyl	idr	sfar-sfa-2025-annex-4	true	5 µg/ml	5 µg/ml	1:10		
+fentanyl	idr	eaaci-2019-table-4	false					
+alfentanil	prick	sfar-sfa-2025-annex-4	true	0.5 mg/ml				
+alfentanil	prick	eaaci-2019-table-4	false					
+alfentanil	idr	sfar-sfa-2025-annex-4	true	0.05 mg/ml	0.05 mg/ml	1:10		
+alfentanil	idr	eaaci-2019-table-4	false					
+remifentanil	prick	sfar-sfa-2025-annex-4	true	50 µg/ml				
+remifentanil	prick	eaaci-2019-table-4	false					
+remifentanil	idr	sfar-sfa-2025-annex-4	true	5 µg/ml	5 µg/ml	1:10		
+remifentanil	idr	eaaci-2019-table-4	false					
+sufentanil	prick	sfar-sfa-2025-annex-4	true	5 µg/ml				
+sufentanil	prick	eaaci-2019-table-4	false					
+sufentanil	idr	sfar-sfa-2025-annex-4	true	0.5 µg/ml	0.5 µg/ml	1:10		
+sufentanil	idr	eaaci-2019-table-4	false					
+morphine	prick	sfar-sfa-2025-annex-4	true	1 mg/ml				
+morphine	prick	eaaci-2019-table-4	false					
+morphine	idr	sfar-sfa-2025-annex-4	true	0.005 mg/ml	0.005 mg/ml	1:100; 1:10		
+morphine	idr	eaaci-2019-table-4	false					
+oxycodone	prick	sfar-sfa-2025-annex-4	true	10 mg/ml				
+oxycodone	idr	sfar-sfa-2025-annex-4	true	1 mg/ml	1 mg/ml	1:10		
+nefopam	prick	sfar-sfa-2025-annex-4	true	10 mg/ml				
+nefopam	idr	sfar-sfa-2025-annex-4	true	1 mg/ml	1 mg/ml	1:10		
+tramadol	prick	sfar-sfa-2025-annex-4	true	50 mg/ml				
+tramadol	idr	sfar-sfa-2025-annex-4	true	5 mg/ml	5 mg/ml	1:10		
+ketoprofen	prick	sfar-sfa-2025-annex-4	true	25 mg/ml				
+ketoprofen	idr	sfar-sfa-2025-annex-4	true	0.25 mg/ml	0.25 mg/ml	1:100; 1:10		
+paracetamol	prick	sfar-sfa-2025-annex-4	true	10 mg/ml				
+paracetamol	idr	sfar-sfa-2025-annex-4	true	10 mg/ml	10 mg/ml	1:10		
+bleu-patente-v	prick	sfar-sfa-2025-annex-4	true	25 mg/ml				
+bleu-patente-v	prick	eaaci-2019-table-4	false					
+bleu-patente-v	idr	sfar-sfa-2025-annex-4	true	0.25 mg/ml	0.25 mg/ml	1:100; 1:10		
+bleu-patente-v	idr	eaaci-2019-table-4	false					
+bleu-de-methylene	prick	sfar-sfa-2025-annex-4	true	5 mg/ml				
+bleu-de-methylene	prick	eaaci-2019-table-4	false	10 mg/ml				
+bleu-de-methylene	idr	sfar-sfa-2025-annex-4	true	0.05 mg/ml	0.05 mg/ml	1:100; 1:10		
+bleu-de-methylene	idr	eaaci-2019-table-4	false	0.1 mg/ml	0.1 mg/ml			
+fluorescein	prick	sfar-sfa-2025-annex-4	true	100 mg/ml				
+fluorescein	idr	sfar-sfa-2025-annex-4	true	10 mg/ml	10 mg/ml	1:10		
+lidocaine	prick	sfar-sfa-2025-annex-4	true	10 mg/ml				
+lidocaine	prick	eaaci-2019-table-4	false					
+lidocaine	idr	sfar-sfa-2025-annex-4	true	1 mg/ml	1 mg/ml	1:10		
+lidocaine	idr	eaaci-2019-table-4	false					
+bupivacaine	prick	sfar-sfa-2025-annex-4	true	2.5 mg/ml				
+bupivacaine	prick	eaaci-2019-table-4	false					
+bupivacaine	idr	sfar-sfa-2025-annex-4	true	0.25 mg/ml	0.25 mg/ml	1:10		
+bupivacaine	idr	eaaci-2019-table-4	false					
+ropivacaine	prick	sfar-sfa-2025-annex-4	true	10 mg/ml				
+ropivacaine	prick	eaaci-2019-table-4	false					
+ropivacaine	idr	sfar-sfa-2025-annex-4	true	1 mg/ml	1 mg/ml	1:10		
+ropivacaine	idr	eaaci-2019-table-4	false					
+mepivacaine	prick	sfar-sfa-2025-annex-4	true	20 mg/ml				
+mepivacaine	prick	eaaci-2019-table-4	false					
+mepivacaine	idr	sfar-sfa-2025-annex-4	true	2 mg/ml	2 mg/ml	1:10		
+mepivacaine	idr	eaaci-2019-table-4	false					
+amoxicillin	prick	sfar-sfa-2025-annex-4	true	20 mg/ml				
+amoxicillin	idr	sfar-sfa-2025-annex-4	true	20 mg/ml	20 mg/ml	1:10		
+amoxicillin-clavulanate	prick	sfar-sfa-2025-annex-4	true	20 mg/ml				
+amoxicillin-clavulanate	idr	sfar-sfa-2025-annex-4	true	20 mg/ml	20 mg/ml	1:10		
+piperacillin	prick	sfar-sfa-2025-annex-4	true	20 mg/ml				
+piperacillin	idr	sfar-sfa-2025-annex-4	true	20 mg/ml	20 mg/ml	1:10		
+piperacillin-tazobactam	prick	sfar-sfa-2025-annex-4	true	20 mg/ml				
+piperacillin-tazobactam	idr	sfar-sfa-2025-annex-4	true	20 mg/ml	20 mg/ml	1:10		
+cloxacillin	prick	sfar-sfa-2025-annex-4	true	20 mg/ml				
+cloxacillin	idr	sfar-sfa-2025-annex-4	true	20 mg/ml	20 mg/ml	1:10		
+cefazolin	prick	sfar-sfa-2025-annex-4	true	20 mg/ml				
+cefazolin	idr	sfar-sfa-2025-annex-4	true	20 mg/ml	20 mg/ml	1:10		
+cefuroxime	prick	sfar-sfa-2025-annex-4	true	20 mg/ml				
+cefuroxime	idr	sfar-sfa-2025-annex-4	true	20 mg/ml	20 mg/ml	1:10		
+cefotaxime	prick	sfar-sfa-2025-annex-4	true	20 mg/ml				
+cefotaxime	idr	sfar-sfa-2025-annex-4	true	20 mg/ml	20 mg/ml	1:10		
+ceftriaxone	prick	sfar-sfa-2025-annex-4	true	20 mg/ml				
+ceftriaxone	idr	sfar-sfa-2025-annex-4	true	20 mg/ml	20 mg/ml	1:10		
+cefepime	prick	sfar-sfa-2025-annex-4	true	2 mg/ml				
+cefepime	idr	sfar-sfa-2025-annex-4	true	2 mg/ml	2 mg/ml	1:10		
+ceftazidime	prick	sfar-sfa-2025-annex-4	true	20 mg/ml				
+ceftazidime	idr	sfar-sfa-2025-annex-4	true	20 mg/ml	20 mg/ml	1:10		
+ertapenem	prick	sfar-sfa-2025-annex-4	true	1 mg/ml				
+ertapenem	idr	sfar-sfa-2025-annex-4	true	1 mg/ml	1 mg/ml	1:10		
+imipenem	prick	sfar-sfa-2025-annex-4	true	0.05 mg/ml				
+imipenem	idr	sfar-sfa-2025-annex-4	true	0.05 mg/ml	0.05 mg/ml	1:10		
+meropenem	prick	sfar-sfa-2025-annex-4	true	1 mg/ml				
+meropenem	idr	sfar-sfa-2025-annex-4	true	1 mg/ml	1 mg/ml	1:10		
+aztreonam	prick	sfar-sfa-2025-annex-4	true	2 mg/ml				
+aztreonam	idr	sfar-sfa-2025-annex-4	true	2 mg/ml	2 mg/ml	1:10		
+atropine	prick	sfar-sfa-2025-annex-4	true	0.5 mg/ml				
+atropine	idr	sfar-sfa-2025-annex-4	true	0.05 mg/ml	0.05 mg/ml	1:10		
+chlorhexidine	prick	sfar-sfa-2025-annex-4	true	2 mg/ml				
+chlorhexidine	prick	eaaci-2019-table-4	false	5 mg/ml				
+chlorhexidine	idr	sfar-sfa-2025-annex-4	true	0.002 mg/ml	0.002 mg/ml	1:100; 1:10		
+chlorhexidine	idr	eaaci-2019-table-4	false					
+ondansetron	prick	sfar-sfa-2025-annex-4	true	4 mg/ml				
+ondansetron	idr	sfar-sfa-2025-annex-4	true	0.04 mg/ml	0.04 mg/ml	1:100; 1:10		
+protamine	prick	sfar-sfa-2025-annex-4	true	10 mg/ml				
+protamine	idr	sfar-sfa-2025-annex-4	true	0.01 mg/ml	0.01 mg/ml	1:100; 1:10		
+sugammadex	prick	sfar-sfa-2025-annex-4	true	10 mg/ml				
+sugammadex	prick	eaaci-2019-table-4	false	100 mg/ml				
+sugammadex	idr	sfar-sfa-2025-annex-4	true	1 mg/ml	1 mg/ml	1:10		
+sugammadex	idr	eaaci-2019-table-4	false	10 mg/ml	10 mg/ml			
+dexamethasone	prick	sfar-sfa-2025-annex-4	true	4 mg/ml				
+dexamethasone	idr	sfar-sfa-2025-annex-4	true	4 mg/ml	4 mg/ml	1:10		
+gelatin	prick	sfar-sfa-2025-annex-4	true	40 mg/ml				
+gelatin	idr	sfar-sfa-2025-annex-4	true	40 mg/ml	40 mg/ml	1:10		
+vancomycin	prick	sfar-sfa-2025-annex-4	true	50 mg/ml				
+vancomycin	idr	sfar-sfa-2025-annex-4	true	0.005 mg/ml	0.005 mg/ml	1:100; 1:10		
+vecuronium	prick	eaaci-2019-table-4	true	4 mg/ml				
+vecuronium	idr	eaaci-2019-table-4	true	0.04 mg/ml	0.04 mg/ml	1:100; 1:10		
+pancuronium	prick	eaaci-2019-table-4	true	2 mg/ml				
+pancuronium	idr	eaaci-2019-table-4	true	0.02 mg/ml	0.02 mg/ml	1:100; 1:10		
+s-ketamine	prick	eaaci-2019-table-4	true	25 mg/ml				
+s-ketamine	idr	eaaci-2019-table-4	true	0.25 mg/ml	0.25 mg/ml	1:100; 1:10		
+articaine	prick	eaaci-2019-table-4	true	20 mg/ml				
+articaine	idr	eaaci-2019-table-4	true	2 mg/ml	2 mg/ml	1:10		
+prilocaine	prick	eaaci-2019-table-4	true	20 mg/ml				
+prilocaine	idr	eaaci-2019-table-4	true	2 mg/ml	2 mg/ml	1:10		
+levobupivacaine	prick	eaaci-2019-table-4	true	7.5 mg/ml				
+levobupivacaine	idr	eaaci-2019-table-4	true	0.75 mg/ml	0.75 mg/ml	1:10		
+chloroprocaine	prick	eaaci-2019-table-4	true	10 mg/ml				
+chloroprocaine	idr	eaaci-2019-table-4	true	1 mg/ml	1 mg/ml	1:10		
+povidone-iodine	prick	eaaci-2019-table-4	true	100 mg/ml				
+dextran	prick	eaaci-2019-table-4	true					
+hydroxyethyl-starch	prick	eaaci-2019-table-4	true	60 mg/ml				
+hydroxyethyl-starch	idr	eaaci-2019-table-4	true	6 mg/ml	6 mg/ml	1:10		
+peg-macrogol-300	prick	eaaci-2019-table-4	true	undiluted				
+peg-macrogol-3000	prick	eaaci-2019-table-4	true	50% w/v				
+peg-macrogol-6000	prick	eaaci-2019-table-4	true	50% w/v				
+polysorbate-80	prick	eaaci-2019-table-4	true	20% w/v				
+poloxamer-407	prick	eaaci-2019-table-4	true	10% w/v				
+carboxymethyl-cellulose	prick	eaaci-2019-table-4	true	1% w/v

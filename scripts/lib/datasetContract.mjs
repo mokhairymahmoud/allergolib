@@ -73,13 +73,7 @@ function requireTrimmedField(row, key, context) {
 }
 
 function hasDisplayableTestContent(test) {
-  return Boolean(
-    test.concentration ||
-      test.maxConcentration ||
-      test.dilutions.length ||
-      test.vehicle ||
-      test.notes.length
-  );
+  return test.sourceEntries.length > 0 || test.notes.length > 0;
 }
 
 function assertSourceDocumentComplete(source, context) {
@@ -141,16 +135,20 @@ function buildSources(sourceRows) {
   return sources;
 }
 
-function emptyTestRecord(sourceId = "") {
+function emptyTestRecord() {
   return {
-    concentration: "",
-    maxConcentration: "",
+    sourceEntries: [],
     dilutions: [],
     vehicle: undefined,
     notes: [],
-    preferredSourceId: sourceId,
-    alternateSourceId: undefined,
   };
+}
+
+// Detect whether test_entries rows use the new multi-source layout (has is_preferred column)
+// or the legacy layout (has source_id + alternate_source_id columns).
+function isNewTestEntriesLayout(testRows) {
+  if (!testRows.length) return false;
+  return "is_preferred" in testRows[0];
 }
 
 function buildDrugs(drugRows, aliasRows, testRows, noteRows, sources) {
@@ -193,48 +191,10 @@ function buildDrugs(drugRows, aliasRows, testRows, noteRows, sources) {
     drugsById[row.drug_id].aliases.push(row.alias);
   }
 
-  for (const row of testRows) {
-    assert(drugsById[row.drug_id], `test_entries references unknown drug ${row.drug_id}.`);
-    assert(TEST_KINDS.includes(row.test_kind), `Invalid test kind ${row.test_kind} for ${row.drug_id}.`);
-    assert(sources[row.source_id], `test_entries references unknown source ${row.source_id}.`);
-    if (row.alternate_source_id) {
-      assert(
-        sources[row.alternate_source_id],
-        `test_entries references unknown alternate source ${row.alternate_source_id}.`
-      );
-      assert(
-        row.alternate_source_id !== row.source_id,
-        `test_entries alternate source must differ from preferred source for ${row.drug_id}/${row.test_kind}.`
-      );
-    }
-
-    const dilutions = row.dilutions
-      ? row.dilutions.split(";").map((value) => value.trim()).filter(Boolean)
-      : [];
-
-    const normalizedDilutions = [];
-
-    for (const dilution of dilutions) {
-      assert(
-        DILUTION_PATTERN.test(dilution),
-        `Invalid dilution "${dilution}" for ${row.drug_id}/${row.test_kind}.`
-      );
-      normalizedDilutions.push(normalizeDilution(dilution));
-    }
-
-    if (row.vehicle_en || row.vehicle_fr) {
-      assert(row.vehicle_en && row.vehicle_fr, `${row.drug_id}/${row.test_kind} must include vehicle in both languages.`);
-    }
-
-    drugsById[row.drug_id].tests[row.test_kind] = {
-      concentration: row.concentration,
-      maxConcentration: row.max_concentration,
-      dilutions: normalizedDilutions,
-      vehicle: row.vehicle_en || row.vehicle_fr ? { en: row.vehicle_en, fr: row.vehicle_fr } : undefined,
-      notes: [],
-      preferredSourceId: row.source_id,
-      alternateSourceId: row.alternate_source_id || undefined,
-    };
+  if (isNewTestEntriesLayout(testRows)) {
+    buildTestEntriesNew(testRows, drugsById, sources);
+  } else {
+    buildTestEntriesLegacy(testRows, drugsById, sources);
   }
 
   for (const row of noteRows) {
@@ -266,23 +226,142 @@ function buildDrugs(drugRows, aliasRows, testRows, noteRows, sources) {
         continue;
       }
 
-      assert(test.preferredSourceId, `Drug ${drug.id} is missing a source for ${kind}.`);
-
-      assertSourceDocumentComplete(
-        sources[test.preferredSourceId],
-        `Drug ${drug.id}/${kind} preferred source`
-      );
-
-      if (test.alternateSourceId) {
+      for (const entry of test.sourceEntries) {
         assertSourceDocumentComplete(
-          sources[test.alternateSourceId],
-          `Drug ${drug.id}/${kind} alternate source`
+          sources[entry.sourceId],
+          `Drug ${drug.id}/${kind} source ${entry.sourceId}`
         );
       }
     }
   }
 
   return Object.values(drugsById);
+}
+
+function buildTestEntriesNew(testRows, drugsById, sources) {
+  // Group rows by (drug_id, test_kind) preserving order.
+  const grouped = {};
+
+  for (const row of testRows) {
+    assert(drugsById[row.drug_id], `test_entries references unknown drug ${row.drug_id}.`);
+    assert(TEST_KINDS.includes(row.test_kind), `Invalid test kind ${row.test_kind} for ${row.drug_id}.`);
+    assert(row.source_id?.trim(), `test_entries row for ${row.drug_id}/${row.test_kind} is missing source_id.`);
+    assert(sources[row.source_id], `test_entries references unknown source ${row.source_id} for ${row.drug_id}/${row.test_kind}.`);
+
+    const key = `${row.drug_id}::${row.test_kind}`;
+
+    if (!grouped[key]) {
+      grouped[key] = { drug_id: row.drug_id, test_kind: row.test_kind, rows: [] };
+    }
+
+    grouped[key].rows.push(row);
+  }
+
+  for (const { drug_id, test_kind, rows } of Object.values(grouped)) {
+    const preferredRows = rows.filter((r) => r.is_preferred === "true");
+    assert(
+      preferredRows.length === 1,
+      `test_entries for ${drug_id}/${test_kind} must have exactly one row with is_preferred=true (found ${preferredRows.length}).`
+    );
+
+    const sourceIds = rows.map((r) => r.source_id);
+    const uniqueIds = new Set(sourceIds);
+    assert(uniqueIds.size === sourceIds.length, `test_entries for ${drug_id}/${test_kind} has duplicate source_id values.`);
+
+    const preferredRow = preferredRows[0];
+
+    const dilutions = preferredRow.dilutions
+      ? preferredRow.dilutions.split(";").map((v) => v.trim()).filter(Boolean)
+      : [];
+
+    const normalizedDilutions = [];
+    for (const dilution of dilutions) {
+      assert(DILUTION_PATTERN.test(dilution), `Invalid dilution "${dilution}" for ${drug_id}/${test_kind}.`);
+      normalizedDilutions.push(normalizeDilution(dilution));
+    }
+
+    const vehicle =
+      preferredRow.vehicle_en || preferredRow.vehicle_fr
+        ? (() => {
+            assert(
+              preferredRow.vehicle_en && preferredRow.vehicle_fr,
+              `${drug_id}/${test_kind} must include vehicle in both languages.`
+            );
+            return { en: preferredRow.vehicle_en, fr: preferredRow.vehicle_fr };
+          })()
+        : undefined;
+
+    const sourceEntries = rows.map((row) => ({
+      sourceId: row.source_id,
+      ...(row.concentration?.trim() ? { concentration: row.concentration.trim() } : {}),
+      ...(row.max_concentration?.trim() ? { maxConcentration: row.max_concentration.trim() } : {}),
+      isPreferred: row.is_preferred === "true",
+    }));
+
+    drugsById[drug_id].tests[test_kind] = {
+      sourceEntries,
+      dilutions: normalizedDilutions,
+      vehicle,
+      notes: [],
+    };
+  }
+}
+
+function buildTestEntriesLegacy(testRows, drugsById, sources) {
+  // Legacy layout: one row per test with source_id + optional alternate_source_id.
+  for (const row of testRows) {
+    assert(drugsById[row.drug_id], `test_entries references unknown drug ${row.drug_id}.`);
+    assert(TEST_KINDS.includes(row.test_kind), `Invalid test kind ${row.test_kind} for ${row.drug_id}.`);
+    assert(sources[row.source_id], `test_entries references unknown source ${row.source_id}.`);
+
+    if (row.alternate_source_id) {
+      assert(
+        sources[row.alternate_source_id],
+        `test_entries references unknown alternate source ${row.alternate_source_id}.`
+      );
+      assert(
+        row.alternate_source_id !== row.source_id,
+        `test_entries alternate source must differ from preferred source for ${row.drug_id}/${row.test_kind}.`
+      );
+    }
+
+    const dilutions = row.dilutions
+      ? row.dilutions.split(";").map((value) => value.trim()).filter(Boolean)
+      : [];
+
+    const normalizedDilutions = [];
+    for (const dilution of dilutions) {
+      assert(DILUTION_PATTERN.test(dilution), `Invalid dilution "${dilution}" for ${row.drug_id}/${row.test_kind}.`);
+      normalizedDilutions.push(normalizeDilution(dilution));
+    }
+
+    if (row.vehicle_en || row.vehicle_fr) {
+      assert(row.vehicle_en && row.vehicle_fr, `${row.drug_id}/${row.test_kind} must include vehicle in both languages.`);
+    }
+
+    const sourceEntries = [
+      {
+        sourceId: row.source_id,
+        ...(row.concentration?.trim() ? { concentration: row.concentration.trim() } : {}),
+        ...(row.max_concentration?.trim() ? { maxConcentration: row.max_concentration.trim() } : {}),
+        isPreferred: true,
+      },
+    ];
+
+    if (row.alternate_source_id?.trim()) {
+      sourceEntries.push({
+        sourceId: row.alternate_source_id.trim(),
+        isPreferred: false,
+      });
+    }
+
+    drugsById[row.drug_id].tests[row.test_kind] = {
+      sourceEntries,
+      dilutions: normalizedDilutions,
+      vehicle: row.vehicle_en || row.vehicle_fr ? { en: row.vehicle_en, fr: row.vehicle_fr } : undefined,
+      notes: [],
+    };
+  }
 }
 
 function buildDatasetFromTabRows(tabRowsByName) {

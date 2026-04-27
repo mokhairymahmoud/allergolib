@@ -144,6 +144,41 @@
       return;
     }
 
+    if (action === "add-source-entry") {
+      const testKind = event.target.getAttribute("data-test-kind");
+      state.form.tests[testKind].sourceEntries.push({
+        sourceId: state.defaultSourceId || "",
+        concentration: "",
+        maxConcentration: "",
+        isPreferred: false,
+      });
+      renderForm();
+      return;
+    }
+
+    if (action === "remove-source-entry") {
+      const testKind = event.target.getAttribute("data-test-kind");
+      const index = Number(event.target.getAttribute("data-index"));
+      state.form.tests[testKind].sourceEntries.splice(index, 1);
+      // Ensure at least one preferred entry remains.
+      const entries = state.form.tests[testKind].sourceEntries;
+      if (entries.length && !entries.some(function (e) { return e.isPreferred; })) {
+        entries[0].isPreferred = true;
+      }
+      renderForm();
+      return;
+    }
+
+    if (action === "set-preferred-source-entry") {
+      const testKind = event.target.getAttribute("data-test-kind");
+      const index = Number(event.target.getAttribute("data-index"));
+      state.form.tests[testKind].sourceEntries.forEach(function (e, i) {
+        e.isPreferred = (i === index);
+      });
+      renderForm();
+      return;
+    }
+
     if (action === "add-note") {
       const testKind = event.target.getAttribute("data-test-kind");
       state.form.tests[testKind].notes.push({
@@ -190,48 +225,57 @@
     if (
       target.matches("[data-test-enabled]") ||
       target.matches("[data-source-field]") ||
-      target.matches("[data-source-select]")
+      target.matches("[data-source-entry]")
     ) {
       syncFormFromDom();
-
-      if (target.matches('[data-source-select="alternate"]')) {
-        const testKind = target.id.replace("test-", "").replace("-alternate-source", "");
-        maybeInjectDiscrepancyNote(testKind);
-      }
-
+      maybeUpdateDiscrepancyNotes();
       renderForm();
     }
+  }
+
+  function maybeUpdateDiscrepancyNotes() {
+    state.testKinds.forEach(function (testKind) {
+      if (state.form.applicableTests.indexOf(testKind) === -1) return;
+      maybeInjectDiscrepancyNote(testKind);
+    });
   }
 
   function maybeInjectDiscrepancyNote(testKind) {
     const test = state.form.tests[testKind];
     const MARKER = "<!-- discrepancy-auto -->";
 
-    // Remove any previously auto-injected discrepancy note.
     test.notes = test.notes.filter(function (note) {
       return note.value.en.indexOf(MARKER) === -1;
     });
 
-    if (!test.alternateSourceId) {
+    const preferredEntry = test.sourceEntries.find(function (e) { return e.isPreferred; });
+    const nonPreferred = test.sourceEntries.filter(function (e) { return !e.isPreferred; });
+    const hasDiscrepancy = nonPreferred.some(function (e) {
+      return e.concentration && e.concentration !== (preferredEntry && preferredEntry.concentration);
+    });
+
+    if (!hasDiscrepancy || !preferredEntry) {
       return;
     }
 
     const allSources = combinedSources();
-
     function labelFor(id) {
       const src = allSources.find(function (s) { return s.id === id; });
       return src ? (src.label || src.id) : id;
     }
 
-    const preferredLabel = labelFor(test.sourceId);
-    const alternateLabel = labelFor(test.alternateSourceId);
-    const conc = test.concentration || "?";
+    const lines = test.sourceEntries.map(function (e) {
+      return labelFor(e.sourceId) + ": " + (e.concentration || "—") + (e.isPreferred ? " (preferred)" : "");
+    });
+    const linesFr = test.sourceEntries.map(function (e) {
+      return labelFor(e.sourceId) + " : " + (e.concentration || "—") + (e.isPreferred ? " (prefere)" : "");
+    });
 
     test.notes.push({
       kind: "warning",
       value: {
-        en: MARKER + "Concentration discrepancy between sources: " + preferredLabel + " recommends " + conc + " (used here as the preferred guideline); verify against " + alternateLabel + " and update this note with the alternate concentration if they differ.",
-        fr: MARKER + "Discordance de concentration entre les sources : " + preferredLabel + " recommande " + conc + " (utilise ici comme recommandation principale) ; verifier par rapport a " + alternateLabel + " et mettre a jour cette note avec la concentration alternative si elles different.",
+        en: MARKER + "Concentration discrepancy between sources — " + lines.join("; ") + ". Verify and update this note as needed.",
+        fr: MARKER + "Discordance de concentration entre les sources — " + linesFr.join(" ; ") + ". Verifier et mettre a jour cette note si necessaire.",
       },
     });
   }
@@ -354,21 +398,9 @@
     state.testKinds.forEach(function (testKind) {
       nextForm.tests[testKind] = cloneTest(nextForm.tests[testKind] || emptyTest(state.defaultSourceId));
 
-      const concentration = document.getElementById("test-" + testKind + "-concentration");
-      const max = document.getElementById("test-" + testKind + "-max");
       const dilutions = document.getElementById("test-" + testKind + "-dilutions");
       const vehicleFr = document.getElementById("test-" + testKind + "-vehicle-fr");
       const vehicleEn = document.getElementById("test-" + testKind + "-vehicle-en");
-      const source = document.getElementById("test-" + testKind + "-source");
-      const alternateSource = document.getElementById("test-" + testKind + "-alternate-source");
-
-      if (concentration) {
-        nextForm.tests[testKind].concentration = concentration.value;
-      }
-
-      if (max) {
-        nextForm.tests[testKind].maxConcentration = max.value;
-      }
 
       if (dilutions) {
         nextForm.tests[testKind].dilutions = dilutions.value;
@@ -382,13 +414,18 @@
         nextForm.tests[testKind].vehicle.en = vehicleEn.value;
       }
 
-      if (source) {
-        nextForm.tests[testKind].sourceId = source.value;
-      }
-
-      if (alternateSource) {
-        nextForm.tests[testKind].alternateSourceId = alternateSource.value;
-      }
+      nextForm.tests[testKind].sourceEntries = Array.from(
+        document.querySelectorAll('[data-source-entry-row="' + testKind + '"]')
+      ).map(function (row) {
+        return {
+          sourceId: readNestedField(row, '[data-source-entry-field="sourceId"]'),
+          concentration: readNestedField(row, '[data-source-entry-field="concentration"]'),
+          maxConcentration: readNestedField(row, '[data-source-entry-field="maxConcentration"]'),
+          isPreferred: row.querySelector('[data-source-entry-field="isPreferred"]')
+            ? row.querySelector('[data-source-entry-field="isPreferred"]').checked
+            : false,
+        };
+      });
 
       nextForm.tests[testKind].notes = Array.from(
         document.querySelectorAll('[data-note-kind-row="' + testKind + '"]')
@@ -635,46 +672,78 @@
       '<article class="testCard">' +
       '<div class="testTitleRow">' +
       "<div>" +
-      "<h3>" +
-      escapeHtml(testKind.toUpperCase()) +
-      "</h3>" +
-      '<div class="fieldHint">Add at least one clinical field or note for this selected test.</div>' +
+      "<h3>" + escapeHtml(testKind.toUpperCase()) + "</h3>" +
+      '<div class="fieldHint">Add at least one source entry with a concentration, or a note, for this test.</div>' +
       "</div>" +
-      '<button type="button" class="ghostButton" data-action="add-note" data-test-kind="' +
-      escapeHtml(testKind) +
-      '">Add note</button>' +
+      '<div style="display:flex;gap:8px;">' +
+      '<button type="button" class="ghostButton" data-action="add-source-entry" data-test-kind="' + escapeHtml(testKind) + '">Add source</button>' +
+      '<button type="button" class="ghostButton" data-action="add-note" data-test-kind="' + escapeHtml(testKind) + '">Add note</button>' +
       "</div>" +
-      '<div class="grid3">' +
-      field(
-        "Preferred source",
-        "test-" + testKind + "-source",
-        sourceOptions(test.sourceId),
-        "select",
-        "",
-        'data-source-select="preferred"'
-      ) +
-      field(
-        "Alternate source",
-        "test-" + testKind + "-alternate-source",
-        sourceOptions(test.alternateSourceId, true),
-        "select",
-        "If concentrations differ between sources, a discrepancy warning note will be added automatically below.",
-        'data-source-select="alternate"'
-      ) +
-      field(
-        "Dilutions",
-        "test-" + testKind + "-dilutions",
-        test.dilutions,
-        "text",
-        "Use semicolons, for example 1:10; 1:100"
-      ) +
-      field("Concentration", "test-" + testKind + "-concentration", test.concentration, "text") +
-      field("Max concentration", "test-" + testKind + "-max", test.maxConcentration, "text") +
+      "</div>" +
+      renderSourceEntries(testKind, test.sourceEntries) +
+      '<div class="grid3" style="margin-top:12px;">' +
+      field("Dilutions", "test-" + testKind + "-dilutions", test.dilutions, "text", "Shared across sources. Use semicolons, e.g. 1:10; 1:100") +
       field("Vehicle (FR)", "test-" + testKind + "-vehicle-fr", test.vehicle.fr, "text") +
       field("Vehicle (EN)", "test-" + testKind + "-vehicle-en", test.vehicle.en, "text") +
       "</div>" +
       renderNotes(testKind, test.notes) +
       "</article>"
+    );
+  }
+
+  function renderSourceEntries(testKind, entries) {
+    if (!entries || !entries.length) {
+      return '<div class="emptyState">No source entries yet for ' + escapeHtml(testKind) + '. Use "Add source" above.</div>';
+    }
+
+    return (
+      '<div class="sourceEntryList">' +
+      entries.map(function (entry, index) {
+        const isOnlyEntry = entries.length === 1;
+        return (
+          '<div class="sourceEntryRow" data-source-entry-row="' + escapeHtml(testKind) + '">' +
+          '<div class="grid3">' +
+          field(
+            "Source",
+            "test-" + testKind + "-source-entry-source-" + index,
+            sourceOptions(entry.sourceId),
+            "select",
+            "",
+            'data-source-entry="' + escapeHtml(testKind) + '" data-source-entry-field="sourceId"'
+          ) +
+          field(
+            "Concentration",
+            "test-" + testKind + "-source-entry-conc-" + index,
+            entry.concentration,
+            "text",
+            "",
+            'data-source-entry="' + escapeHtml(testKind) + '" data-source-entry-field="concentration"'
+          ) +
+          field(
+            "Max concentration",
+            "test-" + testKind + "-source-entry-max-" + index,
+            entry.maxConcentration,
+            "text",
+            "",
+            'data-source-entry="' + escapeHtml(testKind) + '" data-source-entry-field="maxConcentration"'
+          ) +
+          "</div>" +
+          '<div class="cardActions" style="align-items:center;">' +
+          '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">' +
+          '<input type="checkbox"' +
+          (entry.isPreferred ? ' checked="checked"' : "") +
+          ' data-action="set-preferred-source-entry" data-test-kind="' + escapeHtml(testKind) + '" data-index="' + index + '"' +
+          ' data-source-entry="' + escapeHtml(testKind) + '" data-source-entry-field="isPreferred">' +
+          " Preferred source" +
+          "</label>" +
+          (!isOnlyEntry
+            ? '<button type="button" class="dangerButton" data-action="remove-source-entry" data-test-kind="' + escapeHtml(testKind) + '" data-index="' + index + '">Remove</button>'
+            : "") +
+          "</div>" +
+          "</div>"
+        );
+      }).join("") +
+      "</div>"
     );
   }
 
@@ -1119,31 +1188,35 @@
         ".";
 
       if (!hasMeaningfulTestContent(test)) {
-        validation.fields["test-" + testKind + "-concentration"] = contentError;
+        validation.fields["test-" + testKind + "-source-entries"] = contentError;
       }
 
-      if (!test.sourceId) {
-        validation.fields["test-" + testKind + "-source"] = "Preferred source is required.";
-      } else if (!availableSourceIds.has(test.sourceId)) {
-        validation.fields["test-" + testKind + "-source"] =
-          "Preferred source id is not available in the source catalog.";
-      } else {
-        usedSourceIds[test.sourceId] = true;
+      const preferredCount = test.sourceEntries.filter(function (e) { return e.isPreferred; }).length;
+      if (test.sourceEntries.length > 0 && preferredCount !== 1) {
+        validation.fields["test-" + testKind + "-source-entries"] =
+          "Exactly one preferred source is required for " + testKind.toUpperCase() + ".";
       }
 
-      if (test.alternateSourceId) {
-        if (!availableSourceIds.has(test.alternateSourceId)) {
-          validation.fields["test-" + testKind + "-alternate-source"] =
-            "Alternate source id is not available in the source catalog.";
+      const seenEntryIds = {};
+      test.sourceEntries.forEach(function (entry, index) {
+        if (!entry.sourceId) {
+          validation.fields["test-" + testKind + "-source-entry-source-" + index] =
+            "Source is required.";
+        } else if (!availableSourceIds.has(entry.sourceId)) {
+          validation.fields["test-" + testKind + "-source-entry-source-" + index] =
+            "Source id is not available in the source catalog.";
         } else {
-          usedSourceIds[test.alternateSourceId] = true;
+          usedSourceIds[entry.sourceId] = true;
         }
 
-        if (test.alternateSourceId === test.sourceId) {
-          validation.fields["test-" + testKind + "-alternate-source"] =
-            "Alternate source must differ from the preferred source.";
+        if (seenEntryIds[entry.sourceId]) {
+          validation.fields["test-" + testKind + "-source-entry-source-" + index] =
+            "Duplicate source in " + testKind.toUpperCase() + ".";
         }
-      }
+        if (entry.sourceId) {
+          seenEntryIds[entry.sourceId] = true;
+        }
+      });
 
       if (Boolean(test.vehicle.fr.trim()) !== Boolean(test.vehicle.en.trim())) {
         validation.fields["test-" + testKind + "-vehicle-fr"] =
@@ -1317,20 +1390,24 @@
       applicableTests: form.applicableTests.slice(),
       tests: Object.fromEntries(
         state.testKinds.map(function (testKind) {
+          const MARKER = "<!-- discrepancy-auto -->";
           return [
             testKind,
             {
-              concentration: form.tests[testKind].concentration,
-              maxConcentration: form.tests[testKind].maxConcentration,
               dilutions: form.tests[testKind].dilutions,
               vehicle: {
                 fr: form.tests[testKind].vehicle.fr,
                 en: form.tests[testKind].vehicle.en,
               },
-              sourceId: form.tests[testKind].sourceId,
-              alternateSourceId: form.tests[testKind].alternateSourceId,
+              sourceEntries: form.tests[testKind].sourceEntries.map(function (entry) {
+                return {
+                  sourceId: entry.sourceId,
+                  concentration: entry.concentration,
+                  maxConcentration: entry.maxConcentration,
+                  isPreferred: entry.isPreferred,
+                };
+              }),
               notes: form.tests[testKind].notes.map(function (note) {
-                const MARKER = "<!-- discrepancy-auto -->";
                 return {
                   kind: note.kind,
                   value: {
@@ -1376,15 +1453,21 @@
     state.testKinds.forEach(function (testKind) {
       const loadedTest = drug.tests && drug.tests[testKind] ? drug.tests[testKind] : emptyTest(state.defaultSourceId);
       normalized.tests[testKind] = {
-        concentration: loadedTest.concentration || "",
-        maxConcentration: loadedTest.maxConcentration || "",
         dilutions: loadedTest.dilutions || "",
         vehicle: {
           fr: (loadedTest.vehicle && loadedTest.vehicle.fr) || "",
           en: (loadedTest.vehicle && loadedTest.vehicle.en) || "",
         },
-        sourceId: loadedTest.sourceId || state.defaultSourceId || "",
-        alternateSourceId: loadedTest.alternateSourceId || "",
+        sourceEntries: Array.isArray(loadedTest.sourceEntries) && loadedTest.sourceEntries.length
+          ? loadedTest.sourceEntries.map(function (entry) {
+              return {
+                sourceId: (entry && entry.sourceId) || "",
+                concentration: (entry && entry.concentration) || "",
+                maxConcentration: (entry && entry.maxConcentration) || "",
+                isPreferred: Boolean(entry && entry.isPreferred),
+              };
+            })
+          : [{ sourceId: state.defaultSourceId || "", concentration: "", maxConcentration: "", isPreferred: true }],
         notes: Array.isArray(loadedTest.notes)
           ? loadedTest.notes.map(function (note) {
               return {
@@ -1422,12 +1505,11 @@
 
   function emptyTest(defaultSourceId) {
     return {
-      concentration: "",
-      maxConcentration: "",
       dilutions: "",
       vehicle: { en: "", fr: "" },
-      sourceId: defaultSourceId || "",
-      alternateSourceId: "",
+      sourceEntries: [
+        { sourceId: defaultSourceId || "", concentration: "", maxConcentration: "", isPreferred: true },
+      ],
       notes: [],
     };
   }
@@ -1471,15 +1553,19 @@
 
   function cloneTest(test) {
     return {
-      concentration: test.concentration,
-      maxConcentration: test.maxConcentration,
       dilutions: test.dilutions,
       vehicle: {
         fr: test.vehicle.fr,
         en: test.vehicle.en,
       },
-      sourceId: test.sourceId,
-      alternateSourceId: test.alternateSourceId,
+      sourceEntries: test.sourceEntries.map(function (entry) {
+        return {
+          sourceId: entry.sourceId,
+          concentration: entry.concentration,
+          maxConcentration: entry.maxConcentration,
+          isPreferred: entry.isPreferred,
+        };
+      }),
       notes: test.notes.map(function (note) {
         return {
           kind: note.kind,
@@ -1513,8 +1599,9 @@
 
   function hasMeaningfulTestContent(test) {
     return Boolean(
-      test.concentration.trim() ||
-        test.maxConcentration.trim() ||
+      test.sourceEntries.some(function (e) {
+        return (e.concentration && e.concentration.trim()) || (e.maxConcentration && e.maxConcentration.trim());
+      }) ||
         test.dilutions.trim() ||
         (test.vehicle.fr.trim() && test.vehicle.en.trim()) ||
         test.notes.some(function (note) {

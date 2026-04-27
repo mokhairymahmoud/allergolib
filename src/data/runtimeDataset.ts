@@ -12,6 +12,7 @@ import type {
   TestNote,
   TestKind,
   TestRecord,
+  TestSourceEntry,
 } from "../types";
 import { bundledDatasetJson, bundledManifestJson } from "./loadBundledDataset";
 
@@ -124,13 +125,7 @@ function asLocalizedStringArray(value: unknown, context: string): LocalizedStrin
 }
 
 function hasDisplayableTestContent(test: TestRecord) {
-  return Boolean(
-    test.concentration ||
-      test.maxConcentration ||
-      test.dilutions.length ||
-      test.vehicle ||
-      test.notes.length
-  );
+  return test.sourceEntries.length > 0 || test.notes.length > 0;
 }
 
 function assertSourceDocumentComplete(
@@ -257,56 +252,75 @@ function normalizeSourceDocument(value: unknown, context: string): SourceDocumen
   };
 }
 
+function normalizeTestSourceEntry(
+  value: unknown,
+  context: string,
+  sourceIds: Set<string>
+): TestSourceEntry {
+  const record = asRecord(value, context);
+  const sourceId = asString(record.sourceId, `${context}.sourceId`);
+
+  if (!sourceIds.has(sourceId)) {
+    fail(`${context}.sourceId references an unknown source: ${sourceId}.`);
+  }
+
+  const concentration = asOptionalString(record.concentration, `${context}.concentration`);
+  const maxConcentration = asOptionalString(record.maxConcentration, `${context}.maxConcentration`);
+  const isPreferred = record.isPreferred === true || record.isPreferred === "true";
+
+  return { sourceId, concentration, maxConcentration, isPreferred };
+}
+
 function normalizeTestRecord(
   value: unknown,
   context: string,
   sourceIds: Set<string>
 ): TestRecord {
   const record = asRecord(value, context);
-  const preferredSourceId = asOptionalString(
-    record.preferredSourceId ?? record.sourceId,
-    `${context}.preferredSourceId`
-  ) ?? "";
-
-  const concentration = asOptionalString(record.concentration, `${context}.concentration`);
-  const maxConcentration = asOptionalString(record.maxConcentration, `${context}.maxConcentration`);
   const dilutions = asStringArray(record.dilutions, `${context}.dilutions`);
   const vehicle = record.vehicle ? asLocalizedString(record.vehicle, `${context}.vehicle`) : undefined;
   const notes = asTestNotes(record.notes, `${context}.notes`);
 
-  const hasContent = Boolean(concentration || maxConcentration || dilutions.length || vehicle || notes.length);
+  let sourceEntries: TestSourceEntry[];
 
-  if (hasContent) {
-    if (!preferredSourceId) {
+  if (Array.isArray(record.sourceEntries)) {
+    // New format.
+    sourceEntries = record.sourceEntries.map((entry, i) =>
+      normalizeTestSourceEntry(entry, `${context}.sourceEntries[${i}]`, sourceIds)
+    );
+  } else {
+    // Legacy format: reconstruct sourceEntries from flat fields.
+    const preferredSourceId = asOptionalString(
+      record.preferredSourceId ?? record.sourceId,
+      `${context}.preferredSourceId`
+    ) ?? "";
+
+    const concentration = asOptionalString(record.concentration, `${context}.concentration`);
+    const maxConcentration = asOptionalString(record.maxConcentration, `${context}.maxConcentration`);
+    const hasContent = Boolean(concentration || maxConcentration || dilutions.length || vehicle || notes.length);
+
+    sourceEntries = [];
+
+    if (preferredSourceId) {
+      if (!sourceIds.has(preferredSourceId)) {
+        fail(`${context}.preferredSourceId references an unknown source: ${preferredSourceId}.`);
+      }
+      sourceEntries.push({ sourceId: preferredSourceId, concentration, maxConcentration, isPreferred: true });
+    } else if (hasContent) {
       fail(`${context}.preferredSourceId must not be empty.`);
     }
-    if (!sourceIds.has(preferredSourceId)) {
-      fail(`${context}.preferredSourceId references an unknown source: ${preferredSourceId}.`);
+
+    const alternateSourceId = asOptionalString(record.alternateSourceId, `${context}.alternateSourceId`);
+
+    if (alternateSourceId) {
+      if (!sourceIds.has(alternateSourceId)) {
+        fail(`${context}.alternateSourceId references an unknown source: ${alternateSourceId}.`);
+      }
+      sourceEntries.push({ sourceId: alternateSourceId, isPreferred: false });
     }
   }
 
-  const alternateSourceId = asOptionalString(
-    record.alternateSourceId,
-    `${context}.alternateSourceId`
-  );
-
-  if (alternateSourceId && !sourceIds.has(alternateSourceId)) {
-    fail(`${context}.alternateSourceId references an unknown source: ${alternateSourceId}.`);
-  }
-
-  if (alternateSourceId && alternateSourceId === preferredSourceId) {
-    fail(`${context}.alternateSourceId must differ from preferredSourceId.`);
-  }
-
-  return {
-    concentration,
-    maxConcentration,
-    dilutions,
-    vehicle,
-    notes,
-    preferredSourceId,
-    alternateSourceId,
-  };
+  return { sourceEntries, dilutions, vehicle, notes };
 }
 
 function normalizeDataset(value: unknown, context: string): Dataset {
@@ -377,15 +391,10 @@ function normalizeDataset(value: unknown, context: string): Dataset {
         continue;
       }
 
-      assertSourceDocumentComplete(
-        sources[test.preferredSourceId],
-        `${context}.drugs.${drug.id}.tests.${kind}.preferredSource`
-      );
-
-      if (test.alternateSourceId) {
+      for (const entry of test.sourceEntries) {
         assertSourceDocumentComplete(
-          sources[test.alternateSourceId],
-          `${context}.drugs.${drug.id}.tests.${kind}.alternateSource`
+          sources[entry.sourceId],
+          `${context}.drugs.${drug.id}.tests.${kind}.source.${entry.sourceId}`
         );
       }
     }

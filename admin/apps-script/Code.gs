@@ -75,30 +75,45 @@ function loadDrugForAdmin(drugId) {
     record.aliases = [""];
   }
 
+  // Group test_entries by test_kind (new multi-source layout: one row per source entry).
+  const testEntriesByKind = {};
   testEntriesTable.objects
-    .filter((row) => row.drug_id === normalizedDrugId)
+    .filter((row) => row.drug_id === normalizedDrugId && ADMIN_APP.testKinds.includes(row.test_kind))
     .forEach((row) => {
-      if (!ADMIN_APP.testKinds.includes(row.test_kind)) {
-        return;
+      if (!testEntriesByKind[row.test_kind]) {
+        testEntriesByKind[row.test_kind] = [];
       }
+      testEntriesByKind[row.test_kind].push(row);
+    });
 
-      record.tests[row.test_kind] = {
+  ADMIN_APP.testKinds.forEach((testKind) => {
+    const rows = testEntriesByKind[testKind] || [];
+
+    if (!rows.length) {
+      return;
+    }
+
+    const preferredRow = rows.find((r) => r.is_preferred === "true") || rows[0];
+
+    record.tests[testKind] = {
+      dilutions: toTrimmedString_(preferredRow.dilutions),
+      vehicle: {
+        en: toTrimmedString_(preferredRow.vehicle_en),
+        fr: toTrimmedString_(preferredRow.vehicle_fr),
+      },
+      sourceEntries: rows.map((row) => ({
+        sourceId: toTrimmedString_(row.source_id) || defaultSourceId,
         concentration: toTrimmedString_(row.concentration),
         maxConcentration: toTrimmedString_(row.max_concentration),
-        dilutions: toTrimmedString_(row.dilutions),
-        vehicle: {
-          en: toTrimmedString_(row.vehicle_en),
-          fr: toTrimmedString_(row.vehicle_fr),
-        },
-        sourceId: toTrimmedString_(row.source_id) || defaultSourceId,
-        alternateSourceId: toTrimmedString_(row.alternate_source_id),
-        notes: [],
-      };
+        isPreferred: row.is_preferred === "true",
+      })),
+      notes: [],
+    };
 
-      if (hasMeaningfulTestFormContent_(record.tests[row.test_kind])) {
-        applicableKinds[row.test_kind] = true;
-      }
-    });
+    if (hasMeaningfulTestFormContent_(record.tests[testKind])) {
+      applicableKinds[testKind] = true;
+    }
+  });
 
   notesTable.objects
     .filter((row) => row.drug_id === normalizedDrugId)
@@ -616,12 +631,11 @@ function emptyDrugForm_(defaultSourceId) {
 
 function emptyTestForm_(defaultSourceId) {
   return {
-    concentration: "",
-    maxConcentration: "",
     dilutions: "",
     vehicle: { en: "", fr: "" },
-    sourceId: defaultSourceId || "",
-    alternateSourceId: "",
+    sourceEntries: [
+      { sourceId: defaultSourceId || "", concentration: "", maxConcentration: "", isPreferred: true },
+    ],
     notes: [],
   };
 }
@@ -743,15 +757,17 @@ function normalizeDrugPayload_(payload, options) {
     const rawTest = payload && payload.tests ? payload.tests[testKind] : null;
     const normalizedTest = emptyTestForm_(firstSourceId_(options.sourcesById));
 
-    normalizedTest.concentration = toTrimmedString_(rawTest && rawTest.concentration);
-    normalizedTest.maxConcentration = toTrimmedString_(rawTest && rawTest.maxConcentration);
     normalizedTest.dilutions = normalizeDilutionList_(rawTest && rawTest.dilutions, errors, testKind);
     normalizedTest.vehicle.en = toTrimmedString_(rawTest && rawTest.vehicle && rawTest.vehicle.en);
     normalizedTest.vehicle.fr = toTrimmedString_(rawTest && rawTest.vehicle && rawTest.vehicle.fr);
-    normalizedTest.sourceId =
-      toTrimmedString_(rawTest && rawTest.sourceId) || firstSourceId_(options.sourcesById);
-    normalizedTest.alternateSourceId = toTrimmedString_(rawTest && rawTest.alternateSourceId);
     normalizedTest.notes = normalizeNotes_(rawTest && rawTest.notes, errors, testKind);
+    normalizedTest.sourceEntries = normalizeTestSourceEntries_(
+      rawTest && rawTest.sourceEntries,
+      errors,
+      testKind,
+      options.sourcesById,
+      usedSourceIds
+    );
 
     if (!record.applicableTests.includes(testKind)) {
       record.tests[testKind] = normalizedTest;
@@ -760,30 +776,8 @@ function normalizeDrugPayload_(payload, options) {
 
     if (!hasMeaningfulTestFormContent_(normalizedTest)) {
       errors.push(
-        `Test ${testKind} must include at least one of concentration, max concentration, dilution, vehicle, or note.`
+        `Test ${testKind} must include at least one of concentration, dilution, vehicle, note, or source entry.`
       );
-    }
-
-    if (!normalizedTest.sourceId) {
-      errors.push(`Preferred source is required for ${testKind}.`);
-    } else if (!options.sourcesById[normalizedTest.sourceId]) {
-      errors.push(`Preferred source "${normalizedTest.sourceId}" does not exist for ${testKind}.`);
-    } else {
-      usedSourceIds[normalizedTest.sourceId] = true;
-    }
-
-    if (normalizedTest.alternateSourceId) {
-      if (!options.sourcesById[normalizedTest.alternateSourceId]) {
-        errors.push(
-          `Alternate source "${normalizedTest.alternateSourceId}" does not exist for ${testKind}.`
-        );
-      } else {
-        usedSourceIds[normalizedTest.alternateSourceId] = true;
-      }
-
-      if (normalizedTest.alternateSourceId === normalizedTest.sourceId) {
-        errors.push(`Alternate source must differ from the preferred source for ${testKind}.`);
-      }
     }
 
     if (Boolean(normalizedTest.vehicle.en) !== Boolean(normalizedTest.vehicle.fr)) {
@@ -825,6 +819,40 @@ function normalizeNotes_(notes, errors, testKind) {
 
       return note;
     });
+}
+
+function normalizeTestSourceEntries_(rawEntries, errors, testKind, sourcesById, usedSourceIds) {
+  const entries = Array.isArray(rawEntries) ? rawEntries : [];
+  const normalized = entries
+    .map((entry) => ({
+      sourceId: toTrimmedString_(entry && entry.sourceId),
+      concentration: toTrimmedString_(entry && entry.concentration),
+      maxConcentration: toTrimmedString_(entry && entry.maxConcentration),
+      isPreferred: Boolean(entry && entry.isPreferred),
+    }))
+    .filter((entry) => entry.sourceId);
+
+  const preferredCount = normalized.filter((e) => e.isPreferred).length;
+
+  if (normalized.length > 0 && preferredCount !== 1) {
+    errors.push(`Test ${testKind} must have exactly one preferred source entry (found ${preferredCount}).`);
+  }
+
+  const seenIds = {};
+  normalized.forEach((entry) => {
+    if (!sourcesById[entry.sourceId]) {
+      errors.push(`Source "${entry.sourceId}" does not exist for ${testKind}.`);
+    } else {
+      usedSourceIds[entry.sourceId] = true;
+    }
+
+    if (seenIds[entry.sourceId]) {
+      errors.push(`Duplicate source "${entry.sourceId}" in ${testKind}.`);
+    }
+    seenIds[entry.sourceId] = true;
+  });
+
+  return normalized;
 }
 
 function normalizeDilutionList_(value, errors, testKind) {
@@ -888,8 +916,7 @@ function gcd_(left, right) {
 
 function hasMeaningfulTestFormContent_(test) {
   return Boolean(
-    test.concentration ||
-      test.maxConcentration ||
+    (test.sourceEntries && test.sourceEntries.some((e) => e.concentration || e.maxConcentration)) ||
       test.dilutions ||
       test.vehicle.en ||
       test.vehicle.fr ||
@@ -944,15 +971,9 @@ function replaceRowsByDrugId_(table, targetId, objects) {
 }
 
 function replaceTestEntryRows_(table, targetId, record) {
-  const existingByKind = {};
   const preservedRows = [];
 
   table.objects.forEach((row, index) => {
-    if (row.drug_id === targetId && ADMIN_APP.testKinds.includes(row.test_kind)) {
-      existingByKind[row.test_kind] = table.rows[index];
-      return;
-    }
-
     if (row.drug_id === targetId) {
       return;
     }
@@ -960,23 +981,33 @@ function replaceTestEntryRows_(table, targetId, record) {
     preservedRows.push(table.rows[index]);
   });
 
-  const nextRows = record.applicableTests.map((testKind) =>
-    objectToRow_(
-      table.headers,
-      {
-        drug_id: record.id,
-        test_kind: testKind,
-        concentration: record.tests[testKind].concentration,
-        max_concentration: record.tests[testKind].maxConcentration,
-        dilutions: record.tests[testKind].dilutions,
-        vehicle_en: record.tests[testKind].vehicle.en,
-        vehicle_fr: record.tests[testKind].vehicle.fr,
-        source_id: record.tests[testKind].sourceId,
-        alternate_source_id: record.tests[testKind].alternateSourceId,
-      },
-      existingByKind[testKind] || null
-    )
-  );
+  const nextRows = [];
+  record.applicableTests.forEach((testKind) => {
+    const test = record.tests[testKind];
+    const entries = test.sourceEntries && test.sourceEntries.length
+      ? test.sourceEntries
+      : [{ sourceId: "", concentration: "", maxConcentration: "", isPreferred: true }];
+
+    entries.forEach((entry, entryIndex) => {
+      nextRows.push(
+        objectToRow_(
+          table.headers,
+          {
+            drug_id: record.id,
+            test_kind: testKind,
+            source_id: entry.sourceId,
+            is_preferred: entry.isPreferred ? "true" : "false",
+            concentration: entry.concentration || "",
+            max_concentration: entry.maxConcentration || "",
+            dilutions: entryIndex === 0 ? test.dilutions : "",
+            vehicle_en: entryIndex === 0 ? test.vehicle.en : "",
+            vehicle_fr: entryIndex === 0 ? test.vehicle.fr : "",
+          },
+          null
+        )
+      );
+    });
+  });
 
   table.rows = preservedRows.concat(nextRows);
   table.objects = table.rows.map((row) => rowToObject_(table.headers, row));

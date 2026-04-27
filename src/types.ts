@@ -36,14 +36,18 @@ export type TestNote = {
   value: LocalizedString;
 };
 
-export type TestRecord = {
+export type TestSourceEntry = {
+  sourceId: string;
   concentration?: string;
   maxConcentration?: string;
+  isPreferred: boolean;
+};
+
+export type TestRecord = {
+  sourceEntries: TestSourceEntry[];
   dilutions: string[];
   vehicle?: LocalizedString;
   notes: TestNote[];
-  preferredSourceId: string;
-  alternateSourceId?: string;
 };
 
 export type DrugRecord = {

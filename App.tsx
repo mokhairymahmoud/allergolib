@@ -45,6 +45,7 @@ import type {
   TestKind,
   TestNote,
   TestRecord,
+  TestSourceEntry,
 } from "./src/types";
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
@@ -407,6 +408,11 @@ function makeStyles(theme: Theme) {
     },
     recentSection: {
       gap: 10,
+    },
+    sectionLabelRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
     },
     sectionLabel: {
       color: theme.textPrimary,
@@ -1081,6 +1087,44 @@ function makeStyles(theme: Theme) {
     sourceStack: {
       gap: 10,
     },
+    sourceBreakdownTable: {
+      marginTop: 10,
+      gap: 6,
+    },
+    sourceBreakdownHeading: {
+      color: theme.warningText,
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
+      marginBottom: 2,
+    },
+    sourceBreakdownRow: {
+      flexDirection: "row" as const,
+      justifyContent: "space-between" as const,
+      alignItems: "center" as const,
+      paddingVertical: 4,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    sourceBreakdownLabel: {
+      color: theme.textSecondary,
+      fontSize: 13,
+      flex: 1,
+    },
+    sourceBreakdownLabelPreferred: {
+      color: theme.textPrimary,
+      fontWeight: "600",
+    },
+    sourceBreakdownValue: {
+      color: theme.textSecondary,
+      fontSize: 13,
+      fontWeight: "500",
+    },
+    sourceBreakdownValuePreferred: {
+      color: theme.textPrimary,
+      fontWeight: "700",
+    },
     sourceCard: {
       gap: 6,
       backgroundColor: theme.surfaceAlt,
@@ -1150,13 +1194,7 @@ function homeTabIconName(tab: HomeTab, selected: boolean): React.ComponentProps<
 }
 
 function hasDisplayableTestContent(test: TestRecord) {
-  return Boolean(
-    test.concentration ||
-      test.maxConcentration ||
-      test.dilutions.length ||
-      test.vehicle ||
-      test.notes.length
-  );
+  return test.sourceEntries.length > 0 || test.notes.length > 0;
 }
 
 function isTestAvailable(drug: DrugRecord, kind: TestKind) {
@@ -1280,7 +1318,8 @@ function hasTestProvenance(
     return true;
   }
 
-  return hasSourceDocumentContent(sources[test.preferredSourceId]);
+  const preferred = test.sourceEntries.find((e) => e.isPreferred);
+  return hasSourceDocumentContent(preferred ? sources[preferred.sourceId] : undefined);
 }
 
 function formatReleaseDate(value: string, language: Language) {
@@ -1528,6 +1567,8 @@ function SearchScreen({
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const [activeClass, setActiveClass] = useState<string | null>(null);
   const [activeSubclass, setActiveSubclass] = useState<string | null>(null);
+  const [recentCollapsed, setRecentCollapsed] = useState(true);
+  const [categoriesCollapsed, setCategoriesCollapsed] = useState(true);
   const favoriteDrugSet = new Set(favoriteDrugIds);
   const trimmedQuery = query.trim();
   const hasQuery = trimmedQuery.length > 0;
@@ -1586,23 +1627,36 @@ function SearchScreen({
         {/* Recent searches — visible when no query is active */}
         {!hasQuery && recentDrugs.length > 0 ? (
           <View style={styles.recentSection}>
-            <Text style={styles.sectionLabel}>{copy(language, "search.recentTitle")}</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalChipList}
-              style={styles.horizontalChipScroll}
+            <Pressable
+              onPress={() => setRecentCollapsed((v) => !v)}
+              style={styles.sectionLabelRow}
+              hitSlop={8}
             >
-              {recentDrugs.map((drug) => (
-                <Pressable
-                  key={`recent-${drug.id}`}
-                  onPress={() => onOpenDrug(drug.id)}
-                  style={styles.recentChip}
-                >
-                  <Text style={styles.recentChipText} numberOfLines={1}>{drug.name[language]}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
+              <Text style={styles.sectionLabel}>{copy(language, "search.recentTitle")}</Text>
+              <Ionicons
+                name={recentCollapsed ? "chevron-forward" : "chevron-down"}
+                size={14}
+                color={theme.textSecondary}
+              />
+            </Pressable>
+            {!recentCollapsed ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalChipList}
+                style={styles.horizontalChipScroll}
+              >
+                {recentDrugs.map((drug) => (
+                  <Pressable
+                    key={`recent-${drug.id}`}
+                    onPress={() => onOpenDrug(drug.id)}
+                    style={styles.recentChip}
+                  >
+                    <Text style={styles.recentChipText} numberOfLines={1}>{drug.name[language]}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            ) : null}
           </View>
         ) : null}
 
@@ -1627,54 +1681,20 @@ function SearchScreen({
 
         {/* Category chips */}
         <View style={styles.categorySection}>
-          <Text style={styles.sectionLabel}>{copy(language, "search.categories")}</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalChipList}
-            style={styles.horizontalChipScroll}
-            keyboardShouldPersistTaps="handled"
+          <Pressable
+            onPress={() => setCategoriesCollapsed((v) => !v)}
+            style={styles.sectionLabelRow}
+            hitSlop={8}
           >
-            <Pressable
-              onPress={() => { setActiveClass(null); setActiveSubclass(null); }}
-              style={[styles.categoryChip, activeClass === null && styles.categoryChipActive]}
-            >
-              <Text style={[styles.categoryChipText, activeClass === null && styles.categoryChipTextActive]}>
-                {copy(language, "search.categoryAll")}
-              </Text>
-              <View style={[styles.categoryChipCount, activeClass === null && styles.categoryChipCountActive]}>
-                <Text style={[styles.categoryChipCountText, activeClass === null && styles.categoryChipCountTextActive]}>
-                  {allDrugs.length}
-                </Text>
-              </View>
-            </Pressable>
-
-            {drugClasses.map((cls) => {
-              const active = cls === activeClass;
-              const count = allDrugs.filter((d) => d.className[language] === cls).length;
-              return (
-                <Pressable
-                  key={cls}
-                  onPress={() => handleClassPress(cls)}
-                  style={[styles.categoryChip, active && styles.categoryChipActive]}
-                >
-                  <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>
-                    {cls}
-                  </Text>
-                  <View style={[styles.categoryChipCount, active && styles.categoryChipCountActive]}>
-                    <Text style={[styles.categoryChipCountText, active && styles.categoryChipCountTextActive]}>
-                      {count}
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-
-          {/* Subclass chips — only when the active class has subcategories */}
-          {subclasses.length > 0 ? (
-            <View style={styles.categorySection}>
-              <Text style={styles.sectionLabel}>{copy(language, "search.subcategories")}</Text>
+            <Text style={styles.sectionLabel}>{copy(language, "search.categories")}</Text>
+            <Ionicons
+              name={categoriesCollapsed ? "chevron-forward" : "chevron-down"}
+              size={14}
+              color={theme.textSecondary}
+            />
+          </Pressable>
+          {!categoriesCollapsed ? (
+            <>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -1683,34 +1703,33 @@ function SearchScreen({
                 keyboardShouldPersistTaps="handled"
               >
                 <Pressable
-                  onPress={() => setActiveSubclass(null)}
-                  style={[styles.subclassChip, activeSubclass === null && styles.subclassChipActive]}
+                  onPress={() => { setActiveClass(null); setActiveSubclass(null); }}
+                  style={[styles.categoryChip, activeClass === null && styles.categoryChipActive]}
                 >
-                  <Text style={[styles.subclassChipText, activeSubclass === null && styles.subclassChipTextActive]}>
+                  <Text style={[styles.categoryChipText, activeClass === null && styles.categoryChipTextActive]}>
                     {copy(language, "search.categoryAll")}
                   </Text>
-                  <View style={[styles.subclassChipCount, activeSubclass === null && styles.subclassChipCountActive]}>
-                    <Text style={[styles.subclassChipCountText, activeSubclass === null && styles.subclassChipCountTextActive]}>
-                      {activeClassDrugs.length}
+                  <View style={[styles.categoryChipCount, activeClass === null && styles.categoryChipCountActive]}>
+                    <Text style={[styles.categoryChipCountText, activeClass === null && styles.categoryChipCountTextActive]}>
+                      {allDrugs.length}
                     </Text>
                   </View>
                 </Pressable>
-                {subclasses.map((sub) => {
-                  const active = sub === activeSubclass;
-                  const count = activeClassDrugs.filter(
-                    (d) => d.subclassName?.[language] === sub
-                  ).length;
+
+                {drugClasses.map((cls) => {
+                  const active = cls === activeClass;
+                  const count = allDrugs.filter((d) => d.className[language] === cls).length;
                   return (
                     <Pressable
-                      key={sub}
-                      onPress={() => setActiveSubclass(sub)}
-                      style={[styles.subclassChip, active && styles.subclassChipActive]}
+                      key={cls}
+                      onPress={() => handleClassPress(cls)}
+                      style={[styles.categoryChip, active && styles.categoryChipActive]}
                     >
-                      <Text style={[styles.subclassChipText, active && styles.subclassChipTextActive]}>
-                        {sub}
+                      <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>
+                        {cls}
                       </Text>
-                      <View style={[styles.subclassChipCount, active && styles.subclassChipCountActive]}>
-                        <Text style={[styles.subclassChipCountText, active && styles.subclassChipCountTextActive]}>
+                      <View style={[styles.categoryChipCount, active && styles.categoryChipCountActive]}>
+                        <Text style={[styles.categoryChipCountText, active && styles.categoryChipCountTextActive]}>
                           {count}
                         </Text>
                       </View>
@@ -1718,7 +1737,57 @@ function SearchScreen({
                   );
                 })}
               </ScrollView>
-            </View>
+
+              {/* Subclass chips — only when the active class has subcategories */}
+              {subclasses.length > 0 ? (
+                <View style={styles.categorySection}>
+                  <Text style={styles.sectionLabel}>{copy(language, "search.subcategories")}</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.horizontalChipList}
+                    style={styles.horizontalChipScroll}
+                    keyboardShouldPersistTaps="handled"
+                  >
+                    <Pressable
+                      onPress={() => setActiveSubclass(null)}
+                      style={[styles.subclassChip, activeSubclass === null && styles.subclassChipActive]}
+                    >
+                      <Text style={[styles.subclassChipText, activeSubclass === null && styles.subclassChipTextActive]}>
+                        {copy(language, "search.categoryAll")}
+                      </Text>
+                      <View style={[styles.subclassChipCount, activeSubclass === null && styles.subclassChipCountActive]}>
+                        <Text style={[styles.subclassChipCountText, activeSubclass === null && styles.subclassChipCountTextActive]}>
+                          {activeClassDrugs.length}
+                        </Text>
+                      </View>
+                    </Pressable>
+                    {subclasses.map((sub) => {
+                      const active = sub === activeSubclass;
+                      const count = activeClassDrugs.filter(
+                        (d) => d.subclassName?.[language] === sub
+                      ).length;
+                      return (
+                        <Pressable
+                          key={sub}
+                          onPress={() => setActiveSubclass(sub)}
+                          style={[styles.subclassChip, active && styles.subclassChipActive]}
+                        >
+                          <Text style={[styles.subclassChipText, active && styles.subclassChipTextActive]}>
+                            {sub}
+                          </Text>
+                          <View style={[styles.subclassChipCount, active && styles.subclassChipCountActive]}>
+                            <Text style={[styles.subclassChipCountText, active && styles.subclassChipCountTextActive]}>
+                              {count}
+                            </Text>
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              ) : null}
+            </>
           ) : null}
         </View>
       </View>
@@ -2100,28 +2169,32 @@ function DetailScreen({
 
   const test = drug.tests[activeTab];
   const canShowProvenance = hasTestProvenance(test, sources);
-  const preferredSource = canShowProvenance ? sources[test.preferredSourceId] : undefined;
-  const alternateSource =
-    canShowProvenance && test.alternateSourceId
-      ? sources[test.alternateSourceId]
-      : undefined;
+  const preferredEntry = test.sourceEntries.find((e) => e.isPreferred);
+  const nonPreferredEntries = test.sourceEntries.filter((e) => !e.isPreferred);
+  const preferredSource = canShowProvenance && preferredEntry ? sources[preferredEntry.sourceId] : undefined;
   const { warnings, supporting } = splitNotes(test.notes);
-  const concentrationUnit = extractConcentrationUnit(test.maxConcentration ?? test.concentration);
+  const concentrationUnit = extractConcentrationUnit(
+    preferredEntry?.maxConcentration ?? preferredEntry?.concentration
+  );
   const shouldShowStandardConcentration =
-    Boolean(test.concentration) && (activeTab !== "idr" || test.concentration !== test.maxConcentration);
+    Boolean(preferredEntry?.concentration) &&
+    (activeTab !== "idr" || preferredEntry?.concentration !== preferredEntry?.maxConcentration);
+  const sourcesDisagree = nonPreferredEntries.some(
+    (e) => e.concentration && e.concentration !== preferredEntry?.concentration
+  );
   const metricItems: DetailMetricItem[] = [];
 
   if (shouldShowStandardConcentration) {
     metricItems.push({
       label: concentrationLabel(language, activeTab),
-      value: test.concentration ?? "",
+      value: preferredEntry?.concentration ?? "",
     });
   }
 
-  if (test.maxConcentration) {
+  if (preferredEntry?.maxConcentration) {
     metricItems.push({
       label: copy(language, "detail.idr.maxConcentration"),
-      value: test.maxConcentration,
+      value: preferredEntry.maxConcentration,
     });
   }
 
@@ -2279,6 +2352,49 @@ function DetailScreen({
           />
         ) : null}
 
+        {canShowProvenance && sourcesDisagree ? (
+          <View style={styles.warningPanel}>
+            <View style={styles.warningPanelHeader}>
+              <Ionicons name="git-compare-outline" size={18} color={theme.warningText} />
+              <Text style={styles.warningTitle}>
+                {copy(language, "detail.sourceDiscrepancyTitle")}
+              </Text>
+            </View>
+            <Text style={styles.warningText}>
+              {copy(language, "detail.sourceDiscrepancyBody")}
+            </Text>
+            <View style={styles.sourceBreakdownTable}>
+              <Text style={styles.sourceBreakdownHeading}>
+                {copy(language, "detail.sourceBreakdownTitle")}
+              </Text>
+              {test.sourceEntries.map((entry) => {
+                const src = sources[entry.sourceId];
+                const conc = entry.concentration ?? entry.maxConcentration ?? "—";
+                return (
+                  <View key={entry.sourceId} style={styles.sourceBreakdownRow}>
+                    <Text
+                      style={[
+                        styles.sourceBreakdownLabel,
+                        entry.isPreferred && styles.sourceBreakdownLabelPreferred,
+                      ]}
+                    >
+                      {src?.label ?? entry.sourceId}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.sourceBreakdownValue,
+                        entry.isPreferred && styles.sourceBreakdownValuePreferred,
+                      ]}
+                    >
+                      {conc}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        ) : null}
+
         {canShowProvenance && preferredSource ? (
           <View style={styles.panel}>
             <View style={styles.sourceSummaryCard}>
@@ -2298,18 +2414,18 @@ function DetailScreen({
 
             {showSource ? (
               <View style={styles.sourceStack}>
-                <SourceCard
-                  source={preferredSource}
-                  language={language}
-                  eyebrow={copy(language, "detail.preferredSource")}
-                />
-                {alternateSource ? (
-                  <SourceCard
-                    source={alternateSource}
-                    language={language}
-                    eyebrow={copy(language, "detail.alternateSource")}
-                  />
-                ) : null}
+                {test.sourceEntries.map((entry) => {
+                  const src = sources[entry.sourceId];
+                  if (!src) return null;
+                  return (
+                    <SourceCard
+                      key={entry.sourceId}
+                      source={src}
+                      language={language}
+                      eyebrow={copy(language, entry.isPreferred ? "detail.preferredSource" : "detail.alternateSource")}
+                    />
+                  );
+                })}
               </View>
             ) : null}
           </View>

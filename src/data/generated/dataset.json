@@ -58,8 +58,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "2 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "2 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -69,13 +78,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.2 mg/ml",
-          "maxConcentration": "0.2 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.2 mg/ml",
+              "maxConcentration": "0.2 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -88,16 +105,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -117,8 +130,18 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "10 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "100 mg/ml",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -135,13 +158,21 @@
                 "fr": "L'EAACI 2019 recommande une concentration de prick plus elevee de 100 mg/ml ; la SFAR/SFA 2025 (10 mg/ml) est utilisee ici comme recommandation plus recente."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.1 mg/ml",
-          "maxConcentration": "0.1 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.1 mg/ml",
+              "maxConcentration": "0.1 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -154,16 +185,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -184,8 +211,18 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "1 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "5 mg/ml",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -202,13 +239,23 @@
                 "fr": "L'EAACI 2019 recommande des concentrations plus elevees (prick 5 mg/ml, IDR 0,05 mg/ml) ; la SFAR/SFA 2025 (prick 1 mg/ml, IDR 0,01 mg/ml) est utilisee ici comme recommandation plus recente."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.01 mg/ml",
-          "maxConcentration": "0.01 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.01 mg/ml",
+              "maxConcentration": "0.01 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "0.05 mg/ml",
+              "maxConcentration": "0.05 mg/ml",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:20"
           ],
@@ -227,16 +274,12 @@
                 "fr": "L'EAACI 2019 recommande des concentrations plus elevees (prick 5 mg/ml, IDR 0,05 mg/ml) ; la SFAR/SFA 2025 (prick 1 mg/ml, IDR 0,01 mg/ml) est utilisee ici comme recommandation plus recente."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -256,8 +299,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "10 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -267,13 +319,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "1 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "1 mg/ml",
+              "maxConcentration": "1 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -285,16 +345,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -315,8 +371,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "25 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "25 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -326,13 +391,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "2.5 mg/ml",
-          "maxConcentration": "2.5 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "2.5 mg/ml",
+              "maxConcentration": "2.5 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -344,16 +417,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -373,8 +442,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "1 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -384,13 +462,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.01 mg/ml",
-          "maxConcentration": "0.01 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.01 mg/ml",
+              "maxConcentration": "0.01 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -403,16 +489,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -433,8 +515,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "2 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "2 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -444,13 +535,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.02 mg/ml",
-          "maxConcentration": "0.02 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.02 mg/ml",
+              "maxConcentration": "0.02 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -463,16 +562,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -492,8 +587,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "0.2 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.2 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -503,13 +607,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.002 mg/ml",
-          "maxConcentration": "0.002 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.002 mg/ml",
+              "maxConcentration": "0.002 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -522,16 +634,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -551,8 +659,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "10 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -562,13 +679,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.05 mg/ml",
-          "maxConcentration": "0.05 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.05 mg/ml",
+              "maxConcentration": "0.05 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -581,16 +706,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -611,8 +732,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "10 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -622,13 +752,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.1 mg/ml",
-          "maxConcentration": "0.1 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.1 mg/ml",
+              "maxConcentration": "0.1 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -641,16 +779,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -674,8 +808,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "50 µg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "50 µg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -685,13 +828,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "5 µg/ml",
-          "maxConcentration": "5 µg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "5 µg/ml",
+              "maxConcentration": "5 µg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -703,16 +854,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -736,8 +883,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "0.5 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.5 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -747,13 +903,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.05 mg/ml",
-          "maxConcentration": "0.05 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.05 mg/ml",
+              "maxConcentration": "0.05 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -765,16 +929,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -798,8 +958,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "50 µg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "50 µg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -809,13 +978,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "5 µg/ml",
-          "maxConcentration": "5 µg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "5 µg/ml",
+              "maxConcentration": "5 µg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -827,16 +1004,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -860,8 +1033,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "5 µg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "5 µg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -871,13 +1053,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.5 µg/ml",
-          "maxConcentration": "0.5 µg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.5 µg/ml",
+              "maxConcentration": "0.5 µg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -889,16 +1079,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -922,8 +1108,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "1 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -933,13 +1128,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.005 mg/ml",
-          "maxConcentration": "0.005 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.005 mg/ml",
+              "maxConcentration": "0.005 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -952,16 +1155,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -985,8 +1184,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "10 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1003,12 +1207,17 @@
                 "fr": "Possiblement irritant a la concentration maximale (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "1 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "1 mg/ml",
+              "maxConcentration": "1 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -1027,15 +1236,12 @@
                 "fr": "Possiblement irritant a la concentration maximale (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1059,8 +1265,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "10 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1070,12 +1281,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "1 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "1 mg/ml",
+              "maxConcentration": "1 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -1094,15 +1310,12 @@
                 "fr": "Possiblement irritant a la concentration maximale (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1127,8 +1340,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "50 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "50 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1138,12 +1356,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "5 mg/ml",
-          "maxConcentration": "5 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "5 mg/ml",
+              "maxConcentration": "5 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -1155,15 +1378,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1188,8 +1408,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "25 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "25 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1199,12 +1424,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "0.25 mg/ml",
-          "maxConcentration": "0.25 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.25 mg/ml",
+              "maxConcentration": "0.25 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -1224,15 +1454,12 @@
                 "fr": "Possiblement irritant a la concentration maximale (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1257,8 +1484,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "10 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1268,12 +1500,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "10 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "10 mg/ml",
+              "maxConcentration": "10 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -1285,15 +1522,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1314,8 +1548,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "25 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "25 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1325,13 +1568,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.25 mg/ml",
-          "maxConcentration": "0.25 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.25 mg/ml",
+              "maxConcentration": "0.25 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -1344,16 +1595,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1374,8 +1621,18 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "5 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "5 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "10 mg/ml",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1392,13 +1649,23 @@
                 "fr": "L'EAACI 2019 recommande des concentrations plus elevees (prick 10 mg/ml, IDR 0,1 mg/ml) ; la SFAR/SFA 2025 (prick 5 mg/ml, IDR 0,05 mg/ml) est utilisee ici comme recommandation plus recente."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.05 mg/ml",
-          "maxConcentration": "0.05 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.05 mg/ml",
+              "maxConcentration": "0.05 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "0.1 mg/ml",
+              "maxConcentration": "0.1 mg/ml",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -1418,16 +1685,12 @@
                 "fr": "L'EAACI 2019 recommande des concentrations plus elevees (prick 10 mg/ml, IDR 0,1 mg/ml) ; la SFAR/SFA 2025 (prick 5 mg/ml, IDR 0,05 mg/ml) est utilisee ici comme recommandation plus recente."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1447,8 +1710,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "100 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "100 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1458,12 +1726,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "10 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "10 mg/ml",
+              "maxConcentration": "10 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -1475,15 +1748,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1504,8 +1774,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "10 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1515,13 +1794,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "1 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "1 mg/ml",
+              "maxConcentration": "1 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -1533,16 +1820,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1562,8 +1845,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "2.5 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "2.5 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1573,13 +1865,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.25 mg/ml",
-          "maxConcentration": "0.25 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.25 mg/ml",
+              "maxConcentration": "0.25 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -1591,16 +1891,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1620,8 +1916,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "10 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1631,13 +1936,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "1 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "1 mg/ml",
+              "maxConcentration": "1 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -1649,16 +1962,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1678,8 +1987,17 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1689,13 +2007,21 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "2 mg/ml",
-          "maxConcentration": "2 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "2 mg/ml",
+              "maxConcentration": "2 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -1707,16 +2033,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1741,8 +2063,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1752,12 +2079,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "20 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "maxConcentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -1769,15 +2101,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1802,8 +2131,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1813,12 +2147,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "20 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "maxConcentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -1830,15 +2169,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1862,8 +2198,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1873,12 +2214,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "20 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "maxConcentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -1890,15 +2236,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1923,8 +2266,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1934,12 +2282,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "20 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "maxConcentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -1951,15 +2304,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -1984,8 +2334,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -1995,12 +2350,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "20 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "maxConcentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2012,15 +2372,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2045,8 +2402,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2056,12 +2418,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "20 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "maxConcentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2073,15 +2440,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2106,8 +2470,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2117,12 +2486,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "20 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "maxConcentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2134,15 +2508,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2166,8 +2537,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2177,12 +2553,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "20 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "maxConcentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2194,15 +2575,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2226,8 +2604,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2237,12 +2620,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "20 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "maxConcentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2254,15 +2642,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2286,8 +2671,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "2 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "2 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2297,12 +2687,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "2 mg/ml",
-          "maxConcentration": "2 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "2 mg/ml",
+              "maxConcentration": "2 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2314,15 +2709,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2346,8 +2738,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2357,12 +2754,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "20 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "20 mg/ml",
+              "maxConcentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2374,15 +2776,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2406,8 +2805,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "1 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2417,12 +2821,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "1 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "1 mg/ml",
+              "maxConcentration": "1 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2434,15 +2843,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2466,8 +2872,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "0.05 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.05 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2477,12 +2888,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "0.05 mg/ml",
-          "maxConcentration": "0.05 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.05 mg/ml",
+              "maxConcentration": "0.05 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2494,15 +2910,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2526,8 +2939,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "1 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2537,12 +2955,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "1 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "1 mg/ml",
+              "maxConcentration": "1 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2554,15 +2977,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2586,8 +3006,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "2 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "2 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2597,12 +3022,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "2 mg/ml",
-          "maxConcentration": "2 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "2 mg/ml",
+              "maxConcentration": "2 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2614,15 +3044,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2641,8 +3068,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "0.5 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.5 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2652,12 +3084,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "0.05 mg/ml",
-          "maxConcentration": "0.05 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.05 mg/ml",
+              "maxConcentration": "0.05 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2669,15 +3106,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2697,8 +3131,18 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "2 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "2 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "5 mg/ml",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2715,13 +3159,21 @@
                 "fr": "L'EAACI 2019 recommande une concentration de prick plus elevee de 5 mg/ml ; la SFAR/SFA 2025 (2 mg/ml) est utilisee ici comme recommandation plus recente."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.002 mg/ml",
-          "maxConcentration": "0.002 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.002 mg/ml",
+              "maxConcentration": "0.002 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -2734,16 +3186,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2763,8 +3211,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "4 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "4 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2774,12 +3227,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "0.04 mg/ml",
-          "maxConcentration": "0.04 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.04 mg/ml",
+              "maxConcentration": "0.04 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -2799,15 +3257,12 @@
                 "fr": "Possiblement irritant a la concentration maximale (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2826,8 +3281,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "10 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2837,12 +3297,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "0.01 mg/ml",
-          "maxConcentration": "0.01 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.01 mg/ml",
+              "maxConcentration": "0.01 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -2855,15 +3320,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2883,8 +3345,18 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "10 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "100 mg/ml",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2901,13 +3373,23 @@
                 "fr": "L'EAACI 2019 recommande des concentrations plus elevees (prick 100 mg/ml, IDR 10 mg/ml) ; la SFAR/SFA 2025 (prick 10 mg/ml, IDR 1 mg/ml) est utilisee ici comme recommandation plus recente."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "1 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "1 mg/ml",
+              "maxConcentration": "1 mg/ml",
+              "isPreferred": true
+            },
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "10 mg/ml",
+              "maxConcentration": "10 mg/ml",
+              "isPreferred": false
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2926,16 +3408,12 @@
                 "fr": "L'EAACI 2019 recommande des concentrations plus elevees (prick 100 mg/ml, IDR 10 mg/ml) ; la SFAR/SFA 2025 (prick 10 mg/ml, IDR 1 mg/ml) est utilisee ici comme recommandation plus recente."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4",
-          "alternateSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -2955,8 +3433,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "4 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "4 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -2966,12 +3449,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "4 mg/ml",
-          "maxConcentration": "4 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "4 mg/ml",
+              "maxConcentration": "4 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -2983,15 +3471,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3013,8 +3498,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "40 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "40 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3024,12 +3514,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "40 mg/ml",
-          "maxConcentration": "40 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "40 mg/ml",
+              "maxConcentration": "40 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -3041,15 +3536,12 @@
                 "fr": "Meme concentration maximale validee pour le prick et l'IDR (annexe 4)."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3070,8 +3562,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "50 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "50 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3081,12 +3578,17 @@
                 "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "idr": {
-          "concentration": "0.005 mg/ml",
-          "maxConcentration": "0.005 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "sfar-sfa-2025-annex-4",
+              "concentration": "0.005 mg/ml",
+              "maxConcentration": "0.005 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -3099,15 +3601,12 @@
                 "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025."
               }
             }
-          ],
-          "preferredSourceId": "sfar-sfa-2025-annex-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3127,8 +3626,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "4 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "4 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3138,12 +3642,17 @@
                 "fr": "Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.04 mg/ml",
-          "maxConcentration": "0.04 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "0.04 mg/ml",
+              "maxConcentration": "0.04 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -3156,15 +3665,12 @@
                 "fr": "Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3184,8 +3690,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "2 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "2 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3195,12 +3706,17 @@
                 "fr": "Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.02 mg/ml",
-          "maxConcentration": "0.02 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "0.02 mg/ml",
+              "maxConcentration": "0.02 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -3213,15 +3729,12 @@
                 "fr": "Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3242,8 +3755,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "25 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "25 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3253,12 +3771,17 @@
                 "fr": "Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.25 mg/ml",
-          "maxConcentration": "0.25 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "0.25 mg/ml",
+              "maxConcentration": "0.25 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:100",
             "1:10"
@@ -3271,15 +3794,12 @@
                 "fr": "Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3299,8 +3819,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3310,12 +3835,17 @@
                 "fr": "Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "2 mg/ml",
-          "maxConcentration": "2 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "2 mg/ml",
+              "maxConcentration": "2 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -3327,15 +3857,12 @@
                 "fr": "Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3356,8 +3883,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "20 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3367,12 +3899,17 @@
                 "fr": "Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "2 mg/ml",
-          "maxConcentration": "2 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "2 mg/ml",
+              "maxConcentration": "2 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -3384,15 +3921,12 @@
                 "fr": "Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3413,8 +3947,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "7.5 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "7.5 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3424,12 +3963,17 @@
                 "fr": "Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "0.75 mg/ml",
-          "maxConcentration": "0.75 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "0.75 mg/ml",
+              "maxConcentration": "0.75 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -3441,15 +3985,12 @@
                 "fr": "Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3474,8 +4015,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "10 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "10 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3485,12 +4031,17 @@
                 "fr": "Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019. Anesthesique local derive ester."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "1 mg/ml",
-          "maxConcentration": "1 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "1 mg/ml",
+              "maxConcentration": "1 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -3502,15 +4053,12 @@
                 "fr": "Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019. Anesthesique local derive ester."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3532,8 +4080,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "100 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "100 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3550,22 +4103,17 @@
                 "fr": "L'intradermo-reaction n'est pas recommandee pour l'iode povidone (tableau 4 EAACI 2019)."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3585,8 +4133,12 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3596,22 +4148,17 @@
                 "fr": "Les tests cutanes ne sont pas recommandes pour le dextran. Les reactions sont mediees par les IgG et non par les IgE (tableau 4 EAACI 2019)."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3633,8 +4180,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "60 mg/ml",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "60 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3644,12 +4196,17 @@
                 "fr": "Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "6 mg/ml",
-          "maxConcentration": "6 mg/ml",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "6 mg/ml",
+              "maxConcentration": "6 mg/ml",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [
             "1:10"
           ],
@@ -3661,15 +4218,12 @@
                 "fr": "Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3690,8 +4244,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "undiluted",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "undiluted",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3708,22 +4267,17 @@
                 "fr": "Risque eleve de reactions systemiques a l'IDR (tableau 4 EAACI 2019). IDR non recommandee."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3744,8 +4298,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "50% w/v",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "50% w/v",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3762,22 +4321,17 @@
                 "fr": "Risque eleve de reactions systemiques a l'IDR (tableau 4 EAACI 2019). IDR non recommandee."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3798,8 +4352,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "50% w/v",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "50% w/v",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3816,22 +4375,17 @@
                 "fr": "Risque eleve de reactions systemiques a l'IDR (tableau 4 EAACI 2019). IDR non recommandee."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3851,8 +4405,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "20% w/v",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "20% w/v",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3862,22 +4421,17 @@
                 "fr": "Concentration recommandee pour le prick-test (20% m/v) selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3897,8 +4451,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "10% w/v",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "10% w/v",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3908,22 +4467,17 @@
                 "fr": "Concentration recommandee pour le prick-test (10% m/v) selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     },
@@ -3944,8 +4498,13 @@
       ],
       "tests": {
         "prick": {
-          "concentration": "1% w/v",
-          "maxConcentration": "",
+          "sourceEntries": [
+            {
+              "sourceId": "eaaci-2019-table-4",
+              "concentration": "1% w/v",
+              "isPreferred": true
+            }
+          ],
           "dilutions": [],
           "notes": [
             {
@@ -3955,22 +4514,17 @@
                 "fr": "Concentration recommandee pour le prick-test (1% m/v) selon le tableau 4 EAACI 2019."
               }
             }
-          ],
-          "preferredSourceId": "eaaci-2019-table-4"
+          ]
         },
         "idr": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         },
         "patch": {
-          "concentration": "",
-          "maxConcentration": "",
+          "sourceEntries": [],
           "dilutions": [],
-          "notes": [],
-          "preferredSourceId": ""
+          "notes": []
         }
       }
     }

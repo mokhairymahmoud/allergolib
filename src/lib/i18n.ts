@@ -79,6 +79,9 @@ export const dictionary = {
     "detail.calculatorEmpty":
       "Enter a stock concentration and final volume to calculate ratios such as 1:10 and 1:100 offline.",
     "detail.calculatorInvalid": "Use positive numbers for both fields.",
+    "detail.sourceDiscrepancyTitle": "Sources differ",
+    "detail.sourceDiscrepancyBody": "Different concentrations are reported by different sources. The preferred source value is shown above.",
+    "detail.sourceBreakdownTitle": "Values by source",
     "detail.note.info": "Note",
     "detail.note.warning": "Warning",
     "detail.note.cross-reactivity": "Cross-reactivity",
@@ -173,6 +176,9 @@ export const dictionary = {
     "detail.calculatorEmpty":
       "Saisissez une concentration de stock et un volume final pour calculer hors ligne des ratios comme 1:10 et 1:100.",
     "detail.calculatorInvalid": "Utilisez des nombres positifs pour les deux champs.",
+    "detail.sourceDiscrepancyTitle": "Les sources divergent",
+    "detail.sourceDiscrepancyBody": "Des concentrations differentes sont rapportees par differentes sources. La valeur de la source principale est affichee ci-dessus.",
+    "detail.sourceBreakdownTitle": "Valeurs par source",
     "detail.note.info": "Note",
     "detail.note.warning": "Avertissement",
     "detail.note.cross-reactivity": "Reactivite croisee",
