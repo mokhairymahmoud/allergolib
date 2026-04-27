@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
-import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import {
+  Animated,
+  Dimensions,
   PanResponder,
   Pressable,
   SafeAreaView,
@@ -697,18 +699,6 @@ function DetailScreen({
 }) {
   const [activeTab, setActiveTab] = useState<TestKind>(availableTests(drug)[0] ?? "prick");
   const [showSource, setShowSource] = useState(false);
-
-  const swipeBack = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) =>
-          gestureState.dx > 20 && Math.abs(gestureState.dy) < 60 && gestureState.moveX < 60,
-        onPanResponderRelease: (_, gestureState) => {
-          if (gestureState.dx > 60) onBack();
-        },
-      }),
-    [onBack]
-  );
   const availableTestKinds = availableTests(drug);
 
   useEffect(() => {
@@ -767,7 +757,7 @@ function DetailScreen({
   }
 
   return (
-    <View style={styles.flex1} {...swipeBack.panHandlers}>
+    <View style={styles.flex1}>
       {/* Sticky nav header */}
       <View style={styles.detailNavHeader}>
         <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
@@ -1079,118 +1069,212 @@ export default function App() {
     });
   }
 
-  if (selectedDrug) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="dark" />
-        <View style={styles.container}>
-          <DetailScreen
-            drug={selectedDrug}
-            isSaved={favoriteDrugIds.includes(selectedDrug.id)}
-            language={language}
-            onBack={() => {
-              startTransition(() => setSelectedDrugId(null));
-            }}
-            onToggleFavorite={() => toggleFavorite(selectedDrug.id)}
-            sources={activeDataset.dataset.sources}
-          />
+  const SCREEN_WIDTH = Dimensions.get("window").width;
+  const slideX = useRef(new Animated.Value(SCREEN_WIDTH)).current;
+  const prevSelectedDrugIdRef = useRef<string | null>(null);
+  const [detailVisible, setDetailVisible] = useState(false);
+
+  // Slide in when a drug is newly selected, slide out when dismissed
+  useEffect(() => {
+    const prev = prevSelectedDrugIdRef.current;
+    prevSelectedDrugIdRef.current = selectedDrugId;
+
+    if (selectedDrugId && !prev) {
+      // entering: make visible, snap to right edge, then animate to 0
+      setDetailVisible(true);
+      slideX.setValue(SCREEN_WIDTH);
+      Animated.spring(slideX, {
+        toValue: 0,
+        useNativeDriver: true,
+        bounciness: 0,
+        speed: 20,
+      }).start();
+    } else if (!selectedDrugId && prev) {
+      // exiting: animate back to right edge, then hide
+      Animated.spring(slideX, {
+        toValue: SCREEN_WIDTH,
+        useNativeDriver: true,
+        bounciness: 0,
+        speed: 20,
+      }).start(() => setDetailVisible(false));
+    }
+  }, [selectedDrugId, SCREEN_WIDTH, slideX]);
+
+  // Swipe-back pan responder: moves the detail panel with the finger
+  const swipeBack = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) =>
+        g.dx > 10 && Math.abs(g.dy) < 60 && g.moveX < 60,
+      onPanResponderMove: (_, g) => {
+        if (g.dx > 0) slideX.setValue(g.dx);
+      },
+      onPanResponderRelease: (_, g) => {
+        if (g.dx > SCREEN_WIDTH * 0.35 || g.vx > 0.5) {
+          // commit: finish sliding off
+          Animated.spring(slideX, {
+            toValue: SCREEN_WIDTH,
+            useNativeDriver: true,
+            bounciness: 0,
+            speed: 20,
+          }).start(() => {
+            setDetailVisible(false);
+            startTransition(() => setSelectedDrugId(null));
+          });
+        } else {
+          // cancel: snap back
+          Animated.spring(slideX, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 0,
+            speed: 20,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  // Home screen background slides left as detail slides right (parallax)
+  const homeTranslateX = slideX.interpolate({
+    inputRange: [0, SCREEN_WIDTH],
+    outputRange: [-SCREEN_WIDTH * 0.25, 0],
+    extrapolate: "clamp",
+  });
+
+  const HomeContent = (
+    <View style={styles.container}>
+      {/* Top bar */}
+      <View style={styles.topBar}>
+        <View style={styles.titleBlock}>
+          <Text style={styles.title}>{copy(language, "home.title")}</Text>
         </View>
-      </SafeAreaView>
-    );
-  }
+        <View style={styles.languageToggle}>
+          {(["fr", "en"] as Language[]).map((nextLanguage) => {
+            const selected = nextLanguage === language;
+
+            return (
+              <Pressable
+                key={nextLanguage}
+                onPress={() => setLanguage(nextLanguage)}
+                style={[
+                  styles.languageButton,
+                  selected && styles.languageButtonSelected,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.languageButtonText,
+                    selected && styles.languageButtonTextSelected,
+                  ]}
+                >
+                  {nextLanguage.toUpperCase()}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.mainContent}>
+        {homeTab === "search" ? (
+          <SearchScreen
+            favoriteDrugIds={favoriteDrugIds}
+            language={language}
+            onChangeQuery={setQuery}
+            onOpenDrug={openDrug}
+            onToggleFavorite={toggleFavorite}
+            query={query}
+            recentDrugs={recentDrugs}
+            searchResults={searchResults}
+          />
+        ) : null}
+
+        {homeTab === "favorites" ? (
+          <FavoritesScreen
+            favoriteDrugIds={favoriteDrugIds}
+            favoriteDrugs={favoriteDrugs}
+            language={language}
+            onOpenDrug={openDrug}
+            onToggleFavorite={toggleFavorite}
+          />
+        ) : null}
+
+        {homeTab === "info" ? (
+          <InfoScreen activeDataset={activeDataset} language={language} />
+        ) : null}
+      </View>
+
+      {/* Flat bottom tab bar */}
+      <View style={styles.footer}>
+        <View style={styles.topLevelTabs}>
+          {HOME_TABS.map((tab) => {
+            const selected = tab === homeTab;
+
+            return (
+              <Pressable
+                key={tab}
+                onPress={() => setHomeTab(tab)}
+                style={styles.topLevelTab}
+              >
+                <Ionicons
+                  name={homeTabIconName(tab, selected)}
+                  size={24}
+                  color={selected ? "#1A73D4" : "#94A3B8"}
+                />
+                <Text
+                  style={[styles.topLevelTabText, selected && styles.topLevelTabTextSelected]}
+                >
+                  {copy(language, homeTabLabelKey(tab))}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
-      <View style={styles.container}>
-        {/* Top bar */}
-        <View style={styles.topBar}>
-          <View style={styles.titleBlock}>
-            <Text style={styles.title}>{copy(language, "home.title")}</Text>
-          </View>
-          <View style={styles.languageToggle}>
-            {(["fr", "en"] as Language[]).map((nextLanguage) => {
-              const selected = nextLanguage === language;
+      <View style={styles.stackRoot}>
+        {/* Home layer — always rendered, slides left as detail comes in */}
+        <Animated.View
+          style={[styles.stackLayer, { transform: [{ translateX: homeTranslateX }] }]}
+          pointerEvents={selectedDrug ? "none" : "auto"}
+        >
+          {HomeContent}
+        </Animated.View>
 
-              return (
-                <Pressable
-                  key={nextLanguage}
-                  onPress={() => setLanguage(nextLanguage)}
-                  style={[
-                    styles.languageButton,
-                    selected && styles.languageButtonSelected,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.languageButtonText,
-                      selected && styles.languageButtonTextSelected,
-                    ]}
-                  >
-                    {nextLanguage.toUpperCase()}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={styles.mainContent}>
-          {homeTab === "search" ? (
-            <SearchScreen
-              favoriteDrugIds={favoriteDrugIds}
-              language={language}
-              onChangeQuery={setQuery}
-              onOpenDrug={openDrug}
-              onToggleFavorite={toggleFavorite}
-              query={query}
-              recentDrugs={recentDrugs}
-              searchResults={searchResults}
-            />
-          ) : null}
-
-          {homeTab === "favorites" ? (
-            <FavoritesScreen
-              favoriteDrugIds={favoriteDrugIds}
-              favoriteDrugs={favoriteDrugs}
-              language={language}
-              onOpenDrug={openDrug}
-              onToggleFavorite={toggleFavorite}
-            />
-          ) : null}
-
-          {homeTab === "info" ? (
-            <InfoScreen activeDataset={activeDataset} language={language} />
-          ) : null}
-        </View>
-
-        {/* Flat bottom tab bar */}
-        <View style={styles.footer}>
-          <View style={styles.topLevelTabs}>
-            {HOME_TABS.map((tab) => {
-              const selected = tab === homeTab;
-
-              return (
-                <Pressable
-                  key={tab}
-                  onPress={() => setHomeTab(tab)}
-                  style={styles.topLevelTab}
-                >
-                  <Ionicons
-                    name={homeTabIconName(tab, selected)}
-                    size={24}
-                    color={selected ? "#1A73D4" : "#94A3B8"}
-                  />
-                  <Text
-                    style={[styles.topLevelTabText, selected && styles.topLevelTabTextSelected]}
-                  >
-                    {copy(language, homeTabLabelKey(tab))}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
+        {/* Detail layer — slides in from right, kept mounted during exit animation */}
+        {detailVisible ? (
+          <Animated.View
+            style={[styles.stackLayer, { transform: [{ translateX: slideX }] }]}
+            {...swipeBack.panHandlers}
+          >
+            <View style={styles.container}>
+              {selectedDrug ? (
+                <DetailScreen
+                  drug={selectedDrug}
+                  isSaved={favoriteDrugIds.includes(selectedDrug.id)}
+                  language={language}
+                  onBack={() => {
+                    Animated.spring(slideX, {
+                      toValue: SCREEN_WIDTH,
+                      useNativeDriver: true,
+                      bounciness: 0,
+                      speed: 20,
+                    }).start(() => {
+                      setDetailVisible(false);
+                      startTransition(() => setSelectedDrugId(null));
+                    });
+                  }}
+                  onToggleFavorite={() => toggleFavorite(selectedDrug.id)}
+                  sources={activeDataset.dataset.sources}
+                />
+              ) : null}
+            </View>
+          </Animated.View>
+        ) : null}
       </View>
     </SafeAreaView>
   );
@@ -1201,6 +1285,13 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  stackRoot: {
+    flex: 1,
+    overflow: "hidden",
+  },
+  stackLayer: {
+    ...StyleSheet.absoluteFillObject,
   },
   container: {
     flex: 1,
