@@ -310,6 +310,7 @@ function SearchScreen({
   query,
   searchResults,
   recentDrugs,
+  allDrugs,
   favoriteDrugIds,
   onChangeQuery,
   onOpenDrug,
@@ -319,14 +320,28 @@ function SearchScreen({
   query: string;
   searchResults: DrugSearchResult[];
   recentDrugs: DrugRecord[];
+  allDrugs: DrugRecord[];
   favoriteDrugIds: string[];
   onChangeQuery: (value: string) => void;
   onOpenDrug: (drugId: string) => void;
   onToggleFavorite: (drugId: string) => void;
 }) {
+  const [activeClass, setActiveClass] = useState<string | null>(null);
   const favoriteDrugSet = new Set(favoriteDrugIds);
   const trimmedQuery = query.trim();
   const hasQuery = trimmedQuery.length > 0;
+
+  // Derive sorted unique class names from the full drug list
+  const drugClasses = [...new Set(allDrugs.map((d) => d.className[language]))].sort();
+
+  // When a category is active and there's no text query, filter by class
+  const browseDrugs: DrugRecord[] = activeClass
+    ? allDrugs.filter((d) => d.className[language] === activeClass)
+    : [];
+
+  function handleClassPress(cls: string) {
+    setActiveClass((current) => (current === cls ? null : cls));
+  }
 
   return (
     <ScrollView style={styles.scrollView} contentContainerStyle={styles.screenContent} keyboardShouldPersistTaps="handled">
@@ -340,7 +355,7 @@ function SearchScreen({
         <TextInput
           autoCapitalize="none"
           autoCorrect={false}
-          onChangeText={onChangeQuery}
+          onChangeText={(v) => { onChangeQuery(v); setActiveClass(null); }}
           placeholder={copy(language, "search.placeholder")}
           placeholderTextColor="#94A3B8"
           style={styles.searchInput}
@@ -352,6 +367,29 @@ function SearchScreen({
           </Pressable>
         ) : null}
       </View>
+
+      {/* Category filter chips — always visible */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoryChips}
+        keyboardShouldPersistTaps="handled"
+      >
+        {drugClasses.map((cls) => {
+          const active = cls === activeClass;
+          return (
+            <Pressable
+              key={cls}
+              onPress={() => handleClassPress(cls)}
+              style={[styles.categoryChip, active && styles.categoryChipActive]}
+            >
+              <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>
+                {cls}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
 
       {hasQuery ? (
         <>
@@ -378,6 +416,24 @@ function SearchScreen({
               <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
             </View>
           )}
+        </>
+      ) : activeClass ? (
+        <>
+          <Text style={styles.resultCount}>
+            {browseDrugs.length} {copy(language, "search.results")}
+          </Text>
+          <View style={styles.resultsList}>
+            {browseDrugs.map((drug) => (
+              <DrugRow
+                key={drug.id}
+                isSaved={favoriteDrugSet.has(drug.id)}
+                language={language}
+                onPress={() => onOpenDrug(drug.id)}
+                onToggleFavorite={() => onToggleFavorite(drug.id)}
+                result={{ drug, score: Number.MAX_SAFE_INTEGER }}
+              />
+            ))}
+          </View>
         </>
       ) : (
         <>
@@ -1177,6 +1233,7 @@ export default function App() {
       <View style={styles.mainContent}>
         {homeTab === "search" ? (
           <SearchScreen
+            allDrugs={activeDataset.dataset.drugs}
             favoriteDrugIds={favoriteDrugIds}
             language={language}
             onChangeQuery={setQuery}
@@ -1438,6 +1495,31 @@ const styles = StyleSheet.create({
   },
 
   // ─── Recent searches ─────────────────────────────────────────────────
+  categoryChips: {
+    gap: 8,
+    paddingRight: 16,
+  },
+  categoryChip: {
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: "#CBD5E1",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  categoryChipActive: {
+    borderColor: "#1A73D4",
+    backgroundColor: "#EFF6FF",
+  },
+  categoryChipText: {
+    color: "#64748B",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  categoryChipTextActive: {
+    color: "#1A73D4",
+    fontWeight: "700",
+  },
   recentSection: {
     gap: 10,
   },
