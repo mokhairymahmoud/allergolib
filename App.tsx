@@ -391,6 +391,8 @@ function SearchScreen({
       </View>
 
       {/* Category filter chips — always visible */}
+      <View style={styles.categorySection}>
+        <Text style={styles.sectionLabel}>{copy(language, "search.categories")}</Text>
       <View style={styles.categoryChips}>
         {drugClasses.map((cls) => {
           const active = cls === activeClass;
@@ -406,6 +408,7 @@ function SearchScreen({
             </Pressable>
           );
         })}
+      </View>
       </View>
 
       {hasQuery ? (
@@ -1484,6 +1487,9 @@ const styles = StyleSheet.create({
   },
 
   // ─── Recent searches ─────────────────────────────────────────────────
+  categorySection: {
+    gap: 10,
+  },
   categoryChips: {
     flexDirection: "row",
     flexWrap: "wrap",
