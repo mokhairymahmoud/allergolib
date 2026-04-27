@@ -372,6 +372,7 @@
         year: readNestedField(row, '[data-source-field="year"]'),
         version: readNestedField(row, '[data-source-field="version"]'),
         status: readNestedField(row, '[data-source-field="status"]'),
+        url: readNestedField(row, '[data-source-field="url"]'),
         documentName: {
           fr: readNestedField(row, '[data-source-field="document-name-fr"]'),
           en: readNestedField(row, '[data-source-field="document-name-en"]'),
@@ -743,6 +744,16 @@
       sourceField("Year", "source-year-" + index, source.year, "text", index, "year") +
       sourceField("Version", "source-version-" + index, source.version, "text", index, "version") +
       sourceField("Status", "source-status-" + index, source.status, "text", index, "status") +
+      "</div>" +
+      sourceField(
+        "Document / Reference URL",
+        "source-url-" + index,
+        source.url || "",
+        "text",
+        index,
+        "url"
+      ) +
+      '<div class="grid3">' +
       sourceField(
         "Document name (FR)",
         "source-document-name-fr-" + index,
@@ -1389,6 +1400,7 @@
       year: "",
       version: "",
       status: "",
+      url: "",
       documentName: { en: "", fr: "" },
       excerpt: { en: "", fr: "" },
     };

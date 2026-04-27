@@ -165,6 +165,7 @@ function saveDrugFromAdmin(payload) {
         year: source.year,
         version: source.version,
         status: source.status,
+        url: source.url || "",
         document_name_en: source.documentName.en,
         document_name_fr: source.documentName.fr,
         excerpt_en: source.excerpt.en,
@@ -558,6 +559,7 @@ function listSources_() {
       year: toTrimmedString_(row.year),
       version: toTrimmedString_(row.version),
       status: toTrimmedString_(row.status),
+      url: toTrimmedString_(row.url),
       documentName: {
         en: toTrimmedString_(row.document_name_en),
         fr: toTrimmedString_(row.document_name_fr),
@@ -632,6 +634,7 @@ function emptySourceForm_() {
     year: "",
     version: "",
     status: "",
+    url: "",
     documentName: { en: "", fr: "" },
     excerpt: { en: "", fr: "" },
   };
@@ -653,6 +656,7 @@ function normalizeSourceDrafts_(drafts, options) {
       source.status = toTrimmedString_(draft && draft.status);
       source.documentName.en = toTrimmedString_(draft && draft.documentName && draft.documentName.en);
       source.documentName.fr = toTrimmedString_(draft && draft.documentName && draft.documentName.fr);
+      source.url = toTrimmedString_(draft && draft.url);
       source.excerpt.en = toTrimmedString_(draft && draft.excerpt && draft.excerpt.en);
       source.excerpt.fr = toTrimmedString_(draft && draft.excerpt && draft.excerpt.fr);
 
