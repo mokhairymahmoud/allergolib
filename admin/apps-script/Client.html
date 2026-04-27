@@ -30,6 +30,7 @@
     elements.newDrugButton = document.getElementById("newDrugButton");
     elements.drugForm = document.getElementById("drugForm");
     elements.saveButton = document.getElementById("saveButton");
+    elements.publishButton = document.getElementById("publishButton");
 
     elements.lookupQuery.addEventListener("input", handleLookupInput);
     elements.newDrugButton.addEventListener("click", handleNewDrug);
@@ -37,6 +38,7 @@
     elements.formSections.addEventListener("click", handleFormClick);
     elements.formSections.addEventListener("change", handleFormChange);
     elements.drugForm.addEventListener("submit", handleSave);
+    elements.publishButton.addEventListener("click", handlePublish);
 
     setStatus("Loading spreadsheet data…", "info");
 
@@ -232,6 +234,22 @@
         drug: sanitizeDrugForSave(state.form),
         sources: sanitizeSourcesForSave(state.form.sources),
       });
+  }
+
+  function handlePublish() {
+    elements.publishButton.disabled = true;
+    setStatus("Triggering GitHub workflow…", "info");
+
+    google.script.run
+      .withSuccessHandler(function (payload) {
+        elements.publishButton.disabled = false;
+        setStatus(payload.message, "success");
+      })
+      .withFailureHandler(function (error) {
+        elements.publishButton.disabled = false;
+        handleServerError(error);
+      })
+      .publishDatasetFromAdmin();
   }
 
   function handleDelete() {

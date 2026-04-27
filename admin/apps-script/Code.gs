@@ -212,10 +212,9 @@ function saveDrugFromAdmin(payload) {
     writeTable_(notesTable);
 
     SpreadsheetApp.flush();
-    const githubTrigger = dispatchGithubWorkflowOnSave_(normalized.id);
 
     return {
-      message: buildSaveSuccessMessage_(normalized.id, githubTrigger),
+      message: `Saved ${normalized.id} to Google Sheets.`,
       lookups: listDrugLookups_(),
       sources: listSources_(),
       record: loadDrugForAdmin(normalized.id),
@@ -223,6 +222,24 @@ function saveDrugFromAdmin(payload) {
   } finally {
     lock.releaseLock();
   }
+}
+
+function publishDatasetFromAdmin() {
+  const githubTrigger = dispatchGithubWorkflowOnSave_("manual", { promoteLatest: true, dryRun: false });
+
+  if (githubTrigger.status === "disabled") {
+    return { message: "GitHub workflow triggering is not enabled. Set GITHUB_TRIGGER_ON_SAVE=true in script properties." };
+  }
+
+  if (githubTrigger.status === "misconfigured") {
+    return { message: `GitHub workflow triggering is enabled but misconfigured: ${githubTrigger.message}.` };
+  }
+
+  if (githubTrigger.status === "failed") {
+    return { message: `GitHub workflow dispatch failed: ${githubTrigger.message}.` };
+  }
+
+  return { message: `Triggered GitHub dataset publish with latest promotion for ${githubTrigger.repo} on ${githubTrigger.ref}.` };
 }
 
 function deleteDrugFromAdmin(payload) {
@@ -386,35 +403,21 @@ function getBooleanScriptProperty_(key, defaultValue) {
 }
 
 function buildAdminUiText_(githubTrigger) {
-  if (!githubTrigger.enabled) {
-    return {
-      actionNote:
-        "Save writes directly to `drugs`, `aliases`, `test_entries`, `notes`, and any new inline `sources`.",
-      lookupBody:
-        "Create or update a drug record in the normalized Google Sheet tabs. Saving here updates the sheet only.",
-    };
-  }
-
-  if (!githubTrigger.configured) {
-    return {
-      actionNote:
-        "Save writes to the normalized sheet tabs first. GitHub workflow triggering is enabled, but the script properties are incomplete.",
-      lookupBody:
-        "Create or update a drug record in the normalized Google Sheet tabs. Saving here updates the sheet and then attempts GitHub dispatch only when the trigger is fully configured.",
-    };
-  }
-
-  const workflowSummary = githubTrigger.dryRun
-    ? `triggers a GitHub Actions dry run for ${githubTrigger.target} on ${githubTrigger.ref}`
-    : githubTrigger.promoteLatest
-      ? `triggers a GitHub dataset publish with latest promotion for ${githubTrigger.target} on ${githubTrigger.ref}`
-      : `triggers a versioned GitHub dataset publish for ${githubTrigger.target} on ${githubTrigger.ref}`;
+  const publishSummary = !githubTrigger.enabled
+    ? "GitHub workflow triggering is disabled."
+    : !githubTrigger.configured
+      ? `GitHub workflow triggering is enabled but incomplete (missing: ${githubTrigger.missing.join(", ")}).`
+      : githubTrigger.dryRun
+        ? `Publish triggers a dry run for ${githubTrigger.target} on ${githubTrigger.ref}.`
+        : githubTrigger.promoteLatest
+          ? `Publish triggers a dataset publish with latest promotion for ${githubTrigger.target} on ${githubTrigger.ref}.`
+          : `Publish triggers a versioned dataset publish for ${githubTrigger.target} on ${githubTrigger.ref}.`;
 
   return {
     actionNote:
-      `Save writes directly to \`drugs\`, \`aliases\`, \`test_entries\`, \`notes\`, and any new inline \`sources\`, then ${workflowSummary}.`,
+      `Save writes directly to \`drugs\`, \`aliases\`, \`test_entries\`, \`notes\`, and any new inline \`sources\`. ${publishSummary}`,
     lookupBody:
-      `Create or update a drug record in the normalized Google Sheet tabs. Saving here updates the sheet and then ${workflowSummary}.`,
+      "Create or update a drug record in the normalized Google Sheet tabs. Save updates the sheet; Publish triggers the GitHub workflow.",
   };
 }
 
@@ -450,8 +453,13 @@ function buildConnectedStatusMessage_(spreadsheetName, githubTrigger) {
   );
 }
 
-function dispatchGithubWorkflowOnSave_(drugId) {
+function dispatchGithubWorkflowOnSave_(drugId, overrides) {
   const githubTrigger = getGithubTriggerConfig_();
+
+  if (overrides) {
+    if (overrides.promoteLatest != null) githubTrigger.promoteLatest = overrides.promoteLatest;
+    if (overrides.dryRun != null) githubTrigger.dryRun = overrides.dryRun;
+  }
 
   if (!githubTrigger.enabled) {
     return { status: "disabled" };
@@ -538,41 +546,6 @@ function parseGithubDispatchError_(response) {
   return `GitHub dispatch returned HTTP ${statusCode}: ${body}`;
 }
 
-function buildSaveSuccessMessage_(drugId, githubTrigger) {
-  if (!githubTrigger || githubTrigger.status === "disabled") {
-    return `Saved ${drugId} to Google Sheets. Dataset publication remains a separate step.`;
-  }
-
-  if (githubTrigger.status === "misconfigured") {
-    return (
-      `Saved ${drugId} to Google Sheets. GitHub workflow triggering is enabled, but it was skipped ` +
-      `because ${githubTrigger.message}.`
-    );
-  }
-
-  if (githubTrigger.status === "failed") {
-    return `Saved ${drugId} to Google Sheets. GitHub workflow dispatch failed: ${githubTrigger.message}.`;
-  }
-
-  if (githubTrigger.dryRun) {
-    return (
-      `Saved ${drugId} to Google Sheets. Triggered GitHub Actions dry run for ` +
-      `${githubTrigger.repo} on ${githubTrigger.ref}.`
-    );
-  }
-
-  if (githubTrigger.promoteLatest) {
-    return (
-      `Saved ${drugId} to Google Sheets. Triggered GitHub dataset publish with latest promotion ` +
-      `for ${githubTrigger.repo} on ${githubTrigger.ref}.`
-    );
-  }
-
-  return (
-    `Saved ${drugId} to Google Sheets. Triggered versioned GitHub dataset publish for ` +
-    `${githubTrigger.repo} on ${githubTrigger.ref}.`
-  );
-}
 
 function listSources_() {
   const table = readTable_(ADMIN_APP.tabs.sources);
