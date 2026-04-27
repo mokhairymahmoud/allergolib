@@ -350,6 +350,28 @@ function SearchScreen({
         <Text style={styles.screenSubtitle}>{copy(language, "search.heroBody")}</Text>
       </View>
 
+      {/* Recent searches — shown above the input when there are recents and no active query */}
+      {!hasQuery && recentDrugs.length > 0 ? (
+        <View style={styles.recentSection}>
+          <Text style={styles.sectionLabel}>{copy(language, "search.recentTitle")}</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recentChips}
+          >
+            {recentDrugs.map((drug) => (
+              <Pressable
+                key={`recent-${drug.id}`}
+                onPress={() => onOpenDrug(drug.id)}
+                style={styles.recentChip}
+              >
+                <Text style={styles.recentChipText} numberOfLines={1}>{drug.name[language]}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
+
       <View style={styles.searchInputWrap}>
         <Ionicons name="search" size={18} color="#64748B" style={styles.searchIcon} />
         <TextInput
@@ -430,35 +452,7 @@ function SearchScreen({
             ))}
           </View>
         </>
-      ) : (
-        <>
-          {recentDrugs.length > 0 ? (
-            <View style={styles.recentSection}>
-              <Text style={styles.sectionLabel}>{copy(language, "search.recentTitle")}</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.recentChips}
-              >
-                {recentDrugs.map((drug) => (
-                  <Pressable
-                    key={`recent-${drug.id}`}
-                    onPress={() => onOpenDrug(drug.id)}
-                    style={styles.recentChip}
-                  >
-                    <Text style={styles.recentChipText} numberOfLines={1}>{drug.name[language]}</Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            </View>
-          ) : (
-            <NeutralEmptyCard
-              title={copy(language, "search.emptyRecentTitle")}
-              body={copy(language, "search.emptyRecentBody")}
-            />
-          )}
-        </>
-      )}
+      ) : null}
 
       <ComplianceBanner language={language} />
     </ScrollView>
