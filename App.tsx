@@ -1354,31 +1354,13 @@ export default function App() {
         <View style={styles.titleBlock}>
           <AppLogo />
         </View>
-        <View style={styles.languageToggle}>
-          {(["fr", "en"] as Language[]).map((nextLanguage) => {
-            const selected = nextLanguage === language;
-
-            return (
-              <Pressable
-                key={nextLanguage}
-                onPress={() => setLanguage(nextLanguage)}
-                style={[
-                  styles.languageButton,
-                  selected && styles.languageButtonSelected,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.languageButtonText,
-                    selected && styles.languageButtonTextSelected,
-                  ]}
-                >
-                  {nextLanguage.toUpperCase()}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <Pressable
+          onPress={() => setLanguage(language === "fr" ? "en" : "fr")}
+          style={styles.languageButton}
+        >
+          <Ionicons name="globe-outline" size={14} color="#64748B" />
+          <Text style={styles.languageButtonText}>{language.toUpperCase()}</Text>
+        </Pressable>
       </View>
 
       <View style={styles.mainContent}>
@@ -1544,29 +1526,21 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
   },
-  languageToggle: {
-    flexDirection: "row",
-    gap: 6,
-  },
   languageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
     borderWidth: 1,
     borderColor: "#CBD5E1",
     borderRadius: 999,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 6,
     backgroundColor: "#FFFFFF",
   },
-  languageButtonSelected: {
-    backgroundColor: "#0F172A",
-    borderColor: "#0F172A",
-  },
   languageButtonText: {
-    color: "#0F172A",
+    color: "#64748B",
     fontSize: 12,
     fontWeight: "700",
-  },
-  languageButtonTextSelected: {
-    color: "#FFFFFF",
   },
 
   // ─── Bottom Tab Bar ───────────────────────────────────────────────────
