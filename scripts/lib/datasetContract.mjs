@@ -73,7 +73,12 @@ function requireTrimmedField(row, key, context) {
 }
 
 function hasDisplayableTestContent(test) {
-  return test.sourceEntries.length > 0 || test.notes.length > 0;
+  return (
+    test.sourceEntries.some((e) => e.concentration || e.maxConcentration) ||
+    test.dilutions.length > 0 ||
+    Boolean(test.vehicle) ||
+    test.notes.length > 0
+  );
 }
 
 function assertSourceDocumentComplete(source, context) {

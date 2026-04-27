@@ -1194,7 +1194,12 @@ function homeTabIconName(tab: HomeTab, selected: boolean): React.ComponentProps<
 }
 
 function hasDisplayableTestContent(test: TestRecord) {
-  return test.sourceEntries.length > 0 || test.notes.length > 0;
+  return (
+    test.sourceEntries.some((e) => e.concentration || e.maxConcentration) ||
+    test.dilutions.length > 0 ||
+    Boolean(test.vehicle) ||
+    test.notes.length > 0
+  );
 }
 
 function isTestAvailable(drug: DrugRecord, kind: TestKind) {

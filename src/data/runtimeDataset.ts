@@ -125,7 +125,12 @@ function asLocalizedStringArray(value: unknown, context: string): LocalizedStrin
 }
 
 function hasDisplayableTestContent(test: TestRecord) {
-  return test.sourceEntries.length > 0 || test.notes.length > 0;
+  return (
+    test.sourceEntries.some((e) => e.concentration || e.maxConcentration) ||
+    test.dilutions.length > 0 ||
+    Boolean(test.vehicle) ||
+    test.notes.length > 0
+  );
 }
 
 function assertSourceDocumentComplete(
