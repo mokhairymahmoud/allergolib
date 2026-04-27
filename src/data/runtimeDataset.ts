@@ -263,13 +263,26 @@ function normalizeTestRecord(
   sourceIds: Set<string>
 ): TestRecord {
   const record = asRecord(value, context);
-  const preferredSourceId = asString(
+  const preferredSourceId = asOptionalString(
     record.preferredSourceId ?? record.sourceId,
     `${context}.preferredSourceId`
-  );
+  ) ?? "";
 
-  if (!sourceIds.has(preferredSourceId)) {
-    fail(`${context}.preferredSourceId references an unknown source: ${preferredSourceId}.`);
+  const concentration = asOptionalString(record.concentration, `${context}.concentration`);
+  const maxConcentration = asOptionalString(record.maxConcentration, `${context}.maxConcentration`);
+  const dilutions = asStringArray(record.dilutions, `${context}.dilutions`);
+  const vehicle = record.vehicle ? asLocalizedString(record.vehicle, `${context}.vehicle`) : undefined;
+  const notes = asTestNotes(record.notes, `${context}.notes`);
+
+  const hasContent = Boolean(concentration || maxConcentration || dilutions.length || vehicle || notes.length);
+
+  if (hasContent) {
+    if (!preferredSourceId) {
+      fail(`${context}.preferredSourceId must not be empty.`);
+    }
+    if (!sourceIds.has(preferredSourceId)) {
+      fail(`${context}.preferredSourceId references an unknown source: ${preferredSourceId}.`);
+    }
   }
 
   const alternateSourceId = asOptionalString(
@@ -286,11 +299,11 @@ function normalizeTestRecord(
   }
 
   return {
-    concentration: asOptionalString(record.concentration, `${context}.concentration`),
-    maxConcentration: asOptionalString(record.maxConcentration, `${context}.maxConcentration`),
-    dilutions: asStringArray(record.dilutions, `${context}.dilutions`),
-    vehicle: record.vehicle ? asLocalizedString(record.vehicle, `${context}.vehicle`) : undefined,
-    notes: asTestNotes(record.notes, `${context}.notes`),
+    concentration,
+    maxConcentration,
+    dilutions,
+    vehicle,
+    notes,
     preferredSourceId,
     alternateSourceId,
   };

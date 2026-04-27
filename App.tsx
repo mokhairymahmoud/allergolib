@@ -8,7 +8,6 @@ import {
   Linking,
   PanResponder,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,6 +15,7 @@ import {
   useColorScheme,
   View,
 } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import {
   getBundledActiveDataset,
@@ -2615,6 +2615,7 @@ export default function App() {
   );
 
   return (
+    <SafeAreaProvider>
     <ThemeContext.Provider value={theme}>
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style={theme.statusBar as "dark" | "light"} />
@@ -2660,5 +2661,6 @@ export default function App() {
         </View>
       </SafeAreaView>
     </ThemeContext.Provider>
+    </SafeAreaProvider>
   );
 }
