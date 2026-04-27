@@ -435,105 +435,118 @@ function SearchScreen({
     setActiveClass(cls);
   }
 
+  const displayDrugs = hasQuery ? null : browseDrugs;
+  const displayResults = hasQuery ? searchResults : null;
+  const resultCount = hasQuery ? searchResults.length : browseDrugs.length;
+
   return (
-    <ScrollView style={styles.scrollView} contentContainerStyle={styles.screenContent} keyboardShouldPersistTaps="handled">
-      {/* Recent searches — shown above the input when there are recents and no active query */}
-      {!hasQuery && recentDrugs.length > 0 ? (
-        <View style={styles.recentSection}>
-          <Text style={styles.sectionLabel}>{copy(language, "search.recentTitle")}</Text>
+    <View style={styles.flex1}>
+      {/* ── Sticky header ── */}
+      <View style={styles.searchStickyHeader}>
+        {/* Recent searches */}
+        {!hasQuery && recentDrugs.length > 0 ? (
+          <View style={styles.recentSection}>
+            <Text style={styles.sectionLabel}>{copy(language, "search.recentTitle")}</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalChipList}
+              style={styles.horizontalChipScroll}
+            >
+              {recentDrugs.map((drug) => (
+                <Pressable
+                  key={`recent-${drug.id}`}
+                  onPress={() => onOpenDrug(drug.id)}
+                  style={styles.recentChip}
+                >
+                  <Text style={styles.recentChipText} numberOfLines={1}>{drug.name[language]}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
+
+        {/* Search input */}
+        <View style={styles.searchInputWrap}>
+          <Ionicons name="search" size={18} color="#64748B" style={styles.searchIcon} />
+          <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            onChangeText={(v) => { onChangeQuery(v); setActiveClass(null); }}
+            placeholder={copy(language, "search.placeholder")}
+            placeholderTextColor="#94A3B8"
+            style={styles.searchInput}
+            value={query}
+          />
+          {query.length > 0 ? (
+            <Pressable onPress={() => onChangeQuery("")} hitSlop={8} style={styles.searchClear}>
+              <Ionicons name="close-circle" size={18} color="#94A3B8" />
+            </Pressable>
+          ) : null}
+        </View>
+
+        {/* Category chips */}
+        <View style={styles.categorySection}>
+          <Text style={styles.sectionLabel}>{copy(language, "search.categories")}</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalChipList}
             style={styles.horizontalChipScroll}
+            keyboardShouldPersistTaps="handled"
           >
-            {recentDrugs.map((drug) => (
-              <Pressable
-                key={`recent-${drug.id}`}
-                onPress={() => onOpenDrug(drug.id)}
-                style={styles.recentChip}
-              >
-                <Text style={styles.recentChipText} numberOfLines={1}>{drug.name[language]}</Text>
-              </Pressable>
-            ))}
+            <Pressable
+              onPress={() => setActiveClass(null)}
+              style={[styles.categoryChip, activeClass === null && styles.categoryChipActive]}
+            >
+              <Text style={[styles.categoryChipText, activeClass === null && styles.categoryChipTextActive]}>
+                {copy(language, "search.categoryAll")}
+              </Text>
+              <View style={[styles.categoryChipCount, activeClass === null && styles.categoryChipCountActive]}>
+                <Text style={[styles.categoryChipCountText, activeClass === null && styles.categoryChipCountTextActive]}>
+                  {allDrugs.length}
+                </Text>
+              </View>
+            </Pressable>
+
+            {drugClasses.map((cls) => {
+              const active = cls === activeClass;
+              const count = allDrugs.filter((d) => d.className[language] === cls).length;
+              return (
+                <Pressable
+                  key={cls}
+                  onPress={() => handleClassPress(cls)}
+                  style={[styles.categoryChip, active && styles.categoryChipActive]}
+                >
+                  <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>
+                    {cls}
+                  </Text>
+                  <View style={[styles.categoryChipCount, active && styles.categoryChipCountActive]}>
+                    <Text style={[styles.categoryChipCountText, active && styles.categoryChipCountTextActive]}>
+                      {count}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
           </ScrollView>
         </View>
-      ) : null}
-
-      <View style={styles.searchInputWrap}>
-        <Ionicons name="search" size={18} color="#64748B" style={styles.searchIcon} />
-        <TextInput
-          autoCapitalize="none"
-          autoCorrect={false}
-          onChangeText={(v) => { onChangeQuery(v); setActiveClass(null); }}
-          placeholder={copy(language, "search.placeholder")}
-          placeholderTextColor="#94A3B8"
-          style={styles.searchInput}
-          value={query}
-        />
-        {query.length > 0 ? (
-          <Pressable onPress={() => onChangeQuery("")} hitSlop={8} style={styles.searchClear}>
-            <Ionicons name="close-circle" size={18} color="#94A3B8" />
-          </Pressable>
-        ) : null}
       </View>
 
-      {/* Category filter chips — always visible */}
-      <View style={styles.categorySection}>
-        <Text style={styles.sectionLabel}>{copy(language, "search.categories")}</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalChipList}
-          style={styles.horizontalChipScroll}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* "All" chip */}
-          <Pressable
-            onPress={() => setActiveClass(null)}
-            style={[styles.categoryChip, activeClass === null && styles.categoryChipActive]}
-          >
-            <Text style={[styles.categoryChipText, activeClass === null && styles.categoryChipTextActive]}>
-              {copy(language, "search.categoryAll")}
-            </Text>
-            <View style={[styles.categoryChipCount, activeClass === null && styles.categoryChipCountActive]}>
-              <Text style={[styles.categoryChipCountText, activeClass === null && styles.categoryChipCountTextActive]}>
-                {allDrugs.length}
-              </Text>
-            </View>
-          </Pressable>
+      {/* ── Scrollable results ── */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.screenContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.resultCount}>
+          {resultCount} {copy(language, "search.results")}
+        </Text>
 
-          {drugClasses.map((cls) => {
-            const active = cls === activeClass;
-            const count = allDrugs.filter((d) => d.className[language] === cls).length;
-            return (
-              <Pressable
-                key={cls}
-                onPress={() => handleClassPress(cls)}
-                style={[styles.categoryChip, active && styles.categoryChipActive]}
-              >
-                <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>
-                  {cls}
-                </Text>
-                <View style={[styles.categoryChipCount, active && styles.categoryChipCountActive]}>
-                  <Text style={[styles.categoryChipCountText, active && styles.categoryChipCountTextActive]}>
-                    {count}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {hasQuery ? (
-        <>
-          <Text style={styles.resultCount}>
-            {searchResults.length} {copy(language, "search.results")}
-          </Text>
-          {searchResults.length ? (
+        {hasQuery && displayResults !== null ? (
+          displayResults.length ? (
             <View style={styles.resultsList}>
-              {searchResults.map((result) => (
+              {displayResults.map((result) => (
                 <DrugRow
                   key={result.drug.id}
                   isSaved={favoriteDrugSet.has(result.drug.id)}
@@ -550,15 +563,10 @@ function SearchScreen({
               <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
               <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
             </View>
-          )}
-        </>
-      ) : (
-        <>
-          <Text style={styles.resultCount}>
-            {browseDrugs.length} {copy(language, "search.results")}
-          </Text>
+          )
+        ) : displayDrugs !== null ? (
           <View style={styles.resultsList}>
-            {browseDrugs.map((drug) => (
+            {displayDrugs.map((drug) => (
               <DrugRow
                 key={drug.id}
                 isSaved={favoriteDrugSet.has(drug.id)}
@@ -569,11 +577,11 @@ function SearchScreen({
               />
             ))}
           </View>
-        </>
-      )}
+        ) : null}
 
-      <ComplianceBanner language={language} />
-    </ScrollView>
+        <ComplianceBanner language={language} />
+      </ScrollView>
+    </View>
   );
 }
 
@@ -1563,6 +1571,16 @@ const styles = StyleSheet.create({
     color: "#64748B",
     fontSize: 14,
     lineHeight: 20,
+  },
+
+  searchStickyHeader: {
+    backgroundColor: "#F4F6F9",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E4E9EF",
   },
 
   // ─── Search Input ─────────────────────────────────────────────────────
