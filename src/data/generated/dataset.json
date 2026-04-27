@@ -323,15 +323,15 @@
       "aliases": ["fentanyl", "fentanil"],
       "tests": {
         "prick": {
-          "concentration": "50 µg/ml",
+          "concentration": "50 μg/ml",
           "maxConcentration": "",
           "dilutions": [],
           "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         },
         "idr": {
-          "concentration": "5 µg/ml",
-          "maxConcentration": "5 µg/ml",
+          "concentration": "5 μg/ml",
+          "maxConcentration": "5 μg/ml",
           "dilutions": ["1:10"],
           "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
@@ -383,15 +383,15 @@
       "aliases": ["remifentanil", "ultiva"],
       "tests": {
         "prick": {
-          "concentration": "50 µg/ml",
+          "concentration": "50 μg/ml",
           "maxConcentration": "",
           "dilutions": [],
           "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         },
         "idr": {
-          "concentration": "5 µg/ml",
-          "maxConcentration": "5 µg/ml",
+          "concentration": "5 μg/ml",
+          "maxConcentration": "5 μg/ml",
           "dilutions": ["1:10"],
           "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
@@ -413,15 +413,15 @@
       "aliases": ["sufentanil", "sufenta"],
       "tests": {
         "prick": {
-          "concentration": "5 µg/ml",
+          "concentration": "5 μg/ml",
           "maxConcentration": "",
           "dilutions": [],
           "notes": [{ "kind": "info", "value": { "en": "Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025." } }],
           "preferredSourceId": "sfar-sfa-2025-annex-4"
         },
         "idr": {
-          "concentration": "0.5 µg/ml",
-          "maxConcentration": "0.5 µg/ml",
+          "concentration": "0.5 μg/ml",
+          "maxConcentration": "0.5 μg/ml",
           "dilutions": ["1:10"],
           "notes": [{ "kind": "info", "value": { "en": "Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.", "fr": "Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025." } }],
           "preferredSourceId": "sfar-sfa-2025-annex-4"

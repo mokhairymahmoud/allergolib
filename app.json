@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "PeriopSkinTest",
-    "slug": "periop-skin-test",
+    "slug": "allergolib",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -11,7 +11,11 @@
       "web"
     ],
     "extra": {
-      "datasetManifestUrl": ""
-    }
+      "datasetManifestUrl": "",
+      "eas": {
+        "projectId": "fc5e1480-8716-4397-9daa-1922d79e9e28"
+      }
+    },
+    "owner": "mokhairy"
   }
 }
