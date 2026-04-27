@@ -44,6 +44,11 @@ const TAB_ORDER: TestKind[] = ["prick", "idr", "patch"];
 const HOME_TABS = ["search", "favorites", "info"] as const;
 
 type HomeTab = (typeof HOME_TABS)[number];
+type DetailMetricItem = {
+  label: string;
+  value: string;
+  compact?: boolean;
+};
 
 function homeTabIcon(tab: HomeTab, selected: boolean) {
   if (tab === "favorites") {
@@ -138,6 +143,10 @@ function matchLabel(language: Language, result: DrugSearchResult) {
 function noteLabel(language: Language, kind: NoteKind) {
   if (kind === "cross-reactivity") {
     return copy(language, "detail.note.cross-reactivity");
+  }
+
+  if (kind === "warning") {
+    return copy(language, "detail.note.warning");
   }
 
   return copy(language, "detail.note.info");
@@ -530,19 +539,23 @@ function SourceCard({
 function NoteList({
   language,
   notes,
+  tone = "default",
 }: {
   language: Language;
   notes: TestNote[];
+  tone?: "default" | "warning";
 }) {
   return (
     <View style={styles.notesBlock}>
       {notes.map((note, index) => (
         <View
           key={`${note.kind}-${note.value.en}-${note.value.fr}-${index}`}
-          style={styles.noteRow}
+          style={[styles.noteRow, tone === "warning" && styles.noteRowWarning]}
         >
-          <View style={styles.noteBadge}>
-            <Text style={styles.noteBadgeText}>{noteLabel(language, note.kind)}</Text>
+          <View style={[styles.noteBadge, tone === "warning" && styles.noteBadgeWarning]}>
+            <Text style={[styles.noteBadgeText, tone === "warning" && styles.noteBadgeTextWarning]}>
+              {noteLabel(language, note.kind)}
+            </Text>
           </View>
           <Text style={styles.noteText}>{note.value[language]}</Text>
         </View>
@@ -668,6 +681,7 @@ function DetailScreen({
 }) {
   const [activeTab, setActiveTab] = useState<TestKind>(availableTests(drug)[0] ?? "prick");
   const [showSource, setShowSource] = useState(false);
+  const availableTestKinds = availableTests(drug);
 
   useEffect(() => {
     const nextAvailableTests = availableTests(drug);
@@ -692,6 +706,37 @@ function DetailScreen({
   const concentrationUnit = extractConcentrationUnit(test.maxConcentration ?? test.concentration);
   const shouldShowStandardConcentration =
     Boolean(test.concentration) && (activeTab !== "idr" || test.concentration !== test.maxConcentration);
+  const metricItems: DetailMetricItem[] = [];
+
+  if (shouldShowStandardConcentration) {
+    metricItems.push({
+      label: concentrationLabel(language, activeTab),
+      value: test.concentration ?? "",
+    });
+  }
+
+  if (test.maxConcentration) {
+    metricItems.push({
+      label: copy(language, "detail.idr.maxConcentration"),
+      value: test.maxConcentration,
+    });
+  }
+
+  if (test.dilutions.length) {
+    metricItems.push({
+      label: copy(language, "detail.idr.dilutions"),
+      value: test.dilutions.join(" -> "),
+      compact: true,
+    });
+  }
+
+  if (test.vehicle) {
+    metricItems.push({
+      label: copy(language, "detail.patch.vehicle"),
+      value: test.vehicle[language],
+      compact: true,
+    });
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.screenContent}>
@@ -702,44 +747,78 @@ function DetailScreen({
       <View style={styles.detailHeader}>
         <View style={styles.detailHeaderTop}>
           <View style={styles.detailHeaderTitleBlock}>
-            <Text style={styles.detailEyebrow}>{drug.className[language]}</Text>
+            <View style={styles.detailHeaderMetaRow}>
+              <View style={styles.detailClassBadge}>
+                <Text style={styles.detailClassBadgeText}>{drug.className[language]}</Text>
+              </View>
+              <View style={styles.detailIdBadge}>
+                <Text style={styles.detailIdBadgeText}>{drug.id}</Text>
+              </View>
+            </View>
             <Text style={styles.detailTitle}>{drug.name[language]}</Text>
+            <Text style={styles.detailSubtitle}>{copy(language, "detail.seedNotice")}</Text>
           </View>
           <SavePill language={language} isSaved={isSaved} onPress={onToggleFavorite} />
         </View>
-        <Text style={styles.detailSubtitle}>{copy(language, "detail.seedNotice")}</Text>
+        <View style={styles.detailAvailableTestsRow}>
+          {availableTestKinds.map((kind) => {
+            const selected = kind === activeTab;
+
+            return (
+              <View
+                key={`available-${kind}`}
+                style={[styles.detailTestChip, selected && styles.detailTestChipSelected]}
+              >
+                <Text
+                  style={[
+                    styles.detailTestChipText,
+                    selected && styles.detailTestChipTextSelected,
+                  ]}
+                >
+                  {testTitle(language, kind)}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
       </View>
 
       <ComplianceCard language={language} />
 
-      <View style={styles.tabRow}>
-        {TAB_ORDER.map((kind) => {
-          const selected = kind === activeTab;
-          const disabled = !isTestAvailable(drug, kind);
+      <View style={styles.detailTabsPanel}>
+        <View style={styles.detailTabsPanelHeader}>
+          <Text style={styles.sectionTitle}>{copy(language, "detail.validatedData")}</Text>
+          <Text style={styles.detailTabsPanelLabel}>{testTitle(language, activeTab)}</Text>
+        </View>
+        <View style={styles.tabRow}>
+          {TAB_ORDER.map((kind) => {
+            const selected = kind === activeTab;
+            const disabled = !isTestAvailable(drug, kind);
 
-          return (
-            <Pressable
-              key={kind}
-              disabled={disabled}
-              onPress={() => setActiveTab(kind)}
-              style={[
-                styles.tabButton,
-                selected && styles.tabButtonSelected,
-                disabled && styles.tabButtonDisabled,
-              ]}
-            >
-              <Text
+            return (
+              <Pressable
+                key={kind}
+                disabled={disabled}
+                onPress={() => setActiveTab(kind)}
                 style={[
-                  styles.tabButtonText,
-                  selected && styles.tabButtonTextSelected,
-                  disabled && styles.tabButtonTextDisabled,
+                  styles.tabButton,
+                  selected && styles.tabButtonSelected,
+                  disabled && styles.tabButtonDisabled,
                 ]}
               >
-                {testTitle(language, kind)}
-              </Text>
-            </Pressable>
-          );
-        })}
+                <Text
+                  style={[
+                    styles.tabButtonText,
+                    selected && styles.tabButtonTextSelected,
+                    disabled && styles.tabButtonTextDisabled,
+                  ]}
+                >
+                  {testTitle(language, kind)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
 
       {!canShowProvenance ? (
@@ -755,49 +834,32 @@ function DetailScreen({
 
       {canShowProvenance ? (
         <View style={styles.panel}>
-          <Text style={styles.sectionTitle}>{copy(language, "detail.validatedData")}</Text>
+          <Text style={styles.sectionTitle}>{testTitle(language, activeTab)}</Text>
 
-          {shouldShowStandardConcentration ? (
-            <View style={styles.metricBlock}>
-              <Text style={styles.metricLabel}>{concentrationLabel(language, activeTab)}</Text>
-              <Text style={styles.metricValue}>{test.concentration}</Text>
+          {metricItems.length ? (
+            <View style={styles.metricGrid}>
+              {metricItems.map((item) => (
+                <View
+                  key={`${activeTab}-${item.label}`}
+                  style={[styles.metricCard, item.compact && styles.metricCardCompact]}
+                >
+                  <Text style={styles.metricLabel}>{item.label}</Text>
+                  <Text style={item.compact ? styles.metricValueSmall : styles.metricValue}>
+                    {item.value}
+                  </Text>
+                </View>
+              ))}
             </View>
-          ) : null}
-
-          {test.maxConcentration ? (
-            <View style={styles.metricBlock}>
-              <Text style={styles.metricLabel}>{copy(language, "detail.idr.maxConcentration")}</Text>
-              <Text style={styles.metricValue}>{test.maxConcentration}</Text>
-            </View>
-          ) : null}
-
-          {test.dilutions.length ? (
-            <View style={styles.metricBlock}>
-              <Text style={styles.metricLabel}>{copy(language, "detail.idr.dilutions")}</Text>
-              <Text style={styles.metricValueSmall}>{test.dilutions.join(" -> ")}</Text>
-            </View>
-          ) : null}
-
-          {test.vehicle ? (
-            <View style={styles.metricBlock}>
-              <Text style={styles.metricLabel}>{copy(language, "detail.patch.vehicle")}</Text>
-              <Text style={styles.metricValueSmall}>{test.vehicle[language]}</Text>
-            </View>
-          ) : null}
-
-          {!shouldShowStandardConcentration &&
-          !test.maxConcentration &&
-          !test.dilutions.length &&
-          !test.vehicle ? (
+          ) : (
             <Text style={styles.emptyState}>{copy(language, "detail.noTestData")}</Text>
-          ) : null}
+          )}
         </View>
       ) : null}
 
       {canShowProvenance && warnings.length ? (
         <View style={styles.warningPanel}>
           <Text style={styles.warningTitle}>{copy(language, "detail.warnings")}</Text>
-          <NoteList language={language} notes={warnings} />
+          <NoteList language={language} notes={warnings} tone="warning" />
         </View>
       ) : null}
 
@@ -818,6 +880,14 @@ function DetailScreen({
 
       {canShowProvenance && preferredSource ? (
         <View style={styles.panel}>
+          <View style={styles.sourceSummaryCard}>
+            <Text style={styles.sourceEyebrow}>{copy(language, "detail.preferredSource")}</Text>
+            <Text style={styles.sourceTitle}>{preferredSource.label}</Text>
+            <Text style={styles.sourceMeta}>
+              {preferredSource.organization} {preferredSource.year} • {preferredSource.version}
+            </Text>
+            <Text style={styles.sourceLabel}>{preferredSource.documentName[language]}</Text>
+          </View>
           <Pressable onPress={() => setShowSource((current) => !current)} style={styles.sourceToggle}>
             <View>
               <Text style={styles.sectionTitle}>{copy(language, "detail.source")}</Text>
@@ -1518,11 +1588,41 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 8,
   },
+  detailHeaderMetaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
   detailEyebrow: {
     color: "#0E6B66",
     fontSize: 12,
     fontWeight: "800",
     textTransform: "uppercase",
+  },
+  detailClassBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#E6F2EF",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  detailClassBadgeText: {
+    color: "#0E6B66",
+    fontSize: 11,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  detailIdBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#EEF2F5",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  detailIdBadgeText: {
+    color: "#536070",
+    fontSize: 11,
+    fontWeight: "700",
   },
   detailTitle: {
     color: "#16222E",
@@ -1534,6 +1634,49 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  detailAvailableTestsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  detailTestChip: {
+    backgroundColor: "#F3F6F9",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  detailTestChipSelected: {
+    backgroundColor: "#E6F2EF",
+  },
+  detailTestChipText: {
+    color: "#536070",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  detailTestChipTextSelected: {
+    color: "#0E6B66",
+  },
+  detailTabsPanel: {
+    backgroundColor: "#FCFBF7",
+    borderRadius: 24,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#D8D4CB",
+    gap: 14,
+  },
+  detailTabsPanelHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
+  detailTabsPanelLabel: {
+    color: "#0E6B66",
+    fontSize: 12,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
   tabRow: {
     flexDirection: "row",
     gap: 8,
@@ -1541,28 +1684,45 @@ const styles = StyleSheet.create({
   tabButton: {
     flex: 1,
     borderRadius: 16,
-    backgroundColor: "#E4E9EE",
+    backgroundColor: "#EEF3F7",
     paddingVertical: 12,
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#D7E1E9",
   },
   tabButtonSelected: {
-    backgroundColor: "#B53E16",
+    backgroundColor: "#16353D",
+    borderColor: "#16353D",
   },
   tabButtonDisabled: {
-    opacity: 0.5,
+    backgroundColor: "#F4F7FA",
+    borderColor: "#E3E8EE",
+    opacity: 0.7,
   },
   tabButtonText: {
-    color: "#16222E",
+    color: "#536070",
     fontSize: 14,
     fontWeight: "800",
   },
   tabButtonTextSelected: {
-    color: "#FFF9F5",
+    color: "#F7FAFC",
   },
   tabButtonTextDisabled: {
     color: "#70808F",
   },
   metricBlock: {
+    gap: 6,
+  },
+  metricGrid: {
+    gap: 12,
+  },
+  metricCard: {
+    gap: 8,
+    backgroundColor: "#F4F7FA",
+    borderRadius: 20,
+    padding: 16,
+  },
+  metricCardCompact: {
     gap: 6,
   },
   metricLabel: {
@@ -1587,6 +1747,14 @@ const styles = StyleSheet.create({
   },
   noteRow: {
     gap: 8,
+    backgroundColor: "#F4F7FA",
+    borderRadius: 18,
+    padding: 14,
+  },
+  noteRowWarning: {
+    backgroundColor: "#FFF0E6",
+    borderWidth: 1,
+    borderColor: "#F2C1AB",
   },
   noteBadge: {
     alignSelf: "flex-start",
@@ -1595,11 +1763,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
+  noteBadgeWarning: {
+    backgroundColor: "#FCE1CF",
+  },
   noteBadgeText: {
     color: "#536070",
     fontSize: 11,
     fontWeight: "800",
     textTransform: "uppercase",
+  },
+  noteBadgeTextWarning: {
+    color: "#8A3312",
   },
   noteText: {
     color: "#223243",
@@ -1646,7 +1820,14 @@ const styles = StyleSheet.create({
   sourceToggle: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     gap: 12,
+  },
+  sourceSummaryCard: {
+    gap: 8,
+    backgroundColor: "#F4F7FA",
+    borderRadius: 18,
+    padding: 14,
   },
   sourceLabel: {
     color: "#536070",
