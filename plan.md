@@ -21,16 +21,18 @@ Durable decisions that apply across all phases:
 
 ## Phase 1: Reference Slice
 
+**Status**: Done
+
 **User stories**: search a drug, open a detail screen, read core concentration data offline
 
 ### What to build
 Build the first end-to-end reference slice with a minimal bundled dataset from the SFAR/SFA 2025 guideline. The app should support home, search, and drug detail for a very small seeded set of drugs, with offline access, bilingual UI framing, and visible source attribution.
 
 ### Acceptance criteria
-- [ ] The app launches offline and shows bundled data without any network dependency.
-- [ ] A clinician can search and open at least one seeded drug in two taps or less.
-- [ ] Drug detail shows test sections, concentration data, notes, and source citation/excerpt.
-- [ ] The slice is bilingual at the UI level and supports localized medical content fields.
+- [x] The app launches offline and shows bundled data without any network dependency.
+- [x] A clinician can search and open at least one seeded drug in two taps or less.
+- [x] Drug detail shows test sections, concentration data, notes, and source citation/excerpt.
+- [x] The slice is bilingual at the UI level and supports localized medical content fields.
 
 ---
 
