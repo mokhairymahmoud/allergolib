@@ -675,13 +675,13 @@
       "<h3>" + escapeHtml(testKind.toUpperCase()) + "</h3>" +
       '<div class="fieldHint">Add at least one source entry with a concentration, or a note, for this test.</div>' +
       "</div>" +
-      '<div style="display:flex;gap:8px;">' +
+      '<div class="testTitleActions">' +
       '<button type="button" class="ghostButton" data-action="add-source-entry" data-test-kind="' + escapeHtml(testKind) + '">Add source</button>' +
       '<button type="button" class="ghostButton" data-action="add-note" data-test-kind="' + escapeHtml(testKind) + '">Add note</button>' +
       "</div>" +
       "</div>" +
       renderSourceEntries(testKind, test.sourceEntries) +
-      '<div class="grid3" style="margin-top:12px;">' +
+      '<div class="grid3">' +
       field("Dilutions", "test-" + testKind + "-dilutions", test.dilutions, "text", "Shared across sources. Use semicolons, e.g. 1:10; 1:100") +
       field("Vehicle (FR)", "test-" + testKind + "-vehicle-fr", test.vehicle.fr, "text") +
       field("Vehicle (EN)", "test-" + testKind + "-vehicle-en", test.vehicle.en, "text") +
@@ -702,7 +702,7 @@
         const isOnlyEntry = entries.length === 1;
         return (
           '<div class="sourceEntryRow" data-source-entry-row="' + escapeHtml(testKind) + '">' +
-          '<div class="grid3">' +
+          '<div class="grid3" style="margin-bottom:4px;">' +
           field(
             "Source",
             "test-" + testKind + "-source-entry-source-" + index,
@@ -728,8 +728,8 @@
             'data-source-entry="' + escapeHtml(testKind) + '" data-source-entry-field="maxConcentration"'
           ) +
           "</div>" +
-          '<div class="cardActions" style="align-items:center;">' +
-          '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">' +
+          '<div class="sourceEntryActions">' +
+          '<label class="sourceEntryPreferredLabel">' +
           '<input type="checkbox"' +
           (entry.isPreferred ? ' checked="checked"' : "") +
           ' data-action="set-preferred-source-entry" data-test-kind="' + escapeHtml(testKind) + '" data-index="' + index + '"' +

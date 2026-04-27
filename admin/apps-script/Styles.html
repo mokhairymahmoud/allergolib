@@ -314,9 +314,44 @@ h3 {
 .testGrid,
 .aliasList,
 .noteList,
-.sourceList {
+.sourceList,
+.sourceEntryList {
   display: grid;
-  gap: 16px;
+  gap: 12px;
+}
+
+.sourceEntryRow {
+  background: var(--panel-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.sourceEntryActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.sourceEntryPreferredLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+
+.testTitleActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .testCard {
@@ -467,8 +502,21 @@ h3 {
     align-items: stretch;
   }
 
+  .testTitleActions {
+    justify-content: flex-start;
+  }
+
   .aliasRow {
     grid-template-columns: 1fr;
+  }
+
+  .sourceEntryActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sourceEntryPreferredLabel {
+    padding: 8px 0;
   }
 }
 </style>
