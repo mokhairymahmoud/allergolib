@@ -206,6 +206,98 @@ function formatReleaseDate(value: string, language: Language) {
   }).format(date);
 }
 
+function AppLogo() {
+  return (
+    <View style={logoStyles.root}>
+      {/* Icon mark */}
+      <View style={logoStyles.mark}>
+        {/* Outer hexagonal shield built from a rotated square + pseudo-circle overlay */}
+        <View style={logoStyles.shield}>
+          {/* Cross — vertical bar */}
+          <View style={logoStyles.crossV} />
+          {/* Cross — horizontal bar */}
+          <View style={logoStyles.crossH} />
+          {/* Small dot accent bottom-right */}
+          <View style={logoStyles.dot} />
+        </View>
+      </View>
+      {/* Wordmark */}
+      <View style={logoStyles.wordmark}>
+        <Text style={logoStyles.wordPrimary}>Allergo</Text>
+        <Text style={logoStyles.wordAccent}>lib</Text>
+      </View>
+    </View>
+  );
+}
+
+const logoStyles = StyleSheet.create({
+  root: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  mark: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  shield: {
+    width: 32,
+    height: 36,
+    borderRadius: 6,
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
+    backgroundColor: "#1A73D4",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#1A73D4",
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  crossV: {
+    position: "absolute",
+    width: 4,
+    height: 18,
+    borderRadius: 2,
+    backgroundColor: "#FFFFFF",
+  },
+  crossH: {
+    position: "absolute",
+    width: 18,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#FFFFFF",
+  },
+  dot: {
+    position: "absolute",
+    bottom: 5,
+    right: 5,
+    width: 5,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.5)",
+  },
+  wordmark: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  wordPrimary: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0F172A",
+    letterSpacing: -0.3,
+  },
+  wordAccent: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#1A73D4",
+    letterSpacing: -0.3,
+  },
+});
+
 // Slim blue compliance banner shown on non-Info screens
 function ComplianceBanner({ language }: { language: Language }) {
   return (
@@ -1216,7 +1308,7 @@ export default function App() {
       {/* Top bar */}
       <View style={styles.topBar}>
         <View style={styles.titleBlock}>
-          <Text style={styles.title}>{copy(language, "home.title")}</Text>
+          <AppLogo />
         </View>
         <View style={styles.languageToggle}>
           {(["fr", "en"] as Language[]).map((nextLanguage) => {
