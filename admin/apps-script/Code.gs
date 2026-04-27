@@ -8,7 +8,7 @@ const ADMIN_APP = Object.freeze({
   },
   testKinds: ["prick", "idr", "patch"],
   noteKinds: ["info", "warning", "cross-reactivity"],
-  dilutionPattern: /^\d+:\d+$/,
+  dilutionPattern: /^[1-9]\d*:[1-9]\d*$/,
 });
 
 function doGet() {
@@ -25,14 +25,13 @@ function include(filename) {
 function bootstrapAdminApp() {
   const spreadsheet = getSpreadsheet_();
   const sources = listSources_();
-  const lookups = listDrugLookups_();
 
   return {
     spreadsheetName: spreadsheet.getName(),
     defaultSourceId: sources[0] ? sources[0].id : "",
     noteKinds: ADMIN_APP.noteKinds.slice(),
     testKinds: ADMIN_APP.testKinds.slice(),
-    lookups,
+    lookups: listDrugLookups_(),
     sources,
   };
 }
@@ -51,6 +50,7 @@ function loadDrugForAdmin(drugId) {
   const testEntriesTable = readTable_(ADMIN_APP.tabs.testEntries);
   const notesTable = readTable_(ADMIN_APP.tabs.notes);
   const drugRow = drugsTable.objects.find((row) => row.id === normalizedDrugId);
+  const applicableKinds = {};
 
   if (!drugRow) {
     throw new Error(`Unknown drug id "${normalizedDrugId}".`);
@@ -91,6 +91,10 @@ function loadDrugForAdmin(drugId) {
         alternateSourceId: toTrimmedString_(row.alternate_source_id),
         notes: [],
       };
+
+      if (hasMeaningfulTestFormContent_(record.tests[row.test_kind])) {
+        applicableKinds[row.test_kind] = true;
+      }
     });
 
   notesTable.objects
@@ -107,7 +111,10 @@ function loadDrugForAdmin(drugId) {
           fr: toTrimmedString_(row.note_fr),
         },
       });
+      applicableKinds[row.test_kind] = true;
     });
+
+  record.applicableTests = ADMIN_APP.testKinds.filter((testKind) => applicableKinds[testKind]);
 
   return {
     mode: "edit",
@@ -121,8 +128,18 @@ function saveDrugFromAdmin(payload) {
   lock.waitLock(30000);
 
   try {
-    const sources = listSources_();
-    const sourcesById = Object.fromEntries(sources.map((source) => [source.id, source]));
+    const existingSources = listSources_();
+    const existingSourcesById = Object.fromEntries(
+      existingSources.map((source) => [source.id, source])
+    );
+    const newSources = normalizeSourceDrafts_((payload && payload.sources) || [], {
+      existingSourceIds: Object.keys(existingSourcesById),
+    });
+    const sourcesById = Object.assign(
+      {},
+      existingSourcesById,
+      Object.fromEntries(newSources.map((source) => [source.id, source]))
+    );
     const lookups = listDrugLookups_();
     const originalId = toTrimmedString_(payload && payload.originalId);
     const normalized = normalizeDrugPayload_(payload && payload.drug, {
@@ -135,8 +152,24 @@ function saveDrugFromAdmin(payload) {
     const aliasesTable = readTable_(ADMIN_APP.tabs.aliases);
     const testEntriesTable = readTable_(ADMIN_APP.tabs.testEntries);
     const notesTable = readTable_(ADMIN_APP.tabs.notes);
+    const sourcesTable = readTable_(ADMIN_APP.tabs.sources);
 
-    upsertDrugRow_(drugsTable, originalId || normalized.id, {
+    newSources.forEach((source) => {
+      upsertRowById_(sourcesTable, source.id, {
+        id: source.id,
+        label: source.label,
+        organization: source.organization,
+        year: source.year,
+        version: source.version,
+        status: source.status,
+        document_name_en: source.documentName.en,
+        document_name_fr: source.documentName.fr,
+        excerpt_en: source.excerpt.en,
+        excerpt_fr: source.excerpt.fr,
+      });
+    });
+
+    upsertRowById_(drugsTable, originalId || normalized.id, {
       id: normalized.id,
       class_name_en: normalized.className.en,
       class_name_fr: normalized.className.fr,
@@ -153,16 +186,12 @@ function saveDrugFromAdmin(payload) {
       }))
     );
 
-    replaceTestEntryRows_(
-      testEntriesTable,
-      originalId || normalized.id,
-      normalized
-    );
+    replaceTestEntryRows_(testEntriesTable, originalId || normalized.id, normalized);
 
     replaceRowsByDrugId_(
       notesTable,
       originalId || normalized.id,
-      ADMIN_APP.testKinds.flatMap((testKind) =>
+      normalized.applicableTests.flatMap((testKind) =>
         normalized.tests[testKind].notes.map((note) => ({
           drug_id: normalized.id,
           test_kind: testKind,
@@ -173,6 +202,7 @@ function saveDrugFromAdmin(payload) {
       )
     );
 
+    writeTable_(sourcesTable);
     writeTable_(drugsTable);
     writeTable_(aliasesTable);
     writeTable_(testEntriesTable);
@@ -183,7 +213,60 @@ function saveDrugFromAdmin(payload) {
     return {
       message: `Saved ${normalized.id} to Google Sheets. Dataset publication remains a separate step.`,
       lookups: listDrugLookups_(),
+      sources: listSources_(),
       record: loadDrugForAdmin(normalized.id),
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function deleteDrugFromAdmin(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+
+  try {
+    const drugId = toTrimmedString_(payload && payload.drugId);
+    const confirmation = toTrimmedString_(payload && payload.confirmation);
+
+    if (!drugId) {
+      throw new Error("Drug id is required before delete.");
+    }
+
+    if (confirmation !== drugId) {
+      throw new Error(`Type ${drugId} exactly to confirm permanent delete.`);
+    }
+
+    const drugsTable = readTable_(ADMIN_APP.tabs.drugs);
+    const aliasesTable = readTable_(ADMIN_APP.tabs.aliases);
+    const testEntriesTable = readTable_(ADMIN_APP.tabs.testEntries);
+    const notesTable = readTable_(ADMIN_APP.tabs.notes);
+
+    if (!drugsTable.objects.some((row) => row.id === drugId)) {
+      throw new Error(`Unknown drug id "${drugId}".`);
+    }
+
+    removeRowsByField_(drugsTable, "id", drugId);
+    removeRowsByField_(aliasesTable, "drug_id", drugId);
+    removeRowsByField_(testEntriesTable, "drug_id", drugId);
+    removeRowsByField_(notesTable, "drug_id", drugId);
+
+    writeTable_(drugsTable);
+    writeTable_(aliasesTable);
+    writeTable_(testEntriesTable);
+    writeTable_(notesTable);
+
+    SpreadsheetApp.flush();
+
+    return {
+      message: `Deleted ${drugId} and its linked aliases, tests, and notes.`,
+      lookups: listDrugLookups_(),
+      sources: listSources_(),
+      record: {
+        mode: "create",
+        originalId: "",
+        drug: emptyDrugForm_(firstSourceId_(Object.fromEntries(listSources_().map((source) => [source.id, source])))),
+      },
     };
   } finally {
     lock.releaseLock();
@@ -299,6 +382,7 @@ function emptyDrugForm_(defaultSourceId) {
     name: { en: "", fr: "" },
     className: { en: "", fr: "" },
     aliases: [""],
+    applicableTests: [],
     tests,
   };
 }
@@ -315,10 +399,84 @@ function emptyTestForm_(defaultSourceId) {
   };
 }
 
+function emptySourceForm_() {
+  return {
+    id: "",
+    label: "",
+    organization: "",
+    year: "",
+    version: "",
+    status: "",
+    documentName: { en: "", fr: "" },
+    excerpt: { en: "", fr: "" },
+  };
+}
+
+function normalizeSourceDrafts_(drafts, options) {
+  const errors = [];
+  const existingSourceIds = new Set(options.existingSourceIds || []);
+  const seenDraftIds = {};
+
+  return (Array.isArray(drafts) ? drafts : [])
+    .map((draft) => {
+      const source = emptySourceForm_();
+
+      source.id = toTrimmedString_(draft && draft.id);
+      source.label = toTrimmedString_(draft && draft.label);
+      source.organization = toTrimmedString_(draft && draft.organization);
+      source.year = toTrimmedString_(draft && draft.year);
+      source.version = toTrimmedString_(draft && draft.version);
+      source.status = toTrimmedString_(draft && draft.status);
+      source.documentName.en = toTrimmedString_(draft && draft.documentName && draft.documentName.en);
+      source.documentName.fr = toTrimmedString_(draft && draft.documentName && draft.documentName.fr);
+      source.excerpt.en = toTrimmedString_(draft && draft.excerpt && draft.excerpt.en);
+      source.excerpt.fr = toTrimmedString_(draft && draft.excerpt && draft.excerpt.fr);
+
+      if (isSourceFormBlank_(source)) {
+        return null;
+      }
+
+      if (!source.id) {
+        errors.push("New sources must include an id.");
+      } else if (existingSourceIds.has(source.id)) {
+        errors.push(`Source id "${source.id}" already exists.`);
+      } else if (seenDraftIds[source.id]) {
+        errors.push(`Source id "${source.id}" is duplicated in the draft sources.`);
+      } else {
+        seenDraftIds[source.id] = true;
+      }
+
+      ["label", "organization", "year", "version", "status"].forEach((key) => {
+        if (!source[key]) {
+          errors.push(`Source ${source.id || "(new source)"} is missing ${key}.`);
+        }
+      });
+
+      if (!source.documentName.fr || !source.documentName.en) {
+        errors.push(`Source ${source.id || "(new source)"} must include document name in French and English.`);
+      }
+
+      if (!source.excerpt.fr || !source.excerpt.en) {
+        errors.push(`Source ${source.id || "(new source)"} must include excerpt in French and English.`);
+      }
+
+      return source;
+    })
+    .filter((source) => source)
+    .map((source) => {
+      if (errors.length) {
+        return source;
+      }
+
+      return source;
+    });
+}
+
 function normalizeDrugPayload_(payload, options) {
   const errors = [];
   const record = emptyDrugForm_(firstSourceId_(options.sourcesById));
   const existingIds = new Set(options.existingIds || []);
+  const usedSourceIds = {};
 
   record.id = toTrimmedString_(payload && payload.id);
   record.name.en = toTrimmedString_(payload && payload.name && payload.name.en);
@@ -326,6 +484,9 @@ function normalizeDrugPayload_(payload, options) {
   record.className.en = toTrimmedString_(payload && payload.className && payload.className.en);
   record.className.fr = toTrimmedString_(payload && payload.className && payload.className.fr);
   record.aliases = uniqueStrings_((payload && payload.aliases) || []);
+  record.applicableTests = uniqueStrings_((payload && payload.applicableTests) || []).filter((testKind) =>
+    ADMIN_APP.testKinds.includes(testKind)
+  );
 
   if (!record.id) {
     errors.push("Drug id is required.");
@@ -343,6 +504,10 @@ function normalizeDrugPayload_(payload, options) {
     errors.push("At least one alias is required.");
   }
 
+  if (!record.applicableTests.length) {
+    errors.push("At least one applicable test entry is required.");
+  }
+
   if (record.id && record.id !== options.originalId && existingIds.has(record.id)) {
     errors.push(`Drug id "${record.id}" already exists.`);
   }
@@ -350,6 +515,7 @@ function normalizeDrugPayload_(payload, options) {
   ADMIN_APP.testKinds.forEach((testKind) => {
     const rawTest = payload && payload.tests ? payload.tests[testKind] : null;
     const normalizedTest = emptyTestForm_(firstSourceId_(options.sourcesById));
+
     normalizedTest.concentration = toTrimmedString_(rawTest && rawTest.concentration);
     normalizedTest.maxConcentration = toTrimmedString_(rawTest && rawTest.maxConcentration);
     normalizedTest.dilutions = normalizeDilutionList_(rawTest && rawTest.dilutions, errors, testKind);
@@ -358,11 +524,25 @@ function normalizeDrugPayload_(payload, options) {
     normalizedTest.sourceId =
       toTrimmedString_(rawTest && rawTest.sourceId) || firstSourceId_(options.sourcesById);
     normalizedTest.alternateSourceId = toTrimmedString_(rawTest && rawTest.alternateSourceId);
+    normalizedTest.notes = normalizeNotes_(rawTest && rawTest.notes, errors, testKind);
+
+    if (!record.applicableTests.includes(testKind)) {
+      record.tests[testKind] = normalizedTest;
+      return;
+    }
+
+    if (!hasMeaningfulTestFormContent_(normalizedTest)) {
+      errors.push(
+        `Test ${testKind} must include at least one of concentration, max concentration, dilution, vehicle, or note.`
+      );
+    }
 
     if (!normalizedTest.sourceId) {
       errors.push(`Preferred source is required for ${testKind}.`);
     } else if (!options.sourcesById[normalizedTest.sourceId]) {
       errors.push(`Preferred source "${normalizedTest.sourceId}" does not exist for ${testKind}.`);
+    } else {
+      usedSourceIds[normalizedTest.sourceId] = true;
     }
 
     if (normalizedTest.alternateSourceId) {
@@ -370,6 +550,8 @@ function normalizeDrugPayload_(payload, options) {
         errors.push(
           `Alternate source "${normalizedTest.alternateSourceId}" does not exist for ${testKind}.`
         );
+      } else {
+        usedSourceIds[normalizedTest.alternateSourceId] = true;
       }
 
       if (normalizedTest.alternateSourceId === normalizedTest.sourceId) {
@@ -381,14 +563,12 @@ function normalizeDrugPayload_(payload, options) {
       errors.push(`Vehicle must be bilingual for ${testKind} when provided.`);
     }
 
-    normalizedTest.notes = normalizeNotes_(
-      rawTest && rawTest.notes,
-      errors,
-      testKind
-    );
-
     record.tests[testKind] = normalizedTest;
   });
+
+  if (!Object.keys(usedSourceIds).length) {
+    errors.push("At least one source is required before save.");
+  }
 
   if (errors.length) {
     throw new Error(errors.join("\n"));
@@ -427,27 +607,41 @@ function normalizeDilutionList_(value, errors, testKind) {
     return "";
   }
 
-  const dilutions = raw
+  const seen = {};
+  const normalized = raw
     .split(";")
     .map((item) => toTrimmedString_(item))
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((dilution) => {
+      if (!ADMIN_APP.dilutionPattern.test(dilution)) {
+        errors.push(`Dilution "${dilution}" is invalid for ${testKind}. Use the form 1:10.`);
+        return "";
+      }
 
-  const normalized = dilutions.map((dilution) => {
-    if (!ADMIN_APP.dilutionPattern.test(dilution)) {
-      errors.push(`Dilution "${dilution}" is invalid for ${testKind}. Use the form 1:10.`);
-      return "";
-    }
+      return normalizeDilutionValue_(dilution, errors, testKind);
+    })
+    .filter((value) => {
+      if (!value || seen[value]) {
+        return false;
+      }
 
-    return normalizeDilutionValue_(dilution);
-  });
+      seen[value] = true;
+      return true;
+    });
 
-  return normalized.filter(Boolean).join("; ");
+  return normalized.join("; ");
 }
 
-function normalizeDilutionValue_(value) {
+function normalizeDilutionValue_(value, errors, testKind) {
   const parts = value.split(":");
   const left = Number(parts[0]);
   const right = Number(parts[1]);
+
+  if (!(left > 0) || !(right > 0)) {
+    errors.push(`Dilution "${value}" is invalid for ${testKind}. Values must be positive integers.`);
+    return "";
+  }
+
   const divisor = gcd_(left, right);
   return `${left / divisor}:${right / divisor}`;
 }
@@ -465,7 +659,33 @@ function gcd_(left, right) {
   return a || 1;
 }
 
-function upsertDrugRow_(table, targetId, object) {
+function hasMeaningfulTestFormContent_(test) {
+  return Boolean(
+    test.concentration ||
+      test.maxConcentration ||
+      test.dilutions ||
+      test.vehicle.en ||
+      test.vehicle.fr ||
+      test.notes.length
+  );
+}
+
+function isSourceFormBlank_(source) {
+  return !(
+    source.id ||
+    source.label ||
+    source.organization ||
+    source.year ||
+    source.version ||
+    source.status ||
+    source.documentName.en ||
+    source.documentName.fr ||
+    source.excerpt.en ||
+    source.excerpt.fr
+  );
+}
+
+function upsertRowById_(table, targetId, object) {
   const index = table.objects.findIndex((row) => row.id === targetId);
   const existingRow = index >= 0 ? table.rows[index] : null;
   const values = objectToRow_(table.headers, object, existingRow);
@@ -513,7 +733,7 @@ function replaceTestEntryRows_(table, targetId, record) {
     preservedRows.push(table.rows[index]);
   });
 
-  const nextRows = ADMIN_APP.testKinds.map((testKind) =>
+  const nextRows = record.applicableTests.map((testKind) =>
     objectToRow_(
       table.headers,
       {
@@ -532,6 +752,21 @@ function replaceTestEntryRows_(table, targetId, record) {
   );
 
   table.rows = preservedRows.concat(nextRows);
+  table.objects = table.rows.map((row) => rowToObject_(table.headers, row));
+}
+
+function removeRowsByField_(table, fieldName, targetValue) {
+  const filteredRows = [];
+
+  table.objects.forEach((row, index) => {
+    if (row[fieldName] === targetValue) {
+      return;
+    }
+
+    filteredRows.push(table.rows[index]);
+  });
+
+  table.rows = filteredRows;
   table.objects = table.rows.map((row) => rowToObject_(table.headers, row));
 }
 
