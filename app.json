@@ -10,6 +10,12 @@
       "android",
       "web"
     ],
+    "ios": {
+      "bundleIdentifier": "fr.chunice.allergolib"
+    },
+    "android": {
+      "package": "fr.chunice.allergolib"
+    },
     "extra": {
       "datasetManifestUrl": "",
       "eas": {
