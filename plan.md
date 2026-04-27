@@ -100,17 +100,24 @@ Add the features that make the app practical in workflow: alias-aware search, fa
 
 ## Phase 5: Beta Hardening And Release Readiness
 
+**Status**: In progress
+
 **User stories**: use the app safely in a private clinical beta with confidence in provenance and behavior
 
 ### What to build
 Harden the product for beta distribution with compliance wording, edge-case handling, content QA, and operational dataset-release discipline. This phase closes the loop between curator workflow and clinician consumption.
 
 ### Acceptance criteria
-- [ ] The informational-use disclaimer is visible in the agreed locations.
+- [x] The informational-use disclaimer is visible in the agreed locations.
 - [ ] Offline-first behavior, dataset rollover, and content fallback paths are verified on real beta devices.
-- [ ] Source provenance is present for every displayed recommendation in the seeded dataset.
-- [ ] Dataset release steps are documented well enough for repeated curator-to-publish cycles.
+- [x] Source provenance is present for every displayed recommendation in the seeded dataset.
+- [x] Dataset release steps are documented well enough for repeated curator-to-publish cycles.
 - [ ] The app is ready for limited clinician beta distribution.
+
+### Implementation notes
+- The home screen and drug detail screens now show a visible informational-use disclaimer for the private beta.
+- The runtime loader and Google Sheets export pipeline now reject or suppress recommendation content that does not resolve to complete preferred-source provenance.
+- The release process is now backed by an explicit beta-readiness checklist covering offline launch, background rollover, failed-update fallback, and rollback steps.
 
 ## Assumptions
 - The SFAR/SFA 2025 PDF is the first locked authority for dataset seeding.

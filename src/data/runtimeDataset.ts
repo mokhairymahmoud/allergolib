@@ -123,6 +123,45 @@ function asLocalizedStringArray(value: unknown, context: string): LocalizedStrin
   return value.map((entry, index) => asLocalizedString(entry, `${context}[${index}]`));
 }
 
+function hasDisplayableTestContent(test: TestRecord) {
+  return Boolean(
+    test.concentration ||
+      test.maxConcentration ||
+      test.dilutions.length ||
+      test.vehicle ||
+      test.notes.length
+  );
+}
+
+function assertSourceDocumentComplete(
+  source: SourceDocument | undefined,
+  context: string
+) {
+  if (!source) {
+    fail(`${context} must reference an existing source.`);
+  }
+
+  const localizedFields: Array<[string, string]> = [
+    ["documentName.en", source.documentName.en],
+    ["documentName.fr", source.documentName.fr],
+    ["excerpt.en", source.excerpt.en],
+    ["excerpt.fr", source.excerpt.fr],
+  ];
+  const stringFields: Array<[string, string]> = [
+    ["label", source.label],
+    ["organization", source.organization],
+    ["year", source.year],
+    ["version", source.version],
+    ["status", source.status],
+  ];
+
+  for (const [fieldName, value] of [...stringFields, ...localizedFields]) {
+    if (!value.trim()) {
+      fail(`${context}.${fieldName} must not be empty.`);
+    }
+  }
+}
+
 function inferLegacyNoteKind(note: LocalizedString): NoteKind {
   const combined = `${note.en} ${note.fr}`.toLowerCase();
 
@@ -308,6 +347,28 @@ function normalizeDataset(value: unknown, context: string): Dataset {
       },
     };
   });
+
+  for (const drug of drugs) {
+    for (const kind of TEST_KINDS) {
+      const test = drug.tests[kind];
+
+      if (!hasDisplayableTestContent(test)) {
+        continue;
+      }
+
+      assertSourceDocumentComplete(
+        sources[test.preferredSourceId],
+        `${context}.drugs.${drug.id}.tests.${kind}.preferredSource`
+      );
+
+      if (test.alternateSourceId) {
+        assertSourceDocumentComplete(
+          sources[test.alternateSourceId],
+          `${context}.drugs.${drug.id}.tests.${kind}.alternateSource`
+        );
+      }
+    }
+  }
 
   return {
     release: normalizeRelease(record.release, `${context}.release`),

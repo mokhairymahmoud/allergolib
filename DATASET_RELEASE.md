@@ -96,8 +96,20 @@ Inputs:
 
 For scheduled runs, GitHub Actions uses UTC cron scheduling and executes the workflow from the default branch.
 
+## Beta Gate
+
+Before promoting a dataset to `latest/`, complete the manual beta checklist in [BETA_READINESS.md](/Users/mohamedkhairy/dev/allergolib/BETA_READINESS.md:1).
+
+Minimum gate for a limited clinician beta:
+
+1. `npm run build:dataset` succeeds against the source sheet.
+2. `npm run typecheck` succeeds on the app bundle that will ship to testers.
+3. The generated dataset contains preferred-source provenance for every seeded test that surfaces recommendation content.
+4. Offline launch, background rollover, and failed-update fallback have been exercised on real iOS and Android beta devices.
+
 ## Operational Notes
 
 - The mobile app always has the bundled dataset as a fallback.
 - If remote fetch, checksum validation, or schema validation fails, the app keeps the previous local dataset.
 - If a release should not be exposed broadly yet, publish only the versioned path and leave `promote_latest` disabled.
+- The app now suppresses recommendation content if the active dataset lacks valid preferred-source provenance for the selected test.

@@ -31,19 +31,23 @@ import type {
   SourceDocument,
   TestKind,
   TestNote,
+  TestRecord,
 } from "./src/types";
 
 const TAB_ORDER: TestKind[] = ["prick", "idr", "patch"];
 
-function isTestAvailable(drug: DrugRecord, kind: TestKind) {
-  const test = drug.tests[kind];
+function hasDisplayableTestContent(test: TestRecord) {
   return Boolean(
-    test?.concentration ||
-      test?.maxConcentration ||
-      test?.dilutions.length ||
-      test?.vehicle ||
-      test?.notes.length
+    test.concentration ||
+      test.maxConcentration ||
+      test.dilutions.length ||
+      test.vehicle ||
+      test.notes.length
   );
+}
+
+function isTestAvailable(drug: DrugRecord, kind: TestKind) {
+  return hasDisplayableTestContent(drug.tests[kind]);
 }
 
 function availableTests(drug: DrugRecord) {
@@ -124,6 +128,52 @@ function splitNotes(notes: TestNote[]) {
     warnings: notes.filter((note) => note.kind === "warning"),
     supporting: notes.filter((note) => note.kind !== "warning"),
   };
+}
+
+function hasSourceDocumentContent(source: SourceDocument | undefined) {
+  return Boolean(
+    source?.label &&
+      source.organization &&
+      source.year &&
+      source.version &&
+      source.documentName.en &&
+      source.documentName.fr &&
+      source.excerpt.en &&
+      source.excerpt.fr
+  );
+}
+
+function hasTestProvenance(
+  test: TestRecord,
+  sources: Record<string, SourceDocument>
+) {
+  if (!hasDisplayableTestContent(test)) {
+    return true;
+  }
+
+  return hasSourceDocumentContent(sources[test.preferredSourceId]);
+}
+
+function formatReleaseDate(value: string, language: Language) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat(language === "fr" ? "fr-FR" : "en-US", {
+    dateStyle: "medium",
+  }).format(date);
+}
+
+function ComplianceCard({ language }: { language: Language }) {
+  return (
+    <View style={styles.complianceCard}>
+      <Text style={styles.complianceBadge}>{copy(language, "compliance.badge")}</Text>
+      <Text style={styles.complianceTitle}>{copy(language, "compliance.title")}</Text>
+      <Text style={styles.complianceBody}>{copy(language, "compliance.body")}</Text>
+    </View>
+  );
 }
 
 function SavePill({
@@ -209,7 +259,7 @@ function SourceCard({
       <Text style={styles.sourceEyebrow}>{eyebrow}</Text>
       <Text style={styles.sourceTitle}>{source.label}</Text>
       <Text style={styles.sourceMeta}>
-        {source.organization} {source.year} • {source.version}
+        {source.organization} {source.year} • {source.version} • {source.status}
       </Text>
       <Text style={styles.sourceMeta}>{source.documentName[language]}</Text>
       <Text style={styles.sourceExcerpt}>{source.excerpt[language]}</Text>
@@ -372,8 +422,12 @@ function DetailScreen({
   }, [drug.id, activeTab]);
 
   const test = drug.tests[activeTab];
-  const preferredSource = sources[test.preferredSourceId];
-  const alternateSource = test.alternateSourceId ? sources[test.alternateSourceId] : undefined;
+  const canShowProvenance = hasTestProvenance(test, sources);
+  const preferredSource = canShowProvenance ? sources[test.preferredSourceId] : undefined;
+  const alternateSource =
+    canShowProvenance && test.alternateSourceId
+      ? sources[test.alternateSourceId]
+      : undefined;
   const { warnings, supporting } = splitNotes(test.notes);
   const concentrationUnit = extractConcentrationUnit(test.maxConcentration ?? test.concentration);
   const shouldShowStandardConcentration =
@@ -395,6 +449,8 @@ function DetailScreen({
         </View>
         <Text style={styles.detailSubtitle}>{copy(language, "detail.seedNotice")}</Text>
       </View>
+
+      <ComplianceCard language={language} />
 
       <View style={styles.tabRow}>
         {TAB_ORDER.map((kind) => {
@@ -426,63 +482,81 @@ function DetailScreen({
         })}
       </View>
 
-      <View style={styles.panel}>
-        <Text style={styles.sectionTitle}>{copy(language, "detail.validatedData")}</Text>
+      {!canShowProvenance ? (
+        <View style={styles.warningPanel}>
+          <Text style={styles.warningTitle}>
+            {copy(language, "detail.provenanceUnavailableTitle")}
+          </Text>
+          <Text style={styles.warningText}>
+            {copy(language, "detail.provenanceUnavailableBody")}
+          </Text>
+        </View>
+      ) : null}
 
-        {shouldShowStandardConcentration ? (
-          <View style={styles.metricBlock}>
-            <Text style={styles.metricLabel}>{concentrationLabel(language, activeTab)}</Text>
-            <Text style={styles.metricValue}>{test.concentration}</Text>
-          </View>
-        ) : null}
+      {canShowProvenance ? (
+        <View style={styles.panel}>
+          <Text style={styles.sectionTitle}>{copy(language, "detail.validatedData")}</Text>
 
-        {test.maxConcentration ? (
-          <View style={styles.metricBlock}>
-            <Text style={styles.metricLabel}>{copy(language, "detail.idr.maxConcentration")}</Text>
-            <Text style={styles.metricValue}>{test.maxConcentration}</Text>
-          </View>
-        ) : null}
+          {shouldShowStandardConcentration ? (
+            <View style={styles.metricBlock}>
+              <Text style={styles.metricLabel}>{concentrationLabel(language, activeTab)}</Text>
+              <Text style={styles.metricValue}>{test.concentration}</Text>
+            </View>
+          ) : null}
 
-        {test.dilutions.length ? (
-          <View style={styles.metricBlock}>
-            <Text style={styles.metricLabel}>{copy(language, "detail.idr.dilutions")}</Text>
-            <Text style={styles.metricValueSmall}>{test.dilutions.join(" -> ")}</Text>
-          </View>
-        ) : null}
+          {test.maxConcentration ? (
+            <View style={styles.metricBlock}>
+              <Text style={styles.metricLabel}>{copy(language, "detail.idr.maxConcentration")}</Text>
+              <Text style={styles.metricValue}>{test.maxConcentration}</Text>
+            </View>
+          ) : null}
 
-        {test.vehicle ? (
-          <View style={styles.metricBlock}>
-            <Text style={styles.metricLabel}>{copy(language, "detail.patch.vehicle")}</Text>
-            <Text style={styles.metricValueSmall}>{test.vehicle[language]}</Text>
-          </View>
-        ) : null}
+          {test.dilutions.length ? (
+            <View style={styles.metricBlock}>
+              <Text style={styles.metricLabel}>{copy(language, "detail.idr.dilutions")}</Text>
+              <Text style={styles.metricValueSmall}>{test.dilutions.join(" -> ")}</Text>
+            </View>
+          ) : null}
 
-        {!shouldShowStandardConcentration && !test.maxConcentration && !test.dilutions.length && !test.vehicle ? (
-          <Text style={styles.emptyState}>{copy(language, "detail.noTestData")}</Text>
-        ) : null}
-      </View>
+          {test.vehicle ? (
+            <View style={styles.metricBlock}>
+              <Text style={styles.metricLabel}>{copy(language, "detail.patch.vehicle")}</Text>
+              <Text style={styles.metricValueSmall}>{test.vehicle[language]}</Text>
+            </View>
+          ) : null}
 
-      {warnings.length ? (
+          {!shouldShowStandardConcentration &&
+          !test.maxConcentration &&
+          !test.dilutions.length &&
+          !test.vehicle ? (
+            <Text style={styles.emptyState}>{copy(language, "detail.noTestData")}</Text>
+          ) : null}
+        </View>
+      ) : null}
+
+      {canShowProvenance && warnings.length ? (
         <View style={styles.warningPanel}>
           <Text style={styles.warningTitle}>{copy(language, "detail.warnings")}</Text>
           <NoteList language={language} notes={warnings} />
         </View>
       ) : null}
 
-      {supporting.length ? (
+      {canShowProvenance && supporting.length ? (
         <View style={styles.panel}>
           <Text style={styles.sectionTitle}>{copy(language, "detail.notes")}</Text>
           <NoteList language={language} notes={supporting} />
         </View>
       ) : null}
 
-      <DilutionCalculator
-        language={language}
-        dilutions={test.dilutions}
-        concentrationUnit={concentrationUnit}
-      />
+      {canShowProvenance ? (
+        <DilutionCalculator
+          language={language}
+          dilutions={test.dilutions}
+          concentrationUnit={concentrationUnit}
+        />
+      ) : null}
 
-      {preferredSource ? (
+      {canShowProvenance && preferredSource ? (
         <View style={styles.panel}>
           <Pressable onPress={() => setShowSource((current) => !current)} style={styles.sourceToggle}>
             <View>
@@ -678,7 +752,16 @@ export default function App() {
                 {copy(language, "home.datasetOrigin")}:{" "}
                 {copy(language, datasetOriginLabelKey(activeDataset.origin))}
               </Text>
+              <Text style={styles.heroMetaSecondary}>
+                {copy(language, "home.approvedBy")}: {activeDataset.manifest.approvedBy}
+              </Text>
+              <Text style={styles.heroMetaSecondary}>
+                {copy(language, "home.releasedAt")}:{" "}
+                {formatReleaseDate(activeDataset.manifest.releasedAt, language)}
+              </Text>
             </View>
+
+            <ComplianceCard language={language} />
 
             {favoriteDrugs.length ? (
               <View style={styles.panel}>
@@ -832,6 +915,31 @@ const styles = StyleSheet.create({
   heroMetaSecondary: {
     color: "#D7E6E2",
     fontSize: 13,
+    lineHeight: 20,
+  },
+  complianceCard: {
+    backgroundColor: "#FFF6E8",
+    borderRadius: 24,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#F2CFA2",
+    gap: 8,
+  },
+  complianceBadge: {
+    color: "#8A3312",
+    fontSize: 11,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  complianceTitle: {
+    color: "#16222E",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  complianceBody: {
+    color: "#5A4331",
+    fontSize: 14,
     lineHeight: 20,
   },
   panel: {

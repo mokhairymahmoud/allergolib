@@ -2,6 +2,10 @@ import type { Language } from "../types";
 
 export const dictionary = {
   en: {
+    "compliance.badge": "Private beta",
+    "compliance.title": "Informational use only",
+    "compliance.body":
+      "Use this app as a clinical reference alongside local protocols and specialist judgment. It does not replace formal diagnosis, treatment decisions, or emergency management.",
     "home.eyebrow": "Offline Clinical Reference",
     "home.title": "PeriopSkinTest",
     "home.heroTitle": "Validated concentrations, instantly available",
@@ -11,6 +15,8 @@ export const dictionary = {
     "home.datasetOrigin": "Dataset source",
     "home.datasetOriginBundled": "Bundled offline release",
     "home.datasetOriginUpdated": "Verified local update",
+    "home.approvedBy": "Approved by",
+    "home.releasedAt": "Released",
     "home.favoritesTitle": "Saved drugs",
     "home.favoritesBody": "Pin frequent entries for one-tap access from the home screen.",
     "search.title": "Drug search",
@@ -38,6 +44,9 @@ export const dictionary = {
     "detail.source": "Source provenance",
     "detail.preferredSource": "Preferred authority",
     "detail.alternateSource": "Alternate authority",
+    "detail.provenanceUnavailableTitle": "Provenance missing",
+    "detail.provenanceUnavailableBody":
+      "This beta build is configured to suppress recommendation content when the active dataset does not include a valid preferred source for the selected test.",
     "detail.showSource": "Show source",
     "detail.hideSource": "Hide source",
     "detail.save": "Save",
@@ -62,6 +71,10 @@ export const dictionary = {
     "tests.patch": "Patch"
   },
   fr: {
+    "compliance.badge": "Beta privee",
+    "compliance.title": "Usage informatif uniquement",
+    "compliance.body":
+      "Utilisez cette application comme reference clinique avec vos protocoles locaux et le jugement d'un specialiste. Elle ne remplace ni le diagnostic formel, ni les decisions therapeutiques, ni la prise en charge d'urgence.",
     "home.eyebrow": "Reference clinique hors ligne",
     "home.title": "PeriopSkinTest",
     "home.heroTitle": "Concentrations validees, accessibles tout de suite",
@@ -71,6 +84,8 @@ export const dictionary = {
     "home.datasetOrigin": "Source des donnees",
     "home.datasetOriginBundled": "Version hors ligne embarquee",
     "home.datasetOriginUpdated": "Mise a jour locale verifiee",
+    "home.approvedBy": "Approuve par",
+    "home.releasedAt": "Publication",
     "home.favoritesTitle": "Medicaments enregistres",
     "home.favoritesBody": "Epinglez les entrees frequentes pour y revenir en un geste depuis l'accueil.",
     "search.title": "Recherche de medicament",
@@ -98,6 +113,9 @@ export const dictionary = {
     "detail.source": "Provenance des sources",
     "detail.preferredSource": "Autorite preferee",
     "detail.alternateSource": "Autorite alternative",
+    "detail.provenanceUnavailableTitle": "Provenance manquante",
+    "detail.provenanceUnavailableBody":
+      "Cette build beta masque les recommandations lorsque le jeu de donnees actif ne contient pas de source preferee valide pour le test selectionne.",
     "detail.showSource": "Afficher la source",
     "detail.hideSource": "Masquer la source",
     "detail.save": "Enregistrer",

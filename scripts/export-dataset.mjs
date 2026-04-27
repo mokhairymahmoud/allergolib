@@ -194,6 +194,33 @@ function requireLocalizedColumns(row, context, prefix) {
   }
 }
 
+function requireTrimmedField(row, key, context) {
+  assert(row[key]?.trim(), `${context} is missing ${key}.`);
+}
+
+function hasDisplayableTestContent(test) {
+  return Boolean(
+    test.concentration ||
+      test.maxConcentration ||
+      test.dilutions.length ||
+      test.vehicle ||
+      test.notes.length
+  );
+}
+
+function assertSourceDocumentComplete(source, context) {
+  assert(source, `${context} must reference an existing source.`);
+
+  for (const key of ["label", "organization", "year", "version", "status"]) {
+    assert(source[key]?.trim(), `${context} is missing ${key}.`);
+  }
+
+  assert(source.documentName.en.trim(), `${context} is missing document_name_en.`);
+  assert(source.documentName.fr.trim(), `${context} is missing document_name_fr.`);
+  assert(source.excerpt.en.trim(), `${context} is missing excerpt_en.`);
+  assert(source.excerpt.fr.trim(), `${context} is missing excerpt_fr.`);
+}
+
 function buildRelease(metadataRows) {
   const release = Object.fromEntries(metadataRows.map((row) => [row.key, row.value]));
 
@@ -210,6 +237,11 @@ function buildSources(sourceRows) {
   for (const row of sourceRows) {
     assert(row.id, "sources contains a source without id.");
     assert(!sources[row.id], `Duplicate source id: ${row.id}`);
+    requireTrimmedField(row, "label", `Source ${row.id}`);
+    requireTrimmedField(row, "organization", `Source ${row.id}`);
+    requireTrimmedField(row, "year", `Source ${row.id}`);
+    requireTrimmedField(row, "version", `Source ${row.id}`);
+    requireTrimmedField(row, "status", `Source ${row.id}`);
     requireLocalizedColumns(row, `Source ${row.id}`, "document_name");
     requireLocalizedColumns(row, `Source ${row.id}`, "excerpt");
 
@@ -349,6 +381,22 @@ function buildDrugs(drugRows, aliasRows, testRows, noteRows, sources) {
     for (const kind of TEST_KINDS) {
       const test = drug.tests[kind];
       assert(test.preferredSourceId, `Drug ${drug.id} is missing a source for ${kind}.`);
+
+      if (!hasDisplayableTestContent(test)) {
+        continue;
+      }
+
+      assertSourceDocumentComplete(
+        sources[test.preferredSourceId],
+        `Drug ${drug.id}/${kind} preferred source`
+      );
+
+      if (test.alternateSourceId) {
+        assertSourceDocumentComplete(
+          sources[test.alternateSourceId],
+          `Drug ${drug.id}/${kind} alternate source`
+        );
+      }
     }
   }
 

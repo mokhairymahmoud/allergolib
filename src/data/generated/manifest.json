@@ -3,9 +3,9 @@
   "releasedAt": "2026-04-27T00:00:00Z",
   "minSupportedAppVersion": "0.1.0",
   "approvedBy": "Clinical dataset owner",
-  "checksum": "3f57f82a3fcbbd789c7c32eb33e9b9e63f3de607e966e1be0c68c2ee7ad6da7c",
+  "checksum": "5cd7681247012462e53d6b18cef8a1478abe7252b91f7783b2f830f775c7a12e",
   "datasetFile": "dataset.json",
-  "drugCount": 8,
+  "drugCount": 9,
   "sourceIds": [
     "sfar-sfa-2025-annex-4"
   ]
