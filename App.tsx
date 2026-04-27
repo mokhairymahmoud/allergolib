@@ -1,6 +1,7 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
-import { startTransition, useEffect, useRef, useState } from "react";
+import React, { createContext, startTransition, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -11,6 +12,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useColorScheme,
   View,
 } from "react-native";
 
@@ -44,8 +46,994 @@ import type {
   TestRecord,
 } from "./src/types";
 
+// ─── Theme ────────────────────────────────────────────────────────────────────
+
+export type Theme = {
+  bg: string;
+  surface: string;
+  surfaceAlt: string;
+  border: string;
+  borderMid: string;
+  textPrimary: string;
+  textSecondary: string;
+  textDisabled: string;
+  accent: string;
+  accentBg: string;
+  accentBorder: string;
+  accentText: string;
+  accentBadgeBg: string;
+  accentBadgeText: string;
+  accentCountBg: string;
+  warningBg: string;
+  warningBorder: string;
+  warningAccent: string;
+  warningText: string;
+  statusBar: string;
+};
+
+export const lightTheme: Theme = {
+  bg: "#F4F6F9",
+  surface: "#FFFFFF",
+  surfaceAlt: "#F8FAFC",
+  border: "#E4E9EF",
+  borderMid: "#CBD5E1",
+  textPrimary: "#0F172A",
+  textSecondary: "#64748B",
+  textDisabled: "#94A3B8",
+  accent: "#1A73D4",
+  accentBg: "#EFF6FF",
+  accentBorder: "#BFDBFE",
+  accentText: "#1E40AF",
+  accentBadgeBg: "#DBEAFE",
+  accentBadgeText: "#1D4ED8",
+  accentCountBg: "#BFDBFE",
+  warningBg: "#FFFBEB",
+  warningBorder: "#FCD34D",
+  warningAccent: "#F59E0B",
+  warningText: "#92400E",
+  statusBar: "dark",
+};
+
+export const darkTheme: Theme = {
+  bg: "#0F172A",
+  surface: "#1E293B",
+  surfaceAlt: "#162032",
+  border: "#2D3F55",
+  borderMid: "#334155",
+  textPrimary: "#F1F5F9",
+  textSecondary: "#94A3B8",
+  textDisabled: "#64748B",
+  accent: "#1A73D4",
+  accentBg: "#1E3A5F",
+  accentBorder: "#1E40AF",
+  accentText: "#93C5FD",
+  accentBadgeBg: "#1E3A5F",
+  accentBadgeText: "#93C5FD",
+  accentCountBg: "#1E3A5F",
+  warningBg: "#1C1506",
+  warningBorder: "#78350F",
+  warningAccent: "#F59E0B",
+  warningText: "#FCD34D",
+  statusBar: "light",
+};
+
+// ─── ThemeContext ─────────────────────────────────────────────────────────────
+
+const ThemeContext = createContext<Theme>(lightTheme);
+
+export function useTheme(): Theme {
+  return useContext(ThemeContext);
+}
+
+// ─── makeStyles ───────────────────────────────────────────────────────────────
+
+function makeStyles(theme: Theme) {
+  return StyleSheet.create({
+    // ─── Layout ──────────────────────────────────────────────────────────
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.surface,
+    },
+    stackRoot: {
+      flex: 1,
+      overflow: "hidden",
+    },
+    stackLayer: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: theme.bg,
+    },
+    mainContent: {
+      flex: 1,
+    },
+    flex1: {
+      flex: 1,
+    },
+    scrollView: {
+      flex: 1,
+      backgroundColor: theme.bg,
+    },
+    screenContent: {
+      flexGrow: 1,
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 32,
+      gap: 16,
+    },
+
+    // ─── Top Bar ─────────────────────────────────────────────────────────
+    topBar: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+      backgroundColor: theme.bg,
+      gap: 12,
+    },
+    titleBlock: {
+      flex: 1,
+    },
+    title: {
+      color: theme.textPrimary,
+      fontSize: 22,
+      fontWeight: "700",
+    },
+    languageButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      borderWidth: 1,
+      borderColor: theme.borderMid,
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      backgroundColor: theme.surface,
+    },
+    languageButtonText: {
+      color: theme.textSecondary,
+      fontSize: 12,
+      fontWeight: "700",
+    },
+
+    // ─── Bottom Tab Bar ───────────────────────────────────────────────────
+    footer: {
+      backgroundColor: theme.surface,
+      borderTopWidth: 1,
+      borderTopColor: theme.border,
+    },
+    topLevelTabs: {
+      flexDirection: "row",
+      height: 56,
+    },
+    topLevelTab: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 3,
+    },
+    topLevelTabText: {
+      color: theme.textDisabled,
+      fontSize: 11,
+      fontWeight: "600",
+    },
+    topLevelTabTextSelected: {
+      color: theme.accent,
+    },
+
+    // ─── Screen Headers ───────────────────────────────────────────────────
+    searchHeader: {
+      gap: 4,
+    },
+    screenTitle: {
+      color: theme.textPrimary,
+      fontSize: 20,
+      fontWeight: "700",
+    },
+    screenSubtitle: {
+      color: theme.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+
+    searchStickyHeader: {
+      backgroundColor: theme.bg,
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 8,
+      gap: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+
+    // ─── Search Input ─────────────────────────────────────────────────────
+    searchInputWrap: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.borderMid,
+      paddingHorizontal: 12,
+      height: 52,
+      gap: 8,
+      shadowColor: "#000",
+      shadowOpacity: 0.04,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 1,
+    },
+    searchIcon: {
+      flexShrink: 0,
+    },
+    searchInput: {
+      flex: 1,
+      color: theme.textPrimary,
+      fontSize: 16,
+      paddingVertical: 0,
+    },
+    searchClear: {
+      flexShrink: 0,
+    },
+    resultCount: {
+      color: theme.textSecondary,
+      fontSize: 13,
+      fontWeight: "500",
+      marginBottom: -4,
+    },
+
+    // ─── Recent searches ─────────────────────────────────────────────────
+    categorySection: {
+      gap: 10,
+    },
+    horizontalChipScroll: {
+      marginHorizontal: -16,
+    },
+    horizontalChipList: {
+      gap: 8,
+      paddingHorizontal: 16,
+    },
+    categoryChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      borderRadius: 999,
+      borderWidth: 1.5,
+      borderColor: theme.borderMid,
+      backgroundColor: theme.surface,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    categoryChipActive: {
+      borderColor: theme.accent,
+      backgroundColor: theme.accentBg,
+    },
+    categoryChipText: {
+      color: theme.textSecondary,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    categoryChipTextActive: {
+      color: theme.accent,
+      fontWeight: "700",
+    },
+    categoryChipCount: {
+      backgroundColor: theme.border,
+      borderRadius: 999,
+      minWidth: 20,
+      height: 20,
+      paddingHorizontal: 5,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    categoryChipCountActive: {
+      backgroundColor: theme.accentCountBg,
+    },
+    categoryChipCountText: {
+      color: theme.textSecondary,
+      fontSize: 11,
+      fontWeight: "700",
+    },
+    categoryChipCountTextActive: {
+      color: theme.accentBadgeText,
+    },
+    recentSection: {
+      gap: 10,
+    },
+    sectionLabel: {
+      color: theme.textPrimary,
+      fontSize: 13,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+    },
+    recentChip: {
+      backgroundColor: theme.surface,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: theme.borderMid,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      maxWidth: 200,
+      shadowColor: "#000",
+      shadowOpacity: 0.04,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 1,
+    },
+    recentChipText: {
+      color: theme.textPrimary,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+
+    // ─── Result Cards ─────────────────────────────────────────────────────
+    resultsList: {
+      gap: 10,
+    },
+    resultCard: {
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      padding: 16,
+      shadowColor: "#000",
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 2,
+    },
+    resultCardPressed: {
+      opacity: 0.95,
+    },
+    resultHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    resultTitleColumn: {
+      flex: 1,
+      gap: 4,
+    },
+    resultNameRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    resultName: {
+      color: theme.textPrimary,
+      fontSize: 16,
+      fontWeight: "700",
+      flexShrink: 1,
+    },
+    classBadge: {
+      backgroundColor: theme.accentBadgeBg,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      alignSelf: "flex-start",
+    },
+    classBadgeText: {
+      color: theme.accentBadgeText,
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+    },
+    resultAlias: {
+      color: theme.textSecondary,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    matchHint: {
+      color: theme.accent,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    resultActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      flexShrink: 0,
+    },
+    heartButton: {
+      padding: 2,
+    },
+
+    // ─── Empty States ─────────────────────────────────────────────────────
+    emptyCard: {
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      padding: 24,
+      alignItems: "center",
+      gap: 8,
+      shadowColor: "#000",
+      shadowOpacity: 0.04,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 1,
+    },
+    emptyIcon: {
+      marginBottom: 4,
+    },
+    emptyTitle: {
+      color: theme.textPrimary,
+      fontSize: 16,
+      fontWeight: "700",
+      textAlign: "center",
+    },
+    emptyText: {
+      color: theme.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+      textAlign: "center",
+    },
+    neutralEmptyCard: {
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 12,
+      padding: 16,
+      gap: 6,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    neutralEmptyTitle: {
+      color: theme.textPrimary,
+      fontSize: 15,
+      fontWeight: "700",
+      textAlign: "center",
+    },
+    neutralEmptyBody: {
+      color: theme.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+      textAlign: "center",
+    },
+    favoritesEmptyState: {
+      alignItems: "center",
+      gap: 12,
+      paddingVertical: 32,
+    },
+
+    // ─── Panels ───────────────────────────────────────────────────────────
+    panel: {
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      padding: 16,
+      gap: 14,
+      shadowColor: "#000",
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 1,
+    },
+    panelBody: {
+      color: theme.textSecondary,
+      fontSize: 14,
+      lineHeight: 22,
+    },
+    panelHeaderRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: 8,
+    },
+    panelHeaderLabel: {
+      color: theme.accent,
+      fontSize: 12,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
+    },
+    sectionTitle: {
+      color: theme.textPrimary,
+      fontSize: 15,
+      fontWeight: "700",
+    },
+
+    // ─── Compliance ───────────────────────────────────────────────────────
+    complianceBanner: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 6,
+      backgroundColor: theme.accentBg,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.accentBorder,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    complianceBannerText: {
+      flex: 1,
+      color: theme.accentText,
+      fontSize: 11,
+      lineHeight: 16,
+      fontWeight: "500",
+    },
+    complianceCard: {
+      backgroundColor: theme.accentBg,
+      borderRadius: 12,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: theme.accentBorder,
+      gap: 8,
+    },
+    complianceBadgeRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    complianceBadge: {
+      color: theme.accentText,
+      fontSize: 11,
+      fontWeight: "800",
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+    },
+    complianceTitle: {
+      color: theme.textPrimary,
+      fontSize: 15,
+      fontWeight: "700",
+    },
+    complianceBody: {
+      color: theme.accentText,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+
+    // ─── Info Screen ──────────────────────────────────────────────────────
+    infoAppCard: {
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
+      shadowColor: "#000",
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 1,
+    },
+    infoAppIcon: {
+      width: 52,
+      height: 52,
+      borderRadius: 14,
+      backgroundColor: theme.accent,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    infoAppIconText: {
+      color: "#FFFFFF",
+      fontSize: 26,
+      fontWeight: "800",
+    },
+    infoAppMeta: {
+      flex: 1,
+      gap: 2,
+    },
+    infoAppName: {
+      color: theme.textPrimary,
+      fontSize: 18,
+      fontWeight: "700",
+    },
+    infoAppVersion: {
+      color: theme.textSecondary,
+      fontSize: 13,
+    },
+    infoMetaCard: {
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      overflow: "hidden",
+      shadowColor: "#000",
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 1,
+    },
+    infoMetaHeader: {
+      color: theme.textSecondary,
+      fontSize: 12,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+      paddingHorizontal: 16,
+      paddingTop: 14,
+      paddingBottom: 8,
+    },
+    infoMetaRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 13,
+      gap: 16,
+    },
+    infoMetaRowBorder: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.border,
+    },
+    infoMetaLabel: {
+      color: theme.textPrimary,
+      fontSize: 14,
+      fontWeight: "500",
+    },
+    infoMetaValue: {
+      color: theme.textSecondary,
+      fontSize: 14,
+      textAlign: "right",
+      flexShrink: 1,
+    },
+
+    // ─── Detail Screen ────────────────────────────────────────────────────
+    detailNavHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+      backgroundColor: theme.bg,
+      gap: 8,
+    },
+    backButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOpacity: 0.06,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 1,
+      flexShrink: 0,
+    },
+    detailNavTitle: {
+      flex: 1,
+      color: theme.textPrimary,
+      fontSize: 16,
+      fontWeight: "700",
+      textAlign: "center",
+    },
+    detailNavAction: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOpacity: 0.06,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 1,
+      flexShrink: 0,
+    },
+    detailHeader: {
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      padding: 16,
+      gap: 8,
+      shadowColor: "#000",
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 1,
+    },
+    detailHeaderMetaRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    detailClassBadge: {
+      alignSelf: "flex-start",
+      backgroundColor: theme.accentBadgeBg,
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    detailClassBadgeText: {
+      color: theme.accentBadgeText,
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+    },
+    detailIdBadge: {
+      alignSelf: "flex-start",
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    detailIdBadgeText: {
+      color: theme.textSecondary,
+      fontSize: 11,
+      fontWeight: "600",
+    },
+    detailTitle: {
+      color: theme.textPrimary,
+      fontSize: 24,
+      fontWeight: "800",
+      lineHeight: 30,
+    },
+    detailSubtitle: {
+      color: theme.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+
+    // ─── Segmented Control ────────────────────────────────────────────────
+    segmentedControl: {
+      flexDirection: "row",
+      backgroundColor: theme.border,
+      borderRadius: 10,
+      padding: 3,
+      gap: 2,
+    },
+    segmentButton: {
+      flex: 1,
+      borderRadius: 8,
+      paddingVertical: 9,
+      alignItems: "center",
+    },
+    segmentButtonSelected: {
+      backgroundColor: theme.surface,
+      shadowColor: "#000",
+      shadowOpacity: 0.08,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 2,
+    },
+    segmentButtonDisabled: {
+      opacity: 0.4,
+    },
+    segmentButtonText: {
+      color: theme.textSecondary,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    segmentButtonTextSelected: {
+      color: theme.textPrimary,
+      fontWeight: "700",
+    },
+    segmentButtonTextDisabled: {
+      color: theme.textDisabled,
+    },
+
+    // ─── Warning Panel ────────────────────────────────────────────────────
+    warningPanel: {
+      backgroundColor: theme.warningBg,
+      borderRadius: 12,
+      padding: 16,
+      borderLeftWidth: 4,
+      borderLeftColor: theme.warningAccent,
+      gap: 10,
+      shadowColor: "#000",
+      shadowOpacity: 0.04,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 1,
+    },
+    warningPanelHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    warningTitle: {
+      color: theme.warningText,
+      fontSize: 15,
+      fontWeight: "700",
+    },
+    warningText: {
+      color: theme.warningText,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+
+    // ─── Metric Cards ─────────────────────────────────────────────────────
+    metricGrid: {
+      gap: 10,
+    },
+    metricCard: {
+      gap: 6,
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 10,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    metricCardCompact: {
+      gap: 4,
+    },
+    metricLabel: {
+      color: theme.textSecondary,
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+    },
+    metricValue: {
+      color: theme.textPrimary,
+      fontSize: 22,
+      fontWeight: "800",
+    },
+    metricValueSmall: {
+      color: theme.textPrimary,
+      fontSize: 16,
+      fontWeight: "700",
+    },
+
+    // ─── Notes ────────────────────────────────────────────────────────────
+    notesBlock: {
+      gap: 8,
+    },
+    noteRow: {
+      gap: 8,
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 10,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    noteRowWarning: {
+      backgroundColor: theme.warningBg,
+      borderColor: theme.warningBorder,
+      borderLeftWidth: 3,
+      borderLeftColor: theme.warningAccent,
+    },
+    noteBadge: {
+      alignSelf: "flex-start",
+      backgroundColor: theme.border,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    noteBadgeWarning: {
+      backgroundColor: theme.warningBorder,
+    },
+    noteBadgeText: {
+      color: theme.textSecondary,
+      fontSize: 10,
+      fontWeight: "800",
+      textTransform: "uppercase",
+    },
+    noteBadgeTextWarning: {
+      color: theme.warningText,
+    },
+    noteText: {
+      color: theme.textPrimary,
+      fontSize: 14,
+      lineHeight: 22,
+    },
+
+    // ─── Dilution Calculator ──────────────────────────────────────────────
+    calculatorToggle: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    calculatorToggleLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    calculatorRow: {
+      gap: 12,
+    },
+    calculatorField: {
+      gap: 6,
+    },
+    calcInput: {
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: theme.borderMid,
+      backgroundColor: theme.surface,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      color: theme.textPrimary,
+      fontSize: 15,
+    },
+    fieldHint: {
+      color: theme.textSecondary,
+      fontSize: 12,
+      lineHeight: 16,
+    },
+    calculatorResults: {
+      gap: 10,
+    },
+    calculatorCard: {
+      gap: 4,
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 10,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    calculatorRatio: {
+      color: theme.textPrimary,
+      fontSize: 16,
+      fontWeight: "800",
+    },
+    calculatorMeta: {
+      color: theme.textPrimary,
+      fontSize: 13,
+      lineHeight: 20,
+    },
+    emptyState: {
+      color: theme.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+
+    // ─── Source / References ──────────────────────────────────────────────
+    sourceSummaryCard: {
+      gap: 6,
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 10,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    sourceToggle: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: 12,
+    },
+    sourceToggleLabel: {
+      color: theme.accent,
+      fontSize: 13,
+      fontWeight: "700",
+    },
+    sourceStack: {
+      gap: 10,
+    },
+    sourceCard: {
+      gap: 6,
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 10,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    sourceEyebrow: {
+      color: theme.accent,
+      fontSize: 11,
+      fontWeight: "800",
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+    },
+    sourceTitle: {
+      color: theme.textPrimary,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    sourceMeta: {
+      color: theme.textSecondary,
+      fontSize: 13,
+    },
+    sourceLabel: {
+      color: theme.textSecondary,
+      fontSize: 13,
+      marginTop: 2,
+    },
+    sourceExcerpt: {
+      color: theme.textPrimary,
+      fontSize: 13,
+      lineHeight: 20,
+    },
+  });
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const TAB_ORDER: TestKind[] = ["prick", "idr", "patch"];
 const HOME_TABS = ["search", "favorites", "info"] as const;
+const DARK_MODE_STORAGE_KEY = "@allergolib/dark-mode";
 
 type HomeTab = (typeof HOME_TABS)[number];
 type DetailMetricItem = {
@@ -206,7 +1194,79 @@ function formatReleaseDate(value: string, language: Language) {
   }).format(date);
 }
 
-function AppLogo() {
+function AppLogo({ theme }: { theme: Theme }) {
+  const logoStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        root: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 10,
+        },
+        mark: {
+          width: 36,
+          height: 36,
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        shield: {
+          width: 32,
+          height: 36,
+          borderRadius: 6,
+          borderBottomLeftRadius: 14,
+          borderBottomRightRadius: 14,
+          backgroundColor: theme.accent,
+          alignItems: "center",
+          justifyContent: "center",
+          shadowColor: theme.accent,
+          shadowOpacity: 0.35,
+          shadowRadius: 6,
+          shadowOffset: { width: 0, height: 3 },
+          elevation: 4,
+        },
+        crossV: {
+          position: "absolute",
+          width: 4,
+          height: 18,
+          borderRadius: 2,
+          backgroundColor: "#FFFFFF",
+        },
+        crossH: {
+          position: "absolute",
+          width: 18,
+          height: 4,
+          borderRadius: 2,
+          backgroundColor: "#FFFFFF",
+        },
+        dot: {
+          position: "absolute",
+          bottom: 5,
+          right: 5,
+          width: 5,
+          height: 5,
+          borderRadius: 999,
+          backgroundColor: "rgba(255,255,255,0.5)",
+        },
+        wordmark: {
+          flexDirection: "row",
+          alignItems: "baseline",
+        },
+        wordPrimary: {
+          fontSize: 20,
+          fontWeight: "800",
+          color: theme.textPrimary,
+          letterSpacing: -0.3,
+        },
+        wordAccent: {
+          fontSize: 20,
+          fontWeight: "800",
+          color: theme.accent,
+          letterSpacing: -0.3,
+        },
+      }),
+    [theme]
+  );
+
   return (
     <View style={logoStyles.root}>
       {/* Icon mark */}
@@ -230,79 +1290,13 @@ function AppLogo() {
   );
 }
 
-const logoStyles = StyleSheet.create({
-  root: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  mark: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  shield: {
-    width: 32,
-    height: 36,
-    borderRadius: 6,
-    borderBottomLeftRadius: 14,
-    borderBottomRightRadius: 14,
-    backgroundColor: "#1A73D4",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#1A73D4",
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
-  },
-  crossV: {
-    position: "absolute",
-    width: 4,
-    height: 18,
-    borderRadius: 2,
-    backgroundColor: "#FFFFFF",
-  },
-  crossH: {
-    position: "absolute",
-    width: 18,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#FFFFFF",
-  },
-  dot: {
-    position: "absolute",
-    bottom: 5,
-    right: 5,
-    width: 5,
-    height: 5,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.5)",
-  },
-  wordmark: {
-    flexDirection: "row",
-    alignItems: "baseline",
-  },
-  wordPrimary: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#0F172A",
-    letterSpacing: -0.3,
-  },
-  wordAccent: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#1A73D4",
-    letterSpacing: -0.3,
-  },
-});
-
 // Slim blue compliance banner shown on non-Info screens
 function ComplianceBanner({ language }: { language: Language }) {
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   return (
     <View style={styles.complianceBanner}>
-      <Ionicons name="shield-checkmark-outline" size={14} color="#1E40AF" style={{ marginTop: 1 }} />
+      <Ionicons name="shield-checkmark-outline" size={14} color={theme.accentText} style={{ marginTop: 1 }} />
       <Text style={styles.complianceBannerText}>{copy(language, "compliance.badge")} — {copy(language, "compliance.title")}</Text>
     </View>
   );
@@ -310,10 +1304,12 @@ function ComplianceBanner({ language }: { language: Language }) {
 
 // Full compliance card used on InfoScreen
 function ComplianceCard({ language }: { language: Language }) {
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   return (
     <View style={styles.complianceCard}>
       <View style={styles.complianceBadgeRow}>
-        <Ionicons name="shield-checkmark-outline" size={14} color="#1E40AF" />
+        <Ionicons name="shield-checkmark-outline" size={14} color={theme.accentText} />
         <Text style={styles.complianceBadge}>{copy(language, "compliance.badge")}</Text>
       </View>
       <Text style={styles.complianceTitle}>{copy(language, "compliance.title")}</Text>
@@ -335,6 +1331,8 @@ function DrugRow({
   onPress: () => void;
   onToggleFavorite?: () => void;
 }) {
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   const matchCopy = matchLabel(language, result);
 
   return (
@@ -371,11 +1369,11 @@ function DrugRow({
               <Ionicons
                 name={isSaved ? "heart" : "heart-outline"}
                 size={20}
-                color={isSaved ? "#1A73D4" : "#94A3B8"}
+                color={isSaved ? theme.accent : theme.textDisabled}
               />
             </Pressable>
           ) : null}
-          <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
+          <Ionicons name="chevron-forward" size={16} color={theme.borderMid} />
         </View>
       </View>
     </Pressable>
@@ -389,6 +1387,8 @@ function NeutralEmptyCard({
   title: string;
   body: string;
 }) {
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   return (
     <View style={styles.neutralEmptyCard}>
       <Text style={styles.neutralEmptyTitle}>{title}</Text>
@@ -418,6 +1418,8 @@ function SearchScreen({
   onOpenDrug: (drugId: string) => void;
   onToggleFavorite: (drugId: string) => void;
 }) {
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   const [activeClass, setActiveClass] = useState<string | null>(null);
   const [inputFocused, setInputFocused] = useState(false);
   const recentFadeAnim = useRef(new Animated.Value(0)).current;
@@ -502,7 +1504,7 @@ function SearchScreen({
 
         {/* Search input */}
         <View style={styles.searchInputWrap}>
-          <Ionicons name="search" size={18} color="#64748B" style={styles.searchIcon} />
+          <Ionicons name="search" size={18} color={theme.textSecondary} style={styles.searchIcon} />
           <TextInput
             autoCapitalize="none"
             autoCorrect={false}
@@ -510,13 +1512,13 @@ function SearchScreen({
             onBlur={() => setInputFocused(false)}
             onChangeText={(v) => { onChangeQuery(v); setActiveClass(null); }}
             placeholder={copy(language, "search.placeholder")}
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={theme.textDisabled}
             style={styles.searchInput}
             value={query}
           />
           {query.length > 0 ? (
             <Pressable onPress={() => onChangeQuery("")} hitSlop={8} style={styles.searchClear}>
-              <Ionicons name="close-circle" size={18} color="#94A3B8" />
+              <Ionicons name="close-circle" size={18} color={theme.textDisabled} />
             </Pressable>
           ) : null}
         </View>
@@ -595,7 +1597,7 @@ function SearchScreen({
             </View>
           ) : (
             <View style={styles.emptyCard}>
-              <Ionicons name="search-outline" size={32} color="#94A3B8" style={styles.emptyIcon} />
+              <Ionicons name="search-outline" size={32} color={theme.textDisabled} style={styles.emptyIcon} />
               <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
               <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
             </View>
@@ -634,6 +1636,8 @@ function FavoritesScreen({
   onOpenDrug: (drugId: string) => void;
   onToggleFavorite: (drugId: string) => void;
 }) {
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   return (
     <ScrollView style={styles.scrollView} contentContainerStyle={styles.screenContent}>
       <View style={styles.searchHeader}>
@@ -659,7 +1663,7 @@ function FavoritesScreen({
         </View>
       ) : (
         <View style={styles.favoritesEmptyState}>
-          <Ionicons name="heart-outline" size={56} color="#CBD5E1" />
+          <Ionicons name="heart-outline" size={56} color={theme.borderMid} />
           <Text style={styles.neutralEmptyTitle}>{copy(language, "favorites.emptyTitle")}</Text>
           <Text style={styles.neutralEmptyBody}>{copy(language, "favorites.emptyBody")}</Text>
         </View>
@@ -677,6 +1681,8 @@ function InfoScreen({
   activeDataset: ReturnType<typeof getBundledActiveDataset>;
   language: Language;
 }) {
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   const rows = [
     {
       label: copy(language, "home.release"),
@@ -732,6 +1738,8 @@ function SourceCard({
   language: Language;
   eyebrow: string;
 }) {
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   return (
     <View style={styles.sourceCard}>
       <Text style={styles.sourceEyebrow}>{eyebrow}</Text>
@@ -754,6 +1762,8 @@ function NoteList({
   notes: TestNote[];
   tone?: "default" | "warning";
 }) {
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   return (
     <View style={styles.notesBlock}>
       {notes.map((note, index) => (
@@ -782,6 +1792,8 @@ function DilutionCalculator({
   dilutions: string[];
   concentrationUnit: string;
 }) {
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   const [expanded, setExpanded] = useState(false);
   const [stockConcentration, setStockConcentration] = useState("");
   const [finalVolume, setFinalVolume] = useState("10");
@@ -799,13 +1811,13 @@ function DilutionCalculator({
     <View style={styles.panel}>
       <Pressable onPress={() => setExpanded((v) => !v)} style={styles.calculatorToggle}>
         <View style={styles.calculatorToggleLeft}>
-          <Ionicons name="calculator-outline" size={18} color="#1A73D4" />
+          <Ionicons name="calculator-outline" size={18} color={theme.accent} />
           <Text style={styles.sectionTitle}>{copy(language, "detail.calculatorTitle")}</Text>
         </View>
         <Ionicons
           name={expanded ? "chevron-up" : "chevron-down"}
           size={18}
-          color="#64748B"
+          color={theme.textSecondary}
         />
       </Pressable>
 
@@ -820,7 +1832,7 @@ function DilutionCalculator({
                 keyboardType="decimal-pad"
                 onChangeText={setStockConcentration}
                 placeholder={copy(language, "detail.calculatorStockPlaceholder")}
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={theme.textDisabled}
                 style={styles.calcInput}
                 value={stockConcentration}
               />
@@ -835,7 +1847,7 @@ function DilutionCalculator({
                 keyboardType="decimal-pad"
                 onChangeText={setFinalVolume}
                 placeholder="10"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={theme.textDisabled}
                 style={styles.calcInput}
                 value={finalVolume}
               />
@@ -904,6 +1916,8 @@ function DetailScreen({
   onBack: () => void;
   onToggleFavorite: () => void;
 }) {
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   const [activeTab, setActiveTab] = useState<TestKind>(availableTests(drug)[0] ?? "prick");
   const [showSource, setShowSource] = useState(false);
   const availableTestKinds = availableTests(drug);
@@ -968,14 +1982,14 @@ function DetailScreen({
       {/* Sticky nav header */}
       <View style={styles.detailNavHeader}>
         <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
-          <Ionicons name="arrow-back" size={20} color="#0F172A" />
+          <Ionicons name="arrow-back" size={20} color={theme.textPrimary} />
         </Pressable>
         <Text style={styles.detailNavTitle} numberOfLines={1}>{drug.name[language]}</Text>
         <Pressable onPress={onToggleFavorite} style={styles.detailNavAction} hitSlop={8}>
           <Ionicons
             name={isSaved ? "heart" : "heart-outline"}
             size={22}
-            color={isSaved ? "#1A73D4" : "#64748B"}
+            color={isSaved ? theme.accent : theme.textSecondary}
           />
         </Pressable>
       </View>
@@ -1033,7 +2047,7 @@ function DetailScreen({
         {!canShowProvenance ? (
           <View style={styles.warningPanel}>
             <View style={styles.warningPanelHeader}>
-              <Ionicons name="warning-outline" size={18} color="#92400E" />
+              <Ionicons name="warning-outline" size={18} color={theme.warningText} />
               <Text style={styles.warningTitle}>
                 {copy(language, "detail.provenanceUnavailableTitle")}
               </Text>
@@ -1074,7 +2088,7 @@ function DetailScreen({
         {canShowProvenance && warnings.length ? (
           <View style={styles.warningPanel}>
             <View style={styles.warningPanelHeader}>
-              <Ionicons name="warning-outline" size={18} color="#92400E" />
+              <Ionicons name="warning-outline" size={18} color={theme.warningText} />
               <Text style={styles.warningTitle}>{copy(language, "detail.warnings")}</Text>
             </View>
             <NoteList language={language} notes={warnings} tone="warning" />
@@ -1139,6 +2153,15 @@ function DetailScreen({
 }
 
 export default function App() {
+  const systemScheme = useColorScheme();
+  const [darkOverride, setDarkOverride] = useState<boolean | null>(null);
+
+  const effectiveScheme: "light" | "dark" =
+    darkOverride !== null ? (darkOverride ? "dark" : "light") : (systemScheme ?? "light");
+  const isDark = effectiveScheme === "dark";
+  const theme = isDark ? darkTheme : lightTheme;
+  const styles = useMemo(() => makeStyles(theme), [theme]);
+
   const [activeDataset, setActiveDataset] = useState(() => getBundledActiveDataset());
   const [language, setLanguage] = useState<Language>("fr");
   const [homeTab, setHomeTab] = useState<HomeTab>("search");
@@ -1153,10 +2176,11 @@ export default function App() {
     let cancelled = false;
 
     async function hydrate() {
-      const [storedDataset, storedFavorites, storedRecents] = await Promise.all([
+      const [storedDataset, storedFavorites, storedRecents, storedDarkMode] = await Promise.all([
         loadActiveDataset(),
         loadFavoriteDrugIds(),
         loadRecentDrugIds(),
+        AsyncStorage.getItem(DARK_MODE_STORAGE_KEY),
       ]);
 
       if (cancelled) {
@@ -1171,6 +2195,11 @@ export default function App() {
         setRecentDrugIds(sanitizeRecentDrugIds(storedRecents, validDrugIds));
         setFavoritesHydrated(true);
         setRecentHydrated(true);
+        if (storedDarkMode === "dark") {
+          setDarkOverride(true);
+        } else if (storedDarkMode === "light") {
+          setDarkOverride(false);
+        }
       });
 
       const syncResult = await syncDatasetInBackground(storedDataset.manifest);
@@ -1276,6 +2305,12 @@ export default function App() {
     });
   }
 
+  function toggleDark() {
+    const next = !isDark;
+    setDarkOverride(next);
+    void AsyncStorage.setItem(DARK_MODE_STORAGE_KEY, next ? "dark" : "light");
+  }
+
   const SCREEN_WIDTH = Dimensions.get("window").width;
   const slideX = useRef(new Animated.Value(SCREEN_WIDTH)).current;
   const prevSelectedDrugIdRef = useRef<string | null>(null);
@@ -1352,13 +2387,19 @@ export default function App() {
       {/* Top bar */}
       <View style={styles.topBar}>
         <View style={styles.titleBlock}>
-          <AppLogo />
+          <AppLogo theme={theme} />
         </View>
+        <Pressable
+          onPress={toggleDark}
+          style={styles.languageButton}
+        >
+          <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={14} color={theme.textSecondary} />
+        </Pressable>
         <Pressable
           onPress={() => setLanguage(language === "fr" ? "en" : "fr")}
           style={styles.languageButton}
         >
-          <Ionicons name="globe-outline" size={14} color="#64748B" />
+          <Ionicons name="globe-outline" size={14} color={theme.textSecondary} />
           <Text style={styles.languageButtonText}>{language.toUpperCase()}</Text>
         </Pressable>
       </View>
@@ -1408,7 +2449,7 @@ export default function App() {
                 <Ionicons
                   name={homeTabIconName(tab, selected)}
                   size={24}
-                  color={selected ? "#1A73D4" : "#94A3B8"}
+                  color={selected ? theme.accent : theme.textDisabled}
                 />
                 <Text
                   style={[styles.topLevelTabText, selected && styles.topLevelTabTextSelected]}
@@ -1424,948 +2465,50 @@ export default function App() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
-      <View style={styles.stackRoot}>
-        {/* Home layer — always rendered, slides left as detail comes in */}
-        <Animated.View
-          style={[styles.stackLayer, { transform: [{ translateX: homeTranslateX }] }]}
-          pointerEvents={selectedDrug ? "none" : "auto"}
-        >
-          {HomeContent}
-        </Animated.View>
-
-        {/* Detail layer — slides in from right, kept mounted during exit animation */}
-        {detailVisible ? (
+    <ThemeContext.Provider value={theme}>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style={theme.statusBar as "dark" | "light"} />
+        <View style={styles.stackRoot}>
+          {/* Home layer — always rendered, slides left as detail comes in */}
           <Animated.View
-            style={[styles.stackLayer, { transform: [{ translateX: slideX }] }]}
-            {...swipeBack.panHandlers}
+            style={[styles.stackLayer, { transform: [{ translateX: homeTranslateX }] }]}
+            pointerEvents={selectedDrug ? "none" : "auto"}
           >
-            <View style={styles.container}>
-              {selectedDrug ? (
-                <DetailScreen
-                  drug={selectedDrug}
-                  isSaved={favoriteDrugIds.includes(selectedDrug.id)}
-                  language={language}
-                  onBack={() => {
-                    Animated.spring(slideX, {
-                      toValue: SCREEN_WIDTH,
-                      useNativeDriver: true,
-                      bounciness: 0,
-                      speed: 20,
-                    }).start(() => {
-                      setDetailVisible(false);
-                      startTransition(() => setSelectedDrugId(null));
-                    });
-                  }}
-                  onToggleFavorite={() => toggleFavorite(selectedDrug.id)}
-                  sources={activeDataset.dataset.sources}
-                />
-              ) : null}
-            </View>
+            {HomeContent}
           </Animated.View>
-        ) : null}
-      </View>
-    </SafeAreaView>
+
+          {/* Detail layer — slides in from right, kept mounted during exit animation */}
+          {detailVisible ? (
+            <Animated.View
+              style={[styles.stackLayer, { transform: [{ translateX: slideX }] }]}
+              {...swipeBack.panHandlers}
+            >
+              <View style={styles.container}>
+                {selectedDrug ? (
+                  <DetailScreen
+                    drug={selectedDrug}
+                    isSaved={favoriteDrugIds.includes(selectedDrug.id)}
+                    language={language}
+                    onBack={() => {
+                      Animated.spring(slideX, {
+                        toValue: SCREEN_WIDTH,
+                        useNativeDriver: true,
+                        bounciness: 0,
+                        speed: 20,
+                      }).start(() => {
+                        setDetailVisible(false);
+                        startTransition(() => setSelectedDrugId(null));
+                      });
+                    }}
+                    onToggleFavorite={() => toggleFavorite(selectedDrug.id)}
+                    sources={activeDataset.dataset.sources}
+                  />
+                ) : null}
+              </View>
+            </Animated.View>
+          ) : null}
+        </View>
+      </SafeAreaView>
+    </ThemeContext.Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  // ─── Layout ──────────────────────────────────────────────────────────
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  stackRoot: {
-    flex: 1,
-    overflow: "hidden",
-  },
-  stackLayer: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#F4F6F9",
-  },
-  mainContent: {
-    flex: 1,
-  },
-  flex1: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-    backgroundColor: "#F4F6F9",
-  },
-  screenContent: {
-    flexGrow: 1,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 32,
-    gap: 16,
-  },
-
-  // ─── Top Bar ─────────────────────────────────────────────────────────
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E4E9EF",
-    backgroundColor: "#F4F6F9",
-    gap: 12,
-  },
-  titleBlock: {
-    flex: 1,
-  },
-  title: {
-    color: "#0F172A",
-    fontSize: 22,
-    fontWeight: "700",
-  },
-  languageButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    borderWidth: 1,
-    borderColor: "#CBD5E1",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: "#FFFFFF",
-  },
-  languageButtonText: {
-    color: "#64748B",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-
-  // ─── Bottom Tab Bar ───────────────────────────────────────────────────
-  footer: {
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: 1,
-    borderTopColor: "#E4E9EF",
-  },
-  topLevelTabs: {
-    flexDirection: "row",
-    height: 56,
-  },
-  topLevelTab: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 3,
-  },
-  topLevelTabText: {
-    color: "#94A3B8",
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  topLevelTabTextSelected: {
-    color: "#1A73D4",
-  },
-
-  // ─── Screen Headers ───────────────────────────────────────────────────
-  searchHeader: {
-    gap: 4,
-  },
-  screenTitle: {
-    color: "#0F172A",
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  screenSubtitle: {
-    color: "#64748B",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-
-  searchStickyHeader: {
-    backgroundColor: "#F4F6F9",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-    gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E4E9EF",
-  },
-
-  // ─── Search Input ─────────────────────────────────────────────────────
-  searchInputWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#CBD5E1",
-    paddingHorizontal: 12,
-    height: 52,
-    gap: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-  },
-  searchIcon: {
-    flexShrink: 0,
-  },
-  searchInput: {
-    flex: 1,
-    color: "#0F172A",
-    fontSize: 16,
-    paddingVertical: 0,
-  },
-  searchClear: {
-    flexShrink: 0,
-  },
-  resultCount: {
-    color: "#64748B",
-    fontSize: 13,
-    fontWeight: "500",
-    marginBottom: -4,
-  },
-
-  // ─── Recent searches ─────────────────────────────────────────────────
-  categorySection: {
-    gap: 10,
-  },
-  horizontalChipScroll: {
-    marginHorizontal: -16,
-  },
-  horizontalChipList: {
-    gap: 8,
-    paddingHorizontal: 16,
-  },
-  categoryChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: "#CBD5E1",
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  categoryChipActive: {
-    borderColor: "#1A73D4",
-    backgroundColor: "#EFF6FF",
-  },
-  categoryChipText: {
-    color: "#64748B",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  categoryChipTextActive: {
-    color: "#1A73D4",
-    fontWeight: "700",
-  },
-  categoryChipCount: {
-    backgroundColor: "#E4E9EF",
-    borderRadius: 999,
-    minWidth: 20,
-    height: 20,
-    paddingHorizontal: 5,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  categoryChipCountActive: {
-    backgroundColor: "#BFDBFE",
-  },
-  categoryChipCountText: {
-    color: "#64748B",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  categoryChipCountTextActive: {
-    color: "#1D4ED8",
-  },
-  recentSection: {
-    gap: 10,
-  },
-  sectionLabel: {
-    color: "#0F172A",
-    fontSize: 13,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  recentChip: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#CBD5E1",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    maxWidth: 200,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-  },
-  recentChipText: {
-    color: "#0F172A",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-
-  // ─── Result Cards ─────────────────────────────────────────────────────
-  resultsList: {
-    gap: 10,
-  },
-  resultCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  resultCardPressed: {
-    opacity: 0.95,
-  },
-  resultHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  resultTitleColumn: {
-    flex: 1,
-    gap: 4,
-  },
-  resultNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  resultName: {
-    color: "#0F172A",
-    fontSize: 16,
-    fontWeight: "700",
-    flexShrink: 1,
-  },
-  classBadge: {
-    backgroundColor: "#DBEAFE",
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    alignSelf: "flex-start",
-  },
-  classBadgeText: {
-    color: "#1D4ED8",
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  resultAlias: {
-    color: "#64748B",
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  matchHint: {
-    color: "#1A73D4",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  resultActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flexShrink: 0,
-  },
-  heartButton: {
-    padding: 2,
-  },
-
-  // ─── Empty States ─────────────────────────────────────────────────────
-  emptyCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 24,
-    alignItems: "center",
-    gap: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-  },
-  emptyIcon: {
-    marginBottom: 4,
-  },
-  emptyTitle: {
-    color: "#0F172A",
-    fontSize: 16,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  emptyText: {
-    color: "#64748B",
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
-  },
-  neutralEmptyCard: {
-    backgroundColor: "#F8FAFC",
-    borderRadius: 12,
-    padding: 16,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: "#E4E9EF",
-  },
-  neutralEmptyTitle: {
-    color: "#0F172A",
-    fontSize: 15,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  neutralEmptyBody: {
-    color: "#64748B",
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
-  },
-  favoritesEmptyState: {
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 32,
-  },
-
-  // ─── Panels ───────────────────────────────────────────────────────────
-  panel: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    gap: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-  },
-  panelBody: {
-    color: "#64748B",
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  panelHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 8,
-  },
-  panelHeaderLabel: {
-    color: "#1A73D4",
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-  sectionTitle: {
-    color: "#0F172A",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-
-  // ─── Compliance ───────────────────────────────────────────────────────
-  complianceBanner: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 6,
-    backgroundColor: "#EFF6FF",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#BFDBFE",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  complianceBannerText: {
-    flex: 1,
-    color: "#1E40AF",
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: "500",
-  },
-  complianceCard: {
-    backgroundColor: "#EFF6FF",
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#BFDBFE",
-    gap: 8,
-  },
-  complianceBadgeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  complianceBadge: {
-    color: "#1E40AF",
-    fontSize: 11,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  complianceTitle: {
-    color: "#0F172A",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  complianceBody: {
-    color: "#1E3A5F",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-
-  // ─── Info Screen ──────────────────────────────────────────────────────
-  infoAppCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-  },
-  infoAppIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: "#1A73D4",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  infoAppIconText: {
-    color: "#FFFFFF",
-    fontSize: 26,
-    fontWeight: "800",
-  },
-  infoAppMeta: {
-    flex: 1,
-    gap: 2,
-  },
-  infoAppName: {
-    color: "#0F172A",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  infoAppVersion: {
-    color: "#64748B",
-    fontSize: 13,
-  },
-  infoMetaCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-  },
-  infoMetaHeader: {
-    color: "#64748B",
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 8,
-  },
-  infoMetaRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    gap: 16,
-  },
-  infoMetaRowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E4E9EF",
-  },
-  infoMetaLabel: {
-    color: "#0F172A",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  infoMetaValue: {
-    color: "#64748B",
-    fontSize: 14,
-    textAlign: "right",
-    flexShrink: 1,
-  },
-
-  // ─── Detail Screen ────────────────────────────────────────────────────
-  detailNavHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E4E9EF",
-    backgroundColor: "#F4F6F9",
-    gap: 8,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-    flexShrink: 0,
-  },
-  detailNavTitle: {
-    flex: 1,
-    color: "#0F172A",
-    fontSize: 16,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  detailNavAction: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-    flexShrink: 0,
-  },
-  detailHeader: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    gap: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-  },
-  detailHeaderMetaRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  detailClassBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "#DBEAFE",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  detailClassBadgeText: {
-    color: "#1D4ED8",
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  detailIdBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "#F1F5F9",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  detailIdBadgeText: {
-    color: "#64748B",
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  detailTitle: {
-    color: "#0F172A",
-    fontSize: 24,
-    fontWeight: "800",
-    lineHeight: 30,
-  },
-  detailSubtitle: {
-    color: "#64748B",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-
-  // ─── Segmented Control ────────────────────────────────────────────────
-  segmentedControl: {
-    flexDirection: "row",
-    backgroundColor: "#E4E9EF",
-    borderRadius: 10,
-    padding: 3,
-    gap: 2,
-  },
-  segmentButton: {
-    flex: 1,
-    borderRadius: 8,
-    paddingVertical: 9,
-    alignItems: "center",
-  },
-  segmentButtonSelected: {
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 2,
-  },
-  segmentButtonDisabled: {
-    opacity: 0.4,
-  },
-  segmentButtonText: {
-    color: "#64748B",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  segmentButtonTextSelected: {
-    color: "#0F172A",
-    fontWeight: "700",
-  },
-  segmentButtonTextDisabled: {
-    color: "#94A3B8",
-  },
-
-  // ─── Warning Panel ────────────────────────────────────────────────────
-  warningPanel: {
-    backgroundColor: "#FFFBEB",
-    borderRadius: 12,
-    padding: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: "#F59E0B",
-    gap: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-  },
-  warningPanelHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  warningTitle: {
-    color: "#92400E",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  warningText: {
-    color: "#92400E",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-
-  // ─── Metric Cards ─────────────────────────────────────────────────────
-  metricGrid: {
-    gap: 10,
-  },
-  metricCard: {
-    gap: 6,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 10,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#E4E9EF",
-  },
-  metricCardCompact: {
-    gap: 4,
-  },
-  metricLabel: {
-    color: "#64748B",
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  metricValue: {
-    color: "#0F172A",
-    fontSize: 22,
-    fontWeight: "800",
-  },
-  metricValueSmall: {
-    color: "#0F172A",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-
-  // ─── Notes ────────────────────────────────────────────────────────────
-  notesBlock: {
-    gap: 8,
-  },
-  noteRow: {
-    gap: 8,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 10,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#E4E9EF",
-  },
-  noteRowWarning: {
-    backgroundColor: "#FFFBEB",
-    borderColor: "#FCD34D",
-    borderLeftWidth: 3,
-    borderLeftColor: "#F59E0B",
-  },
-  noteBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "#E4E9EF",
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  noteBadgeWarning: {
-    backgroundColor: "#FEF3C7",
-  },
-  noteBadgeText: {
-    color: "#64748B",
-    fontSize: 10,
-    fontWeight: "800",
-    textTransform: "uppercase",
-  },
-  noteBadgeTextWarning: {
-    color: "#92400E",
-  },
-  noteText: {
-    color: "#0F172A",
-    fontSize: 14,
-    lineHeight: 22,
-  },
-
-  // ─── Dilution Calculator ──────────────────────────────────────────────
-  calculatorToggle: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  calculatorToggleLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  calculatorRow: {
-    gap: 12,
-  },
-  calculatorField: {
-    gap: 6,
-  },
-  calcInput: {
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#CBD5E1",
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    color: "#0F172A",
-    fontSize: 15,
-  },
-  fieldHint: {
-    color: "#64748B",
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  calculatorResults: {
-    gap: 10,
-  },
-  calculatorCard: {
-    gap: 4,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 10,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#E4E9EF",
-  },
-  calculatorRatio: {
-    color: "#0F172A",
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  calculatorMeta: {
-    color: "#0F172A",
-    fontSize: 13,
-    lineHeight: 20,
-  },
-  emptyState: {
-    color: "#64748B",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-
-  // ─── Source / References ──────────────────────────────────────────────
-  sourceSummaryCard: {
-    gap: 6,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 10,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#E4E9EF",
-  },
-  sourceToggle: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-  },
-  sourceToggleLabel: {
-    color: "#1A73D4",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  sourceStack: {
-    gap: 10,
-  },
-  sourceCard: {
-    gap: 6,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 10,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#E4E9EF",
-  },
-  sourceEyebrow: {
-    color: "#1A73D4",
-    fontSize: 11,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  sourceTitle: {
-    color: "#0F172A",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  sourceMeta: {
-    color: "#64748B",
-    fontSize: 13,
-  },
-  sourceLabel: {
-    color: "#64748B",
-    fontSize: 13,
-    marginTop: 2,
-  },
-  sourceExcerpt: {
-    color: "#0F172A",
-    fontSize: 13,
-    lineHeight: 20,
-  },
-});
