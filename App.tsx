@@ -357,7 +357,8 @@ function SearchScreen({
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.recentChips}
+            contentContainerStyle={styles.horizontalChipList}
+            style={styles.horizontalChipScroll}
           >
             {recentDrugs.map((drug) => (
               <Pressable
@@ -393,7 +394,13 @@ function SearchScreen({
       {/* Category filter chips — always visible */}
       <View style={styles.categorySection}>
         <Text style={styles.sectionLabel}>{copy(language, "search.categories")}</Text>
-        <View style={styles.categoryChips}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.horizontalChipList}
+          style={styles.horizontalChipScroll}
+          keyboardShouldPersistTaps="handled"
+        >
           {/* "All" chip */}
           <Pressable
             onPress={() => setActiveClass(null)}
@@ -429,7 +436,7 @@ function SearchScreen({
               </Pressable>
             );
           })}
-        </View>
+        </ScrollView>
       </View>
 
       {hasQuery ? (
@@ -1511,10 +1518,12 @@ const styles = StyleSheet.create({
   categorySection: {
     gap: 10,
   },
-  categoryChips: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  horizontalChipScroll: {
+    marginHorizontal: -16,
+  },
+  horizontalChipList: {
     gap: 8,
+    paddingHorizontal: 16,
   },
   categoryChip: {
     flexDirection: "row",
@@ -1569,10 +1578,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
-  },
-  recentChips: {
-    gap: 8,
-    paddingRight: 16,
   },
   recentChip: {
     backgroundColor: "#FFFFFF",
