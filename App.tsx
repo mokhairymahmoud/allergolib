@@ -1115,10 +1115,16 @@ function makeStyles(theme: Theme) {
       fontSize: 13,
       lineHeight: 20,
     },
+    sourceLinkRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      marginTop: 8,
+      alignSelf: "flex-start",
+    },
     sourceLink: {
       color: theme.accent,
       fontSize: 13,
-      marginTop: 6,
       textDecorationLine: "underline",
     },
   });
@@ -1886,12 +1892,16 @@ function SourceCard({
       <Text style={styles.sourceMeta}>{source.documentName[language]}</Text>
       <Text style={styles.sourceExcerpt}>{source.excerpt[language]}</Text>
       {source.url ? (
-        <Text
-          style={styles.sourceLink}
+        <Pressable
+          style={styles.sourceLinkRow}
           onPress={() => Linking.openURL(source.url!)}
+          hitSlop={8}
         >
-          {source.url}
-        </Text>
+          <Ionicons name="open-outline" size={14} color={theme.accent} />
+          <Text style={styles.sourceLink}>
+            {language === "fr" ? "Voir le document source" : "View source document"}
+          </Text>
+        </Pressable>
       ) : null}
     </View>
   );
