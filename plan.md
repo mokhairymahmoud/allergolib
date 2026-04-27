@@ -38,17 +38,19 @@ Build the first end-to-end reference slice with a minimal bundled dataset from t
 
 ## Phase 2: Curated Dataset Pipeline v1
 
+**Status**: Done
+
 **User stories**: expand beyond a demo slice into a clinically curated MVP dataset
 
 ### What to build
 Define the Google Sheets structure and the export/validation pipeline that turns curated rows into the app dataset. Seed the first real dataset manually from the SFAR/SFA 2025 guideline because the key concentration appendix is not reliably machine-readable.
 
 ### Acceptance criteria
-- [ ] The sheet structure supports drugs, aliases, test entries, notes, sources, and release metadata.
-- [ ] The export step validates required fields, source references, language completeness, and dilution formatting.
-- [ ] The pipeline emits a production-shaped dataset JSON and manifest JSON.
-- [ ] The app can run entirely on the exported bundled dataset instead of a hand-written fixture.
-- [ ] The seeded dataset covers the agreed MVP drug list from the PRD.
+- [x] The sheet structure supports drugs, aliases, test entries, notes, sources, and release metadata.
+- [x] The export step validates required fields, source references, language completeness, and dilution formatting.
+- [x] The pipeline emits a production-shaped dataset JSON and manifest JSON.
+- [x] The app can run entirely on the exported bundled dataset instead of a hand-written fixture.
+- [x] The seeded dataset covers the agreed MVP drug list from the PRD.
 
 ---
 

@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { startTransition, useDeferredValue, useState } from "react";
 
-import { seedDataset } from "./src/data/seedDataset";
+import { bundledDataset, bundledManifest } from "./src/data/loadBundledDataset";
 import { filterDrugs } from "./src/lib/filterDrugs";
 import { copy } from "./src/lib/i18n";
 import type { DrugRecord, Language, SourceDocument, TestKind } from "./src/types";
@@ -90,7 +90,7 @@ function DetailScreen({
   const [activeTab, setActiveTab] = useState<TestKind>(availableTests(drug)[0] ?? "prick");
   const [showSource, setShowSource] = useState(false);
   const test = drug.tests[activeTab];
-  const source = seedDataset.sources[test.sourceId];
+  const source = bundledDataset.sources[test.sourceId];
 
   return (
     <ScrollView contentContainerStyle={styles.screenContent}>
@@ -200,7 +200,7 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [selectedDrug, setSelectedDrug] = useState<DrugRecord | null>(null);
   const deferredQuery = useDeferredValue(query);
-  const results = filterDrugs(seedDataset.drugs, deferredQuery, language);
+  const results = filterDrugs(bundledDataset.drugs, deferredQuery, language);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -251,6 +251,9 @@ export default function App() {
             <View style={styles.heroCard}>
               <Text style={styles.heroTitle}>{copy(language, "home.heroTitle")}</Text>
               <Text style={styles.heroBody}>{copy(language, "home.heroBody")}</Text>
+              <Text style={styles.heroMeta}>
+                {copy(language, "home.release")}: {bundledManifest.version}
+              </Text>
             </View>
 
             <View style={styles.searchCard}>
@@ -369,6 +372,13 @@ const styles = StyleSheet.create({
     color: "#D7E6E2",
     fontSize: 15,
     lineHeight: 22,
+  },
+  heroMeta: {
+    color: "#9EC2BB",
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
   searchCard: {
     backgroundColor: "#FCFBF7",
@@ -603,4 +613,3 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 });
-
