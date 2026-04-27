@@ -1498,6 +1498,7 @@ const styles = StyleSheet.create({
   categoryChips: {
     gap: 8,
     paddingRight: 16,
+    alignItems: "center",
   },
   categoryChip: {
     borderRadius: 999,
