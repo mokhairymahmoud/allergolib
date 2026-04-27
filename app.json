@@ -9,7 +9,9 @@
       "ios",
       "android",
       "web"
-    ]
+    ],
+    "extra": {
+      "datasetManifestUrl": ""
+    }
   }
 }
-

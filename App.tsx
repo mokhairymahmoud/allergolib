@@ -1,4 +1,5 @@
 import { StatusBar } from "expo-status-bar";
+import { startTransition, useDeferredValue, useEffect, useState } from "react";
 import {
   Pressable,
   SafeAreaView,
@@ -8,9 +9,13 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { startTransition, useDeferredValue, useState } from "react";
 
-import { bundledDataset, bundledManifest } from "./src/data/loadBundledDataset";
+import {
+  getBundledActiveDataset,
+  loadActiveDataset,
+  syncDatasetInBackground,
+  type DatasetOrigin,
+} from "./src/data/runtimeDataset";
 import { filterDrugs } from "./src/lib/filterDrugs";
 import { copy } from "./src/lib/i18n";
 import type { DrugRecord, Language, SourceDocument, TestKind } from "./src/types";
@@ -36,6 +41,14 @@ function concentrationLabel(language: Language, kind: TestKind) {
 
 function testTitle(language: Language, kind: TestKind) {
   return copy(language, `tests.${kind}`);
+}
+
+function datasetOriginLabelKey(origin: DatasetOrigin) {
+  if (origin === "bundled") {
+    return "home.datasetOriginBundled";
+  }
+
+  return "home.datasetOriginUpdated";
 }
 
 function DrugRow({
@@ -65,12 +78,15 @@ function DrugRow({
 function SourceCard({
   source,
   language,
+  eyebrow,
 }: {
   source: SourceDocument;
   language: Language;
+  eyebrow: string;
 }) {
   return (
     <View style={styles.sourceCard}>
+      <Text style={styles.sourceEyebrow}>{eyebrow}</Text>
       <Text style={styles.sourceTitle}>{source.label}</Text>
       <Text style={styles.sourceMeta}>{source.documentName[language]}</Text>
       <Text style={styles.sourceExcerpt}>{source.excerpt[language]}</Text>
@@ -81,16 +97,28 @@ function SourceCard({
 function DetailScreen({
   drug,
   language,
+  sources,
   onBack,
 }: {
   drug: DrugRecord;
   language: Language;
+  sources: Record<string, SourceDocument>;
   onBack: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<TestKind>(availableTests(drug)[0] ?? "prick");
   const [showSource, setShowSource] = useState(false);
+
+  useEffect(() => {
+    const nextAvailableTests = availableTests(drug);
+
+    if (!nextAvailableTests.includes(activeTab)) {
+      setActiveTab(nextAvailableTests[0] ?? "prick");
+    }
+  }, [activeTab, drug]);
+
   const test = drug.tests[activeTab];
-  const source = bundledDataset.sources[test.sourceId];
+  const preferredSource = sources[test.preferredSourceId];
+  const alternateSource = test.alternateSourceId ? sources[test.alternateSourceId] : undefined;
 
   return (
     <ScrollView contentContainerStyle={styles.screenContent}>
@@ -178,29 +206,91 @@ function DetailScreen({
         )}
       </View>
 
-      <View style={styles.panel}>
-        <Pressable onPress={() => setShowSource((current) => !current)} style={styles.sourceToggle}>
-          <View>
-            <Text style={styles.sectionTitle}>{copy(language, "detail.source")}</Text>
-            <Text style={styles.sourceLabel}>{source.label}</Text>
-          </View>
-          <Text style={styles.sourceToggleLabel}>
-            {showSource ? copy(language, "detail.hideSource") : copy(language, "detail.showSource")}
-          </Text>
-        </Pressable>
+      {preferredSource ? (
+        <View style={styles.panel}>
+          <Pressable onPress={() => setShowSource((current) => !current)} style={styles.sourceToggle}>
+            <View>
+              <Text style={styles.sectionTitle}>{copy(language, "detail.source")}</Text>
+              <Text style={styles.sourceLabel}>{preferredSource.label}</Text>
+            </View>
+            <Text style={styles.sourceToggleLabel}>
+              {showSource ? copy(language, "detail.hideSource") : copy(language, "detail.showSource")}
+            </Text>
+          </Pressable>
 
-        {showSource ? <SourceCard source={source} language={language} /> : null}
-      </View>
+          {showSource ? (
+            <View style={styles.sourceStack}>
+              <SourceCard
+                source={preferredSource}
+                language={language}
+                eyebrow={copy(language, "detail.preferredSource")}
+              />
+              {alternateSource ? (
+                <SourceCard
+                  source={alternateSource}
+                  language={language}
+                  eyebrow={copy(language, "detail.alternateSource")}
+                />
+              ) : null}
+            </View>
+          ) : null}
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
 
 export default function App() {
+  const [activeDataset, setActiveDataset] = useState(() => getBundledActiveDataset());
   const [language, setLanguage] = useState<Language>("en");
   const [query, setQuery] = useState("");
-  const [selectedDrug, setSelectedDrug] = useState<DrugRecord | null>(null);
+  const [selectedDrugId, setSelectedDrugId] = useState<string | null>(null);
   const deferredQuery = useDeferredValue(query);
-  const results = filterDrugs(bundledDataset.drugs, deferredQuery, language);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function hydrate() {
+      const storedDataset = await loadActiveDataset();
+
+      if (cancelled) {
+        return;
+      }
+
+      startTransition(() => {
+        setActiveDataset(storedDataset);
+      });
+
+      const syncResult = await syncDatasetInBackground(storedDataset.manifest);
+
+      if (cancelled || syncResult.status !== "activated") {
+        return;
+      }
+
+      startTransition(() => {
+        setActiveDataset(syncResult.activeDataset);
+      });
+    }
+
+    hydrate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectedDrug = selectedDrugId
+    ? activeDataset.dataset.drugs.find((drug) => drug.id === selectedDrugId) ?? null
+    : null;
+  const results = filterDrugs(activeDataset.dataset.drugs, deferredQuery, language);
+
+  useEffect(() => {
+    if (selectedDrugId && !selectedDrug) {
+      startTransition(() => {
+        setSelectedDrugId(null);
+      });
+    }
+  }, [selectedDrug, selectedDrugId]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -242,8 +332,9 @@ export default function App() {
           <DetailScreen
             drug={selectedDrug}
             language={language}
+            sources={activeDataset.dataset.sources}
             onBack={() => {
-              startTransition(() => setSelectedDrug(null));
+              startTransition(() => setSelectedDrugId(null));
             }}
           />
         ) : (
@@ -252,7 +343,11 @@ export default function App() {
               <Text style={styles.heroTitle}>{copy(language, "home.heroTitle")}</Text>
               <Text style={styles.heroBody}>{copy(language, "home.heroBody")}</Text>
               <Text style={styles.heroMeta}>
-                {copy(language, "home.release")}: {bundledManifest.version}
+                {copy(language, "home.release")}: {activeDataset.manifest.version}
+              </Text>
+              <Text style={styles.heroMetaSecondary}>
+                {copy(language, "home.datasetOrigin")}:{" "}
+                {copy(language, datasetOriginLabelKey(activeDataset.origin))}
               </Text>
             </View>
 
@@ -279,7 +374,7 @@ export default function App() {
                   drug={drug}
                   language={language}
                   onPress={() => {
-                    startTransition(() => setSelectedDrug(drug));
+                    startTransition(() => setSelectedDrugId(drug.id));
                   }}
                 />
               ))}
@@ -379,6 +474,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
+  },
+  heroMetaSecondary: {
+    color: "#D7E6E2",
+    fontSize: 13,
+    lineHeight: 20,
   },
   searchCard: {
     backgroundColor: "#FCFBF7",
@@ -592,11 +692,21 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     alignSelf: "center",
   },
+  sourceStack: {
+    gap: 12,
+  },
   sourceCard: {
     gap: 8,
     backgroundColor: "#F4F7FA",
     borderRadius: 18,
     padding: 14,
+  },
+  sourceEyebrow: {
+    color: "#0E6B66",
+    fontSize: 11,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
   sourceTitle: {
     color: "#16222E",

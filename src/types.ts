@@ -35,7 +35,8 @@ export type TestRecord = {
   dilutions: string[];
   vehicle?: LocalizedString;
   notes: LocalizedString[];
-  sourceId: string;
+  preferredSourceId: string;
+  alternateSourceId?: string;
 };
 
 export type DrugRecord = {

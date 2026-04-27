@@ -27,3 +27,5 @@ The build script reads these tabs through the Google Sheets API and generates:
 
 - `src/data/generated/dataset.json`
 - `src/data/generated/manifest.json`
+
+For `test_entries`, `source_id` remains required and is exported as the preferred authority for that test. `alternate_source_id` is optional and, when present, must reference a row in `sources`.

@@ -240,7 +240,8 @@ function emptyTestRecord(sourceId = "") {
     dilutions: [],
     vehicle: undefined,
     notes: [],
-    sourceId,
+    preferredSourceId: sourceId,
+    alternateSourceId: undefined,
   };
 }
 
@@ -282,6 +283,16 @@ function buildDrugs(drugRows, aliasRows, testRows, noteRows, sources) {
     assert(drugsById[row.drug_id], `test_entries references unknown drug ${row.drug_id}.`);
     assert(TEST_KINDS.includes(row.test_kind), `Invalid test kind ${row.test_kind} for ${row.drug_id}.`);
     assert(sources[row.source_id], `test_entries references unknown source ${row.source_id}.`);
+    if (row.alternate_source_id) {
+      assert(
+        sources[row.alternate_source_id],
+        `test_entries references unknown alternate source ${row.alternate_source_id}.`
+      );
+      assert(
+        row.alternate_source_id !== row.source_id,
+        `test_entries alternate source must differ from preferred source for ${row.drug_id}/${row.test_kind}.`
+      );
+    }
 
     const dilutions = row.dilutions
       ? row.dilutions.split(";").map((value) => value.trim()).filter(Boolean)
@@ -307,7 +318,8 @@ function buildDrugs(drugRows, aliasRows, testRows, noteRows, sources) {
       dilutions: normalizedDilutions,
       vehicle: row.vehicle_en || row.vehicle_fr ? { en: row.vehicle_en, fr: row.vehicle_fr } : undefined,
       notes: [],
-      sourceId: row.source_id,
+      preferredSourceId: row.source_id,
+      alternateSourceId: row.alternate_source_id || undefined,
     };
   }
 
@@ -327,7 +339,7 @@ function buildDrugs(drugRows, aliasRows, testRows, noteRows, sources) {
 
     for (const kind of TEST_KINDS) {
       const test = drug.tests[kind];
-      assert(test.sourceId, `Drug ${drug.id} is missing a source for ${kind}.`);
+      assert(test.preferredSourceId, `Drug ${drug.id} is missing a source for ${kind}.`);
     }
   }
 
