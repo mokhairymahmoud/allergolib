@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style><?!= include("Styles"); ?></style>
+  </head>
+  <body>
+    <div class="appShell">
+      <aside class="lookupPanel">
+        <div class="lookupHeader">
+          <p class="eyebrow">Allergolib</p>
+          <h1>Admin curation</h1>
+          <p class="lookupBody">
+            Create or update a drug record in the normalized Google Sheet tabs. Saving here does
+            not publish a dataset.
+          </p>
+        </div>
+
+        <label class="fieldLabel" for="lookupQuery">Lookup by id or localized name</label>
+        <input id="lookupQuery" class="textField" type="search" placeholder="cefazoline, CEF..." />
+
+        <div class="lookupActions">
+          <button id="newDrugButton" class="secondaryButton" type="button">New drug</button>
+        </div>
+
+        <div id="lookupMeta" class="lookupMeta"></div>
+        <div id="lookupResults" class="lookupResults"></div>
+      </aside>
+
+      <main class="editorPanel">
+        <div class="editorHeader">
+          <div>
+            <p class="eyebrow">Phase 4</p>
+            <h2 id="modeTitle">Loading…</h2>
+          </div>
+          <div id="statusBanner" class="statusBanner isHidden"></div>
+        </div>
+
+        <form id="drugForm">
+          <div id="formSections"></div>
+          <div class="actionBar">
+            <div class="actionNote">
+              Save writes directly to `drugs`, `aliases`, `test_entries`, and `notes`.
+            </div>
+            <button id="saveButton" class="primaryButton" type="submit">Save to sheet</button>
+          </div>
+        </form>
+      </main>
+    </div>
+
+    <script><?!= include("Client"); ?></script>
+  </body>
+</html>

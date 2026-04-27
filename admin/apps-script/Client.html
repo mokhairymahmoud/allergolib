@@ -1,0 +1,672 @@
+(function () {
+  const state = {
+    defaultSourceId: "",
+    lookups: [],
+    mode: "create",
+    noteKinds: ["info", "warning", "cross-reactivity"],
+    originalId: "",
+    query: "",
+    sources: [],
+    testKinds: ["prick", "idr", "patch"],
+    form: null,
+  };
+
+  const elements = {};
+
+  document.addEventListener("DOMContentLoaded", init);
+
+  function init() {
+    elements.lookupQuery = document.getElementById("lookupQuery");
+    elements.lookupResults = document.getElementById("lookupResults");
+    elements.lookupMeta = document.getElementById("lookupMeta");
+    elements.formSections = document.getElementById("formSections");
+    elements.statusBanner = document.getElementById("statusBanner");
+    elements.modeTitle = document.getElementById("modeTitle");
+    elements.newDrugButton = document.getElementById("newDrugButton");
+    elements.drugForm = document.getElementById("drugForm");
+    elements.saveButton = document.getElementById("saveButton");
+
+    elements.lookupQuery.addEventListener("input", handleLookupInput);
+    elements.newDrugButton.addEventListener("click", handleNewDrug);
+    elements.lookupResults.addEventListener("click", handleLookupClick);
+    elements.formSections.addEventListener("click", handleFormClick);
+    elements.drugForm.addEventListener("submit", handleSave);
+
+    setStatus("Loading spreadsheet data…", "info");
+
+    google.script.run
+      .withSuccessHandler(handleBootstrapSuccess)
+      .withFailureHandler(handleServerError)
+      .bootstrapAdminApp();
+  }
+
+  function handleBootstrapSuccess(payload) {
+    state.defaultSourceId = payload.defaultSourceId || "";
+    state.lookups = payload.lookups || [];
+    state.mode = "create";
+    state.noteKinds = payload.noteKinds || state.noteKinds;
+    state.originalId = "";
+    state.sources = payload.sources || [];
+    state.testKinds = payload.testKinds || state.testKinds;
+    state.form = emptyDrug(state.defaultSourceId);
+
+    setStatus(
+      "Connected to " + payload.spreadsheetName + ". Save updates the sheet only.",
+      "success"
+    );
+    renderLookupResults();
+    renderForm();
+  }
+
+  function handleServerError(error) {
+    const message =
+      error && error.message ? error.message : "The admin app could not complete the request.";
+    setStatus(message, "error");
+  }
+
+  function handleLookupInput(event) {
+    state.query = event.target.value;
+    renderLookupResults();
+  }
+
+  function handleNewDrug() {
+    syncFormFromDom();
+    state.mode = "create";
+    state.originalId = "";
+    state.form = emptyDrug(state.defaultSourceId);
+    setStatus("Create mode ready.", "info");
+    renderForm();
+    elements.lookupQuery.focus();
+  }
+
+  function handleLookupClick(event) {
+    const button = event.target.closest("[data-load-drug]");
+
+    if (!button) {
+      return;
+    }
+
+    syncFormFromDom();
+    const drugId = button.getAttribute("data-load-drug");
+    setStatus("Loading " + drugId + "…", "info");
+
+    google.script.run
+      .withSuccessHandler(function (payload) {
+        state.mode = payload.mode;
+        state.originalId = payload.originalId;
+        state.form = payload.drug;
+        setStatus("Loaded " + payload.originalId + ".", "success");
+        renderLookupResults();
+        renderForm();
+      })
+      .withFailureHandler(handleServerError)
+      .loadDrugForAdmin(drugId);
+  }
+
+  function handleFormClick(event) {
+    const action = event.target.getAttribute("data-action");
+
+    if (!action) {
+      return;
+    }
+
+    syncFormFromDom();
+
+    if (action === "add-alias") {
+      state.form.aliases.push("");
+      renderForm();
+      return;
+    }
+
+    if (action === "remove-alias") {
+      const index = Number(event.target.getAttribute("data-index"));
+      state.form.aliases.splice(index, 1);
+
+      if (!state.form.aliases.length) {
+        state.form.aliases.push("");
+      }
+
+      renderForm();
+      return;
+    }
+
+    if (action === "add-note") {
+      const testKind = event.target.getAttribute("data-test-kind");
+      state.form.tests[testKind].notes.push({
+        kind: "info",
+        value: { en: "", fr: "" },
+      });
+      renderForm();
+      return;
+    }
+
+    if (action === "remove-note") {
+      const testKind = event.target.getAttribute("data-test-kind");
+      const index = Number(event.target.getAttribute("data-index"));
+      state.form.tests[testKind].notes.splice(index, 1);
+      renderForm();
+    }
+  }
+
+  function handleSave(event) {
+    event.preventDefault();
+    syncFormFromDom();
+    elements.saveButton.disabled = true;
+    setStatus("Saving to Google Sheets…", "info");
+
+    google.script.run
+      .withSuccessHandler(function (payload) {
+        state.lookups = payload.lookups || state.lookups;
+        state.mode = payload.record.mode;
+        state.originalId = payload.record.originalId;
+        state.form = payload.record.drug;
+        elements.saveButton.disabled = false;
+        setStatus(payload.message, "success");
+        renderLookupResults();
+        renderForm();
+      })
+      .withFailureHandler(function (error) {
+        elements.saveButton.disabled = false;
+        handleServerError(error);
+      })
+      .saveDrugFromAdmin({
+        originalId: state.originalId,
+        drug: state.form,
+      });
+  }
+
+  function syncFormFromDom() {
+    if (!state.form || !document.getElementById("drug-id")) {
+      return;
+    }
+
+    const nextForm = emptyDrug(state.defaultSourceId);
+    nextForm.id = readValue("drug-id");
+    nextForm.name.fr = readValue("name-fr");
+    nextForm.name.en = readValue("name-en");
+    nextForm.className.fr = readValue("class-fr");
+    nextForm.className.en = readValue("class-en");
+
+    nextForm.aliases = Array.from(document.querySelectorAll("[data-alias-row]")).map(function (row) {
+      return row.querySelector("input").value;
+    });
+
+    state.testKinds.forEach(function (testKind) {
+      nextForm.tests[testKind] = {
+        concentration: readValue("test-" + testKind + "-concentration"),
+        maxConcentration: readValue("test-" + testKind + "-max"),
+        dilutions: readValue("test-" + testKind + "-dilutions"),
+        vehicle: {
+          fr: readValue("test-" + testKind + "-vehicle-fr"),
+          en: readValue("test-" + testKind + "-vehicle-en"),
+        },
+        sourceId: readValue("test-" + testKind + "-source"),
+        alternateSourceId: readValue("test-" + testKind + "-alternate-source"),
+        notes: Array.from(
+          document.querySelectorAll('[data-note-kind-row="' + testKind + '"]')
+        ).map(function (row) {
+          return {
+            kind: row.querySelector('[data-note-field="kind"]').value,
+            value: {
+              fr: row.querySelector('[data-note-field="fr"]').value,
+              en: row.querySelector('[data-note-field="en"]').value,
+            },
+          };
+        }),
+      };
+    });
+
+    state.form = nextForm;
+  }
+
+  function renderLookupResults() {
+    const normalizedQuery = normalize(state.query);
+    const items = filteredLookups(normalizedQuery);
+
+    elements.lookupMeta.textContent =
+      items.length + " result" + (items.length === 1 ? "" : "s") + " in the local lookup index";
+
+    if (!items.length) {
+      elements.lookupResults.innerHTML =
+        '<div class="emptyState">No drug matched that id or localized name.</div>';
+      return;
+    }
+
+    elements.lookupResults.innerHTML = items
+      .map(function (item) {
+        const selected =
+          state.mode === "edit" && (state.form && state.form.id === item.id ? " isSelected" : "");
+
+        return (
+          '<button type="button" class="lookupItem' +
+          selected +
+          '" data-load-drug="' +
+          escapeHtml(item.id) +
+          '">' +
+          '<div class="lookupItemTitle">' +
+          "<span>" +
+          escapeHtml(item.name.fr || item.name.en || item.id) +
+          "</span>" +
+          '<span class="pill">' +
+          escapeHtml(item.id) +
+          "</span>" +
+          "</div>" +
+          '<div class="lookupItemMeta">' +
+          escapeHtml(item.name.en || "") +
+          (item.className.fr ? " · " + escapeHtml(item.className.fr) : "") +
+          "</div>" +
+          "</button>"
+        );
+      })
+      .join("");
+  }
+
+  function renderForm() {
+    if (!state.form) {
+      return;
+    }
+
+    elements.modeTitle.textContent =
+      state.mode === "edit" ? "Edit " + state.originalId : "Create a new drug";
+
+    elements.formSections.innerHTML =
+      renderCoreSection() + renderAliasesSection() + renderTestsSection();
+  }
+
+  function renderCoreSection() {
+    return (
+      '<section class="sectionCard">' +
+      '<div class="sectionHead">' +
+      "<div>" +
+      "<h3>Core drug info</h3>" +
+      '<p class="sectionIntro">French remains the primary authoring path, but both languages are saved together.</p>' +
+      "</div>" +
+      '<span class="pill">' +
+      escapeHtml(state.mode === "edit" ? "Edit mode" : "Create mode") +
+      "</span>" +
+      "</div>" +
+      '<div class="grid2">' +
+      field("Drug id", "drug-id", state.form.id, "text") +
+      field(
+        "French name",
+        "name-fr",
+        state.form.name.fr,
+        "text"
+      ) +
+      field("English name", "name-en", state.form.name.en, "text") +
+      field("French class", "class-fr", state.form.className.fr, "text") +
+      field("English class", "class-en", state.form.className.en, "text") +
+      "</div>" +
+      "</section>"
+    );
+  }
+
+  function renderAliasesSection() {
+    return (
+      '<section class="sectionCard">' +
+      '<div class="sectionHead">' +
+      "<div>" +
+      "<h3>Aliases</h3>" +
+      '<p class="sectionIntro">One row per alias will be written to the <code>aliases</code> tab.</p>' +
+      "</div>" +
+      '<button type="button" class="ghostButton" data-action="add-alias">Add alias</button>' +
+      "</div>" +
+      '<div class="aliasList">' +
+      state.form.aliases
+        .map(function (alias, index) {
+          return (
+            '<div class="aliasRow" data-alias-row>' +
+            field("Alias " + (index + 1), "alias-" + index, alias, "text") +
+            '<button type="button" class="dangerButton" data-action="remove-alias" data-index="' +
+            index +
+            '">Remove</button>' +
+            "</div>"
+          );
+        })
+        .join("") +
+      "</div>" +
+      "</section>"
+    );
+  }
+
+  function renderTestsSection() {
+    return (
+      '<section class="sectionCard">' +
+      '<div class="sectionHead">' +
+      "<div>" +
+      "<h3>Test sections</h3>" +
+      '<p class="sectionIntro">Phase 4 mirrors the current export contract and persists all three test rows.</p>' +
+      "</div>" +
+      "</div>" +
+      '<div class="testGrid">' +
+      state.testKinds
+        .map(function (testKind) {
+          return renderTestCard(testKind, state.form.tests[testKind]);
+        })
+        .join("") +
+      "</div>" +
+      "</section>"
+    );
+  }
+
+  function renderTestCard(testKind, test) {
+    return (
+      '<article class="testCard">' +
+      '<div class="testTitleRow">' +
+      "<h3>" +
+      escapeHtml(testKind.toUpperCase()) +
+      "</h3>" +
+      '<button type="button" class="ghostButton" data-action="add-note" data-test-kind="' +
+      escapeHtml(testKind) +
+      '">Add note</button>' +
+      "</div>" +
+      '<div class="grid3">' +
+      field("Preferred source", "test-" + testKind + "-source", sourceOptions(test.sourceId), "select") +
+      field(
+        "Alternate source",
+        "test-" + testKind + "-alternate-source",
+        sourceOptions(test.alternateSourceId, true),
+        "select"
+      ) +
+      field("Dilutions", "test-" + testKind + "-dilutions", test.dilutions, "text", "Use semicolons, for example 1:10; 1:100") +
+      field("Concentration", "test-" + testKind + "-concentration", test.concentration, "text") +
+      field("Max concentration", "test-" + testKind + "-max", test.maxConcentration, "text") +
+      field("Vehicle (FR)", "test-" + testKind + "-vehicle-fr", test.vehicle.fr, "text") +
+      field("Vehicle (EN)", "test-" + testKind + "-vehicle-en", test.vehicle.en, "text") +
+      "</div>" +
+      renderNotes(testKind, test.notes) +
+      "</article>"
+    );
+  }
+
+  function renderNotes(testKind, notes) {
+    if (!notes.length) {
+      return '<div class="emptyState">No notes yet for ' + escapeHtml(testKind) + ".</div>";
+    }
+
+    return (
+      '<div class="noteList">' +
+      notes
+        .map(function (note, index) {
+          return (
+            '<div class="noteRow" data-note-kind-row="' +
+            escapeHtml(testKind) +
+            '">' +
+            '<div class="grid3">' +
+            field(
+              "Note type",
+              "test-" + testKind + "-note-kind-" + index,
+              noteKindOptions(note.kind),
+              "select",
+              "",
+              'data-note-field="kind"'
+            ) +
+            field(
+              "French note",
+              "test-" + testKind + "-note-fr-" + index,
+              note.value.fr,
+              "textarea",
+              "",
+              'data-note-field="fr"'
+            ) +
+            field(
+              "English note",
+              "test-" + testKind + "-note-en-" + index,
+              note.value.en,
+              "textarea",
+              "",
+              'data-note-field="en"'
+            ) +
+            "</div>" +
+            '<div class="cardActions">' +
+            '<button type="button" class="dangerButton" data-action="remove-note" data-test-kind="' +
+            escapeHtml(testKind) +
+            '" data-index="' +
+            index +
+            '">Remove note</button>' +
+            "</div>" +
+            "</div>"
+          );
+        })
+        .join("") +
+      "</div>"
+    );
+  }
+
+  function field(label, id, value, kind, hint, extraAttributes) {
+    const attributes = extraAttributes ? " " + extraAttributes : "";
+    const hintMarkup = hint ? '<div class="fieldHint">' + escapeHtml(hint) + "</div>" : "";
+
+    if (kind === "select") {
+      return (
+        '<div class="fieldBlock">' +
+        '<label class="fieldLabel" for="' +
+        escapeHtml(id) +
+        '">' +
+        escapeHtml(label) +
+        "</label>" +
+        '<select id="' +
+        escapeHtml(id) +
+        '" class="selectField"' +
+        attributes +
+        ">" +
+        value +
+        "</select>" +
+        hintMarkup +
+        "</div>"
+      );
+    }
+
+    if (kind === "textarea") {
+      return (
+        '<div class="fieldBlock">' +
+        '<label class="fieldLabel" for="' +
+        escapeHtml(id) +
+        '">' +
+        escapeHtml(label) +
+        "</label>" +
+        '<textarea id="' +
+        escapeHtml(id) +
+        '" class="textArea"' +
+        attributes +
+        ">" +
+        escapeHtml(value || "") +
+        "</textarea>" +
+        hintMarkup +
+        "</div>"
+      );
+    }
+
+    return (
+      '<div class="fieldBlock">' +
+      '<label class="fieldLabel" for="' +
+      escapeHtml(id) +
+      '">' +
+      escapeHtml(label) +
+      "</label>" +
+      '<input id="' +
+      escapeHtml(id) +
+      '" class="textField" type="' +
+      escapeHtml(kind || "text") +
+      '" value="' +
+      escapeHtml(value || "") +
+      '"' +
+      attributes +
+      " />" +
+      hintMarkup +
+      "</div>"
+    );
+  }
+
+  function sourceOptions(selectedId, includeBlank) {
+    const options = [];
+
+    if (includeBlank) {
+      options.push('<option value="">None</option>');
+    }
+
+    state.sources.forEach(function (source) {
+      const selected = source.id === selectedId ? ' selected="selected"' : "";
+      const label =
+        source.id +
+        " · " +
+        (source.label || source.documentName.fr || source.documentName.en || source.organization);
+      options.push(
+        '<option value="' +
+          escapeHtml(source.id) +
+          '"' +
+          selected +
+          ">" +
+          escapeHtml(label) +
+          "</option>"
+      );
+    });
+
+    return options.join("");
+  }
+
+  function noteKindOptions(selectedValue) {
+    return state.noteKinds
+      .map(function (kind) {
+        const selected = kind === selectedValue ? ' selected="selected"' : "";
+        return (
+          '<option value="' +
+          escapeHtml(kind) +
+          '"' +
+          selected +
+          ">" +
+          escapeHtml(kind) +
+          "</option>"
+        );
+      })
+      .join("");
+  }
+
+  function filteredLookups(normalizedQuery) {
+    const items = state.lookups.slice();
+
+    if (!normalizedQuery) {
+      return items.slice(0, 30);
+    }
+
+    return items
+      .map(function (item) {
+        return {
+          item: item,
+          score: scoreLookup(item, normalizedQuery),
+        };
+      })
+      .filter(function (entry) {
+        return entry.score > 0;
+      })
+      .sort(function (left, right) {
+        if (right.score !== left.score) {
+          return right.score - left.score;
+        }
+
+        return (left.item.name.fr || left.item.id).localeCompare(right.item.name.fr || right.item.id);
+      })
+      .slice(0, 30)
+      .map(function (entry) {
+        return entry.item;
+      });
+  }
+
+  function scoreLookup(item, normalizedQuery) {
+    const names = [
+      { value: normalize(item.id), score: 180 },
+      { value: normalize(item.name.fr), score: 170 },
+      { value: normalize(item.name.en), score: 160 },
+      { value: normalize(item.className.fr), score: 90 },
+      { value: normalize(item.className.en), score: 80 },
+    ];
+
+    let best = 0;
+
+    names.forEach(function (candidate) {
+      if (!candidate.value) {
+        return;
+      }
+
+      if (candidate.value === normalizedQuery) {
+        best = Math.max(best, 300 + candidate.score);
+        return;
+      }
+
+      if (candidate.value.indexOf(normalizedQuery) === 0) {
+        best = Math.max(best, 200 + candidate.score);
+        return;
+      }
+
+      if (candidate.value.indexOf(normalizedQuery) >= 0) {
+        best = Math.max(best, 100 + candidate.score);
+      }
+    });
+
+    return best;
+  }
+
+  function emptyDrug(defaultSourceId) {
+    const tests = {};
+
+    state.testKinds.forEach(function (testKind) {
+      tests[testKind] = {
+        concentration: "",
+        maxConcentration: "",
+        dilutions: "",
+        vehicle: { en: "", fr: "" },
+        sourceId: defaultSourceId || "",
+        alternateSourceId: "",
+        notes: [],
+      };
+    });
+
+    return {
+      id: "",
+      name: { en: "", fr: "" },
+      className: { en: "", fr: "" },
+      aliases: [""],
+      tests: tests,
+    };
+  }
+
+  function readValue(id) {
+    const input = document.getElementById(id);
+    return input ? input.value : "";
+  }
+
+  function setStatus(message, kind) {
+    elements.statusBanner.textContent = message || "";
+    elements.statusBanner.className = "statusBanner";
+
+    if (!message) {
+      elements.statusBanner.classList.add("isHidden");
+      return;
+    }
+
+    if (kind === "success") {
+      elements.statusBanner.classList.add("isSuccess");
+    } else if (kind === "error") {
+      elements.statusBanner.classList.add("isError");
+    }
+  }
+
+  function normalize(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+})();
