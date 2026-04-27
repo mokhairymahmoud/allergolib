@@ -345,11 +345,6 @@ function SearchScreen({
 
   return (
     <ScrollView style={styles.scrollView} contentContainerStyle={styles.screenContent} keyboardShouldPersistTaps="handled">
-      <View style={styles.searchHeader}>
-        <Text style={styles.screenTitle}>{copy(language, "search.heroTitle")}</Text>
-        <Text style={styles.screenSubtitle}>{copy(language, "search.heroBody")}</Text>
-      </View>
-
       {/* Recent searches — shown above the input when there are recents and no active query */}
       {!hasQuery && recentDrugs.length > 0 ? (
         <View style={styles.recentSection}>
