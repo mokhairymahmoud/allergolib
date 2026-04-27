@@ -1,4 +1,4 @@
-# Plan: PeriopSkinTest MVP
+# Plan: AllergoLib MVP
 
 > Source PRD: [prd-mvp.md](./prd-mvp.md) plus the locked source document `2025 SFAR/SFA Diagnostic et prise en charge des réactions d’hypersensibilité immédiate périopératoires`
 

@@ -1533,7 +1533,17 @@ function SearchScreen({
   const hasQuery = trimmedQuery.length > 0;
 
   // Derive sorted unique class names from the full drug list
-  const drugClasses = [...new Set(allDrugs.map((d) => d.className[language]))].sort();
+  const drugClasses = [...new Set(allDrugs.map((d) => d.className[language]))]
+    .sort()
+    .sort((a, b) => {
+      const miscEn = "Miscellaneous";
+      const miscFr = "Divers";
+      const aIsMisc = a === miscEn || a === miscFr;
+      const bIsMisc = b === miscEn || b === miscFr;
+      if (aIsMisc && !bIsMisc) return 1;
+      if (!aIsMisc && bIsMisc) return -1;
+      return 0;
+    });
 
   // Derive sorted unique subclass names for the active class (empty when no subclasses exist)
   const activeClassDrugs = activeClass

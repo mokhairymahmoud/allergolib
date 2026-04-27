@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**PeriopSkinTest** (package slug: `allergolib`) is an offline-first React Native / Expo cross-platform app (iOS, Android, Web) for allergologists to look up validated skin test concentrations for perioperative drugs. The app supports English and French.
+**AllergoLib** (package slug: `allergolib`) is an offline-first React Native / Expo cross-platform app (iOS, Android, Web) for allergologists to look up validated skin test concentrations for perioperative drugs. The app supports English and French.
 
 ## Commands
 

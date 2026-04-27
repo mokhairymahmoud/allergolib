@@ -2,9 +2,12 @@ drug_id	test_kind	note_kind	note_en	note_fr
 etomidate	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
 etomidate	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
 ketamine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+ketamine	prick	warning	EAACI 2019 recommends a higher SPT concentration of 100 mg/ml; SFAR/SFA 2025 (10 mg/ml) is used here as the more recent guideline.	L'EAACI 2019 recommande une concentration de prick plus elevee de 100 mg/ml ; la SFAR/SFA 2025 (10 mg/ml) est utilisee ici comme recommandation plus recente.
 ketamine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
 midazolam	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+midazolam	prick	warning	EAACI 2019 recommends higher concentrations (SPT 5 mg/ml, IDT 0.05 mg/ml); SFAR/SFA 2025 (SPT 1 mg/ml, IDT 0.01 mg/ml) is used here as the more recent guideline.	L'EAACI 2019 recommande des concentrations plus elevees (prick 5 mg/ml, IDR 0,05 mg/ml) ; la SFAR/SFA 2025 (prick 1 mg/ml, IDR 0,01 mg/ml) est utilisee ici comme recommandation plus recente.
 midazolam	idr	warning	Possibly irritant at the maximum concentration (Annex 4).	Possiblement irritant a la concentration maximale (annexe 4).
+midazolam	idr	warning	EAACI 2019 recommends higher concentrations (SPT 5 mg/ml, IDT 0.05 mg/ml); SFAR/SFA 2025 (SPT 1 mg/ml, IDT 0.01 mg/ml) is used here as the more recent guideline.	L'EAACI 2019 recommande des concentrations plus elevees (prick 5 mg/ml, IDR 0,05 mg/ml) ; la SFAR/SFA 2025 (prick 1 mg/ml, IDR 0,01 mg/ml) est utilisee ici comme recommandation plus recente.
 propofol	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
 propofol	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
 thiopenthal	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
@@ -46,7 +49,9 @@ paracetamol	idr	info	Same validated maximum concentration for prick and IDR (Ann
 bleu-patente-v	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
 bleu-patente-v	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
 bleu-de-methylene	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+bleu-de-methylene	prick	warning	EAACI 2019 recommends higher concentrations (SPT 10 mg/ml, IDT 0.1 mg/ml); SFAR/SFA 2025 (SPT 5 mg/ml, IDT 0.05 mg/ml) is used here as the more recent guideline.	L'EAACI 2019 recommande des concentrations plus elevees (prick 10 mg/ml, IDR 0,1 mg/ml) ; la SFAR/SFA 2025 (prick 5 mg/ml, IDR 0,05 mg/ml) est utilisee ici comme recommandation plus recente.
 bleu-de-methylene	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+bleu-de-methylene	idr	warning	EAACI 2019 recommends higher concentrations (SPT 10 mg/ml, IDT 0.1 mg/ml); SFAR/SFA 2025 (SPT 5 mg/ml, IDT 0.05 mg/ml) is used here as the more recent guideline.	L'EAACI 2019 recommande des concentrations plus elevees (prick 10 mg/ml, IDR 0,1 mg/ml) ; la SFAR/SFA 2025 (prick 5 mg/ml, IDR 0,05 mg/ml) est utilisee ici comme recommandation plus recente.
 fluorescein	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
 fluorescein	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
 lidocaine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
@@ -90,6 +95,7 @@ aztreonam	idr	info	Same validated maximum concentration for prick and IDR (Annex
 atropine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
 atropine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
 chlorhexidine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+chlorhexidine	prick	warning	EAACI 2019 recommends a higher SPT concentration of 5 mg/ml; SFAR/SFA 2025 (2 mg/ml) is used here as the more recent guideline.	L'EAACI 2019 recommande une concentration de prick plus elevee de 5 mg/ml ; la SFAR/SFA 2025 (2 mg/ml) est utilisee ici comme recommandation plus recente.
 chlorhexidine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
 ondansetron	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
 ondansetron	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
@@ -97,10 +103,40 @@ ondansetron	idr	warning	Possibly irritant at the maximum concentration (Annex 4)
 protamine	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
 protamine	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
 sugammadex	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
+sugammadex	prick	warning	EAACI 2019 recommends higher concentrations (SPT 100 mg/ml, IDT 10 mg/ml); SFAR/SFA 2025 (SPT 10 mg/ml, IDT 1 mg/ml) is used here as the more recent guideline.	L'EAACI 2019 recommande des concentrations plus elevees (prick 100 mg/ml, IDR 10 mg/ml) ; la SFAR/SFA 2025 (prick 10 mg/ml, IDR 1 mg/ml) est utilisee ici comme recommandation plus recente.
 sugammadex	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+sugammadex	idr	warning	EAACI 2019 recommends higher concentrations (SPT 100 mg/ml, IDT 10 mg/ml); SFAR/SFA 2025 (SPT 10 mg/ml, IDT 1 mg/ml) is used here as the more recent guideline.	L'EAACI 2019 recommande des concentrations plus elevees (prick 100 mg/ml, IDR 10 mg/ml) ; la SFAR/SFA 2025 (prick 10 mg/ml, IDR 1 mg/ml) est utilisee ici comme recommandation plus recente.
 dexamethasone	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
 dexamethasone	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
 gelatin	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
 gelatin	idr	info	Same validated maximum concentration for prick and IDR (Annex 4).	Meme concentration maximale validee pour le prick et l'IDR (annexe 4).
 vancomycin	prick	info	Validated maximum prick concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale de prick validee dans l'annexe 4 SFAR/SFA 2025.
 vancomycin	idr	info	Validated maximum intradermal concentration from SFAR/SFA 2025 Annex 4.	Concentration maximale d'IDR validee dans l'annexe 4 SFAR/SFA 2025.
+vecuronium	prick	info	Recommended maximum non-irritative prick concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019.
+vecuronium	idr	info	Recommended maximum non-irritative intradermal concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019.
+pancuronium	prick	info	Recommended maximum non-irritative prick concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019.
+pancuronium	idr	info	Recommended maximum non-irritative intradermal concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019.
+s-ketamine	prick	info	Recommended maximum non-irritative prick concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019.
+s-ketamine	idr	info	Recommended maximum non-irritative intradermal concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019.
+articaine	prick	info	Recommended maximum non-irritative prick concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019.
+articaine	idr	info	Recommended maximum non-irritative intradermal concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019.
+prilocaine	prick	info	Recommended maximum non-irritative prick concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019.
+prilocaine	idr	info	Recommended maximum non-irritative intradermal concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019.
+levobupivacaine	prick	info	Recommended maximum non-irritative prick concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019.
+levobupivacaine	idr	info	Recommended maximum non-irritative intradermal concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019.
+chloroprocaine	prick	info	Recommended maximum non-irritative prick concentration from EAACI 2019 Table 4. Ester-derivative local anaesthetic.	Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019. Anesthesique local derive ester.
+chloroprocaine	idr	info	Recommended maximum non-irritative intradermal concentration from EAACI 2019 Table 4. Ester-derivative local anaesthetic.	Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019. Anesthesique local derive ester.
+povidone-iodine	prick	info	Recommended maximum non-irritative prick concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019.
+povidone-iodine	prick	warning	Intradermal testing is not recommended for povidone iodine (EAACI 2019 Table 4).	L'intradermo-reaction n'est pas recommandee pour l'iode povidone (tableau 4 EAACI 2019).
+dextran	prick	warning	Skin testing is not recommended for dextran. Reactions are IgG-mediated, not IgE-mediated (EAACI 2019 Table 4).	Les tests cutanes ne sont pas recommandes pour le dextran. Les reactions sont mediees par les IgG et non par les IgE (tableau 4 EAACI 2019).
+hydroxyethyl-starch	prick	info	Recommended maximum non-irritative prick concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour le prick-test selon le tableau 4 EAACI 2019.
+hydroxyethyl-starch	idr	info	Recommended maximum non-irritative intradermal concentration from EAACI 2019 Table 4.	Concentration maximale non-irritante recommandee pour l'IDR selon le tableau 4 EAACI 2019.
+peg-macrogol-300	prick	info	Recommended prick test concentration (undiluted) from EAACI 2019 Table 4.	Concentration recommandee pour le prick-test (non diluee) selon le tableau 4 EAACI 2019.
+peg-macrogol-300	prick	warning	High risk of systemic reactions on intradermal testing (EAACI 2019 Table 4). IDT not recommended.	Risque eleve de reactions systemiques a l'IDR (tableau 4 EAACI 2019). IDR non recommandee.
+peg-macrogol-3000	prick	info	Recommended prick test concentration (50% w/v) from EAACI 2019 Table 4.	Concentration recommandee pour le prick-test (50% m/v) selon le tableau 4 EAACI 2019.
+peg-macrogol-3000	prick	warning	High risk of systemic reactions on intradermal testing (EAACI 2019 Table 4). IDT not recommended.	Risque eleve de reactions systemiques a l'IDR (tableau 4 EAACI 2019). IDR non recommandee.
+peg-macrogol-6000	prick	info	Recommended prick test concentration (50% w/v) from EAACI 2019 Table 4.	Concentration recommandee pour le prick-test (50% m/v) selon le tableau 4 EAACI 2019.
+peg-macrogol-6000	prick	warning	High risk of systemic reactions on intradermal testing (EAACI 2019 Table 4). IDT not recommended.	Risque eleve de reactions systemiques a l'IDR (tableau 4 EAACI 2019). IDR non recommandee.
+polysorbate-80	prick	info	Recommended prick test concentration (20% w/v) from EAACI 2019 Table 4.	Concentration recommandee pour le prick-test (20% m/v) selon le tableau 4 EAACI 2019.
+poloxamer-407	prick	info	Recommended prick test concentration (10% w/v) from EAACI 2019 Table 4.	Concentration recommandee pour le prick-test (10% m/v) selon le tableau 4 EAACI 2019.
+carboxymethyl-cellulose	prick	info	Recommended prick test concentration (1% w/v) from EAACI 2019 Table 4.	Concentration recommandee pour le prick-test (1% m/v) selon le tableau 4 EAACI 2019.

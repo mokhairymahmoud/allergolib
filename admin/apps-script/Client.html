@@ -193,8 +193,47 @@
       target.matches("[data-source-select]")
     ) {
       syncFormFromDom();
+
+      if (target.matches('[data-source-select="alternate"]')) {
+        const testKind = target.id.replace("test-", "").replace("-alternate-source", "");
+        maybeInjectDiscrepancyNote(testKind);
+      }
+
       renderForm();
     }
+  }
+
+  function maybeInjectDiscrepancyNote(testKind) {
+    const test = state.form.tests[testKind];
+    const MARKER = "<!-- discrepancy-auto -->";
+
+    // Remove any previously auto-injected discrepancy note.
+    test.notes = test.notes.filter(function (note) {
+      return note.value.en.indexOf(MARKER) === -1;
+    });
+
+    if (!test.alternateSourceId) {
+      return;
+    }
+
+    const allSources = combinedSources();
+
+    function labelFor(id) {
+      const src = allSources.find(function (s) { return s.id === id; });
+      return src ? (src.label || src.id) : id;
+    }
+
+    const preferredLabel = labelFor(test.sourceId);
+    const alternateLabel = labelFor(test.alternateSourceId);
+    const conc = test.concentration || "?";
+
+    test.notes.push({
+      kind: "warning",
+      value: {
+        en: MARKER + "Concentration discrepancy between sources: " + preferredLabel + " recommends " + conc + " (used here as the preferred guideline); verify against " + alternateLabel + " and update this note with the alternate concentration if they differ.",
+        fr: MARKER + "Discordance de concentration entre les sources : " + preferredLabel + " recommande " + conc + " (utilise ici comme recommandation principale) ; verifier par rapport a " + alternateLabel + " et mettre a jour cette note avec la concentration alternative si elles different.",
+      },
+    });
   }
 
   function handleSave(event) {
@@ -619,7 +658,7 @@
         "test-" + testKind + "-alternate-source",
         sourceOptions(test.alternateSourceId, true),
         "select",
-        "",
+        "If concentrations differ between sources, a discrepancy warning note will be added automatically below.",
         'data-source-select="alternate"'
       ) +
       field(
@@ -1291,11 +1330,12 @@
               sourceId: form.tests[testKind].sourceId,
               alternateSourceId: form.tests[testKind].alternateSourceId,
               notes: form.tests[testKind].notes.map(function (note) {
+                const MARKER = "<!-- discrepancy-auto -->";
                 return {
                   kind: note.kind,
                   value: {
-                    fr: note.value.fr,
-                    en: note.value.en,
+                    fr: note.value.fr.replace(MARKER, "").trim(),
+                    en: note.value.en.replace(MARKER, "").trim(),
                   },
                 };
               }),

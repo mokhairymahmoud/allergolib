@@ -4,7 +4,7 @@ Great—let’s turn this into a clear, build-ready PRD that a coding agent (or 
 
 📄 Product Requirements Document (PRD)
 
-Product name (working): PeriopSkinTest
+Product name (working): AllergoLib
 Version: MVP v1
 Target users: Allergologists (perioperative drug allergy)
 

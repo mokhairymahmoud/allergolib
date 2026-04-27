@@ -7,7 +7,7 @@ export const dictionary = {
     "compliance.body":
       "Use this app as a clinical reference alongside local protocols and specialist judgment. It does not replace formal diagnosis, treatment decisions, or emergency management.",
     "home.eyebrow": "Offline Clinical Reference",
-    "home.title": "PeriopSkinTest",
+    "home.title": "AllergoLib",
     "home.heroTitle": "Validated concentrations, instantly available",
     "home.heroBody":
       "This offline bundle is generated from structured curator tabs and seeded from the SFAR/SFA 2025 appendix for fast perioperative skin-test lookup.",
@@ -101,7 +101,7 @@ export const dictionary = {
     "compliance.body":
       "Utilisez cette application comme reference clinique avec vos protocoles locaux et le jugement d'un specialiste. Elle ne remplace ni le diagnostic formel, ni les decisions therapeutiques, ni la prise en charge d'urgence.",
     "home.eyebrow": "Reference clinique hors ligne",
-    "home.title": "PeriopSkinTest",
+    "home.title": "AllergoLib",
     "home.heroTitle": "Concentrations validees, accessibles tout de suite",
     "home.heroBody":
       "Ce bundle hors ligne est genere a partir d'onglets de curation structures et initialise depuis l'annexe 4 SFAR/SFA 2025 pour une consultation rapide des tests cutanes perioperatoires.",
