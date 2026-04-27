@@ -2,6 +2,9 @@
 
 This folder contains the Google Apps Script web app for admin curation.
 
+For day-to-day maintenance and recovery guidance, use
+[OPERATIONS.md](/Users/mohamedkhairy/dev/allergolib/admin/apps-script/OPERATIONS.md:1).
+
 ## What it supports
 
 - desktop-first web app shell
@@ -72,3 +75,5 @@ Internally this wrapper maps the local `open` alias to the upstream `clasp open-
 - `alternate_source_id` and `note_kind` are supported when those columns exist.
 - Delete does not remove rows from `sources`; it only removes the drug row and linked `aliases`,
   `test_entries`, and `notes` rows.
+- Phase 6 verification now includes `npm run verify:admin-fixture`, which proves the exporter still
+  accepts a representative admin-written row shape with selective applicable tests.

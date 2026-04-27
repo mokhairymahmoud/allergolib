@@ -5,6 +5,10 @@ This checklist closes the loop between curator release work and clinician beta u
 ## Exit Criteria
 
 - The home screen shows the "Informational use only" disclaimer.
+- The search-first landing screen opens on the `Search` tab with the language switcher visible.
+- Recent searches appear when the search field is empty after at least one successful lookup.
+- Favorites remain isolated in the `Favorites` tab and reopen saved drugs correctly.
+- The `Info` tab loads without interfering with search and detail flows.
 - Every drug detail screen shows the same disclaimer before test data.
 - Every seeded test with displayed content resolves to a preferred source with localized document name and excerpt.
 - The bundled dataset loads with network disabled.
@@ -16,15 +20,15 @@ This checklist closes the loop between curator release work and clinician beta u
 Run these checks on at least one iOS beta device and one Android beta device before widening access.
 
 1. Fresh install, airplane mode on:
-   Confirm the home screen loads, search works, and at least one drug detail opens with source provenance.
+   Confirm the home screen loads on `Search`, search works, recent searches appear after one lookup, and at least one drug detail opens with source provenance.
 2. Existing install with cached dataset, airplane mode on:
-   Confirm the last active dataset still loads and favorites remain intact.
+   Confirm the last active dataset still loads, favorites remain intact, and saved drugs still open from the `Favorites` tab.
 3. Existing install with network on and newer remote manifest available:
-   Launch the app, wait for background sync, relaunch, and confirm the new manifest version appears on the home screen.
+   Launch the app, wait for background sync, relaunch, and confirm the new manifest version appears on the home screen without breaking search ranking or detail navigation.
 4. Existing install with network on and intentionally broken remote dataset:
    Use a checksum mismatch or schema-invalid payload and confirm the app keeps the prior active dataset.
 5. English and French spot check:
-   Open the home screen plus two drug detail screens in both languages and verify disclaimer, source excerpt, and note copy render correctly.
+   Open the home screen, `Favorites`, `Info`, plus two drug detail screens in both languages and verify disclaimer, source excerpt, note copy, and tab labels render correctly.
 
 ## Release Operator Steps
 
