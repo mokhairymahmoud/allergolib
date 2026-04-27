@@ -11,9 +11,9 @@
         <div class="lookupHeader">
           <p class="eyebrow">Allergolib</p>
           <h1>Admin curation</h1>
-          <p class="lookupBody">
-            Create or update a drug record in the normalized Google Sheet tabs. Saving here does
-            not publish a dataset.
+          <p id="lookupBody" class="lookupBody">
+            Create or update a drug record in the normalized Google Sheet tabs. Saving here updates
+            the sheet, and any GitHub workflow dispatch depends on Apps Script configuration.
           </p>
         </div>
 
@@ -40,9 +40,10 @@
         <form id="drugForm">
           <div id="formSections"></div>
           <div class="actionBar">
-            <div class="actionNote">
+            <div id="actionNote" class="actionNote">
               Save writes directly to `drugs`, `aliases`, `test_entries`, `notes`, and any new
-              inline `sources`.
+              inline `sources`. Any GitHub workflow dispatch happens only after a successful sheet
+              write.
             </div>
             <button id="saveButton" class="primaryButton" type="submit">Save to sheet</button>
           </div>

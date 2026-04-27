@@ -19,7 +19,9 @@
   document.addEventListener("DOMContentLoaded", init);
 
   function init() {
+    elements.actionNote = document.getElementById("actionNote");
     elements.lookupQuery = document.getElementById("lookupQuery");
+    elements.lookupBody = document.getElementById("lookupBody");
     elements.lookupResults = document.getElementById("lookupResults");
     elements.lookupMeta = document.getElementById("lookupMeta");
     elements.formSections = document.getElementById("formSections");
@@ -57,10 +59,8 @@
     state.validation = emptyValidation();
     state.deleteConfirmation = "";
 
-    setStatus(
-      "Connected to " + payload.spreadsheetName + ". Save updates the sheet only.",
-      "success"
-    );
+    applyUiText(payload.uiText);
+    setStatus(payload.connectedStatus, "success");
     renderLookupResults();
     renderForm();
   }
@@ -1491,6 +1491,16 @@
       elements.statusBanner.classList.add("isSuccess");
     } else if (kind === "error") {
       elements.statusBanner.classList.add("isError");
+    }
+  }
+
+  function applyUiText(uiText) {
+    if (elements.lookupBody && uiText && uiText.lookupBody) {
+      elements.lookupBody.textContent = uiText.lookupBody;
+    }
+
+    if (elements.actionNote && uiText && uiText.actionNote) {
+      elements.actionNote.textContent = uiText.actionNote;
     }
   }
 

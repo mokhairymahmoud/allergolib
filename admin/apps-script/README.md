@@ -15,8 +15,9 @@ For day-to-day maintenance and recovery guidance, use
 - strict bilingual and required-field validation before save
 - selective applicable-test writes instead of forcing all three test rows
 - typed-confirm permanent delete for a drug and its linked child rows
-
-This slice intentionally does **not** publish a dataset after save. It only updates the sheet.
+- optional GitHub Actions dispatch after a successful save
+The admin app always writes to the sheet first. It can optionally dispatch the dataset GitHub
+workflow after a successful save, depending on Apps Script script properties.
 
 ## Sheet contract
 
@@ -37,6 +38,26 @@ rows that the admin selected for the drug.
 2. Copy the files from this folder into the Apps Script project.
 3. If the script is standalone, set the script property `SPREADSHEET_ID` to the target sheet id.
 4. Deploy as a web app.
+
+Optional script properties for GitHub Actions dispatch after save:
+
+- `GITHUB_TRIGGER_ON_SAVE=true`
+- `GITHUB_TRIGGER_OWNER=<github-owner>`
+- `GITHUB_TRIGGER_REPO=<github-repo>`
+- `GITHUB_TRIGGER_TOKEN=<github-token-with-actions:write>`
+
+Optional overrides:
+
+- `GITHUB_TRIGGER_WORKFLOW_FILE=publish-dataset.yml`
+- `GITHUB_TRIGGER_REF=master`
+- `GITHUB_TRIGGER_DRY_RUN=true`
+- `GITHUB_TRIGGER_PROMOTE_LATEST=false`
+
+Behavior notes:
+
+- The Apps Script backend dispatches GitHub only after `SpreadsheetApp.flush()` succeeds.
+- The default safe trigger mode is a workflow dry run, not a publish.
+- If GitHub dispatch fails, the sheet save still succeeds and the admin UI shows the dispatch error.
 
 Suggested web app settings:
 
