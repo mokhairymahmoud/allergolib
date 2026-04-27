@@ -56,17 +56,19 @@ Define the Google Sheets structure and the export/validation pipeline that turns
 
 ## Phase 3: Background Updates And Multi-Source Readiness
 
+**Status**: Done
+
 **User stories**: receive corrected or newer data without requiring a mobile app release
 
 ### What to build
 Add remote manifest checking, dataset download, local caching, and safe activation of new dataset versions. Extend the data contract so each entry can carry preferred and alternate authorities, even if the exact EAACI document is added later.
 
 ### Acceptance criteria
-- [ ] On online launch, the app checks a remote manifest in the background without blocking usage.
-- [ ] A newer valid dataset downloads, verifies, and replaces the current cached dataset atomically.
-- [ ] Failed download, checksum mismatch, or schema failure leaves the previous dataset intact.
-- [ ] The dataset contract supports preferred and alternate source display per test entry.
-- [ ] A republished dataset hotfix can reach beta users without an app-store release.
+- [x] On online launch, the app checks a remote manifest in the background without blocking usage.
+- [x] A newer valid dataset downloads, verifies, and replaces the current cached dataset atomically.
+- [x] Failed download, checksum mismatch, or schema failure leaves the previous dataset intact.
+- [x] The dataset contract supports preferred and alternate source display per test entry.
+- [x] A republished dataset hotfix can reach beta users without an app-store release.
 
 ---
 
