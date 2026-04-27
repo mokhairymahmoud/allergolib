@@ -4,6 +4,13 @@
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
+    "admin:clasp:deploy": "node ./scripts/run-admin-clasp.mjs deploy",
+    "admin:clasp:link": "node ./scripts/setup-admin-clasp.mjs",
+    "admin:clasp:login": "node ./scripts/run-admin-clasp.mjs login",
+    "admin:clasp:open": "node ./scripts/run-admin-clasp.mjs open",
+    "admin:clasp:pull": "node ./scripts/run-admin-clasp.mjs pull",
+    "admin:clasp:push": "node ./scripts/run-admin-clasp.mjs push",
+    "admin:clasp:status": "node ./scripts/run-admin-clasp.mjs status",
     "build:dataset": "node ./scripts/export-dataset.mjs",
     "start": "expo start",
     "android": "expo start --android",
@@ -13,17 +20,17 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
-    "expo": "~55.0.17",
-    "expo-crypto": "~55.0.14",
-    "expo-status-bar": "~55.0.5",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-native": "0.83.6",
+    "expo": "^54.0.33",
+    "expo-crypto": "~15.0.8",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
     "react-native-web": "^0.21.0"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14",
-    "@types/react-native": "^0.72.8",
+    "@google/clasp": "^3.3.0",
+    "@types/react": "~19.1.10",
     "google-auth-library": "^10.6.2",
     "typescript": "^5.9.3"
   }

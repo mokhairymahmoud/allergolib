@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { startTransition, useDeferredValue, useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import {
   Pressable,
   SafeAreaView,
@@ -23,6 +23,12 @@ import {
 } from "./src/lib/dilutionCalculator";
 import { loadFavoriteDrugIds, persistFavoriteDrugIds, sanitizeFavoriteDrugIds } from "./src/lib/favorites";
 import { copy } from "./src/lib/i18n";
+import {
+  loadRecentDrugIds,
+  persistRecentDrugIds,
+  recordRecentDrugId,
+  sanitizeRecentDrugIds,
+} from "./src/lib/recentSearches";
 import { searchDrugs, type DrugSearchResult } from "./src/lib/drugSearch";
 import type {
   DrugRecord,
@@ -35,6 +41,34 @@ import type {
 } from "./src/types";
 
 const TAB_ORDER: TestKind[] = ["prick", "idr", "patch"];
+const HOME_TABS = ["search", "favorites", "info"] as const;
+
+type HomeTab = (typeof HOME_TABS)[number];
+type DetailMetricItem = {
+  label: string;
+  value: string;
+  compact?: boolean;
+};
+
+function homeTabIcon(tab: HomeTab, selected: boolean) {
+  if (tab === "favorites") {
+    return selected ? "♥" : "♡";
+  }
+
+  if (tab === "info") {
+    return "ⓘ";
+  }
+
+  return "⌕";
+}
+
+function homeTabIconStyle(tab: HomeTab) {
+  if (tab === "search") {
+    return styles.topLevelTabIconSearch;
+  }
+
+  return null;
+}
 
 function hasDisplayableTestContent(test: TestRecord) {
   return Boolean(
@@ -74,6 +108,18 @@ function datasetOriginLabelKey(origin: DatasetOrigin) {
   return "home.datasetOriginUpdated";
 }
 
+function homeTabLabelKey(tab: HomeTab) {
+  if (tab === "favorites") {
+    return "home.tabFavorites";
+  }
+
+  if (tab === "info") {
+    return "home.tabInfo";
+  }
+
+  return "home.tabSearch";
+}
+
 function matchLabel(language: Language, result: DrugSearchResult) {
   if (result.matchedField === "alias") {
     return copy(language, "search.matchAlias");
@@ -97,6 +143,10 @@ function matchLabel(language: Language, result: DrugSearchResult) {
 function noteLabel(language: Language, kind: NoteKind) {
   if (kind === "cross-reactivity") {
     return copy(language, "detail.note.cross-reactivity");
+  }
+
+  if (kind === "warning") {
+    return copy(language, "detail.note.warning");
   }
 
   return copy(language, "detail.note.info");
@@ -225,9 +275,14 @@ function DrugRow({
       <View style={styles.resultHeader}>
         <View style={styles.resultTitleColumn}>
           <Text style={styles.resultName}>{result.drug.name[language]}</Text>
-          <Text style={styles.resultAlias}>
-            {copy(language, "search.aliases")}: {result.drug.aliases.join(", ")}
-          </Text>
+          <View style={styles.resultMetaRow}>
+            <View style={styles.idBadge}>
+              <Text style={styles.idBadgeText}>{result.drug.id}</Text>
+            </View>
+            <Text style={styles.resultAlias}>
+              {copy(language, "search.aliases")}: {result.drug.aliases.join(", ")}
+            </Text>
+          </View>
         </View>
         <View style={styles.resultHeaderBadges}>
           {isSaved ? <SavePill language={language} isSaved /> : null}
@@ -242,6 +297,220 @@ function DrugRow({
         </Text>
       ) : null}
     </Pressable>
+  );
+}
+
+function SectionIntro({
+  title,
+  body,
+}: {
+  title: string;
+  body: string;
+}) {
+  return (
+    <View style={styles.sectionIntro}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={styles.panelBody}>{body}</Text>
+    </View>
+  );
+}
+
+function NeutralEmptyCard({
+  title,
+  body,
+}: {
+  title: string;
+  body: string;
+}) {
+  return (
+    <View style={styles.neutralEmptyCard}>
+      <Text style={styles.neutralEmptyTitle}>{title}</Text>
+      <Text style={styles.neutralEmptyBody}>{body}</Text>
+    </View>
+  );
+}
+
+function SearchScreen({
+  language,
+  query,
+  searchResults,
+  recentDrugs,
+  favoriteDrugIds,
+  onChangeQuery,
+  onOpenDrug,
+}: {
+  language: Language;
+  query: string;
+  searchResults: DrugSearchResult[];
+  recentDrugs: DrugRecord[];
+  favoriteDrugIds: string[];
+  onChangeQuery: (value: string) => void;
+  onOpenDrug: (drugId: string) => void;
+}) {
+  const favoriteDrugSet = new Set(favoriteDrugIds);
+  const trimmedQuery = query.trim();
+  const hasQuery = trimmedQuery.length > 0;
+
+  return (
+    <ScrollView contentContainerStyle={styles.screenContent}>
+      <View style={styles.searchHeroCard}>
+        <Text style={styles.searchHeroTitle}>{copy(language, "search.heroTitle")}</Text>
+        <Text style={styles.searchHeroBody}>{copy(language, "search.heroBody")}</Text>
+        <View style={styles.searchInputWrap}>
+          <Text style={styles.metricLabel}>{copy(language, "search.title")}</Text>
+          <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            onChangeText={onChangeQuery}
+            placeholder={copy(language, "search.placeholder")}
+            placeholderTextColor="#6B7888"
+            style={styles.searchInput}
+            value={query}
+          />
+        </View>
+        {hasQuery ? (
+          <Text style={styles.searchSummary}>
+            {searchResults.length} {copy(language, "search.results")}
+          </Text>
+        ) : null}
+      </View>
+
+      {hasQuery ? (
+        <>
+          {searchResults.length ? (
+            <View style={styles.resultsList}>
+              {searchResults.map((result) => (
+                <DrugRow
+                  key={result.drug.id}
+                  isSaved={favoriteDrugSet.has(result.drug.id)}
+                  language={language}
+                  onPress={() => onOpenDrug(result.drug.id)}
+                  result={result}
+                />
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
+              <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
+            </View>
+          )}
+        </>
+      ) : (
+        <View style={styles.panel}>
+          <SectionIntro
+            title={copy(language, "search.recentTitle")}
+            body={copy(language, "search.recentBody")}
+          />
+          {recentDrugs.length ? (
+            <View style={styles.resultsList}>
+              {recentDrugs.map((drug) => (
+                <DrugRow
+                  key={`recent-${drug.id}`}
+                  isSaved={favoriteDrugSet.has(drug.id)}
+                  language={language}
+                  onPress={() => onOpenDrug(drug.id)}
+                  result={{
+                    drug,
+                    score: Number.MAX_SAFE_INTEGER,
+                  }}
+                />
+              ))}
+            </View>
+          ) : (
+            <NeutralEmptyCard
+              title={copy(language, "search.emptyRecentTitle")}
+              body={copy(language, "search.emptyRecentBody")}
+            />
+          )}
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+function FavoritesScreen({
+  language,
+  favoriteDrugs,
+  favoriteDrugIds,
+  onOpenDrug,
+}: {
+  language: Language;
+  favoriteDrugs: DrugRecord[];
+  favoriteDrugIds: string[];
+  onOpenDrug: (drugId: string) => void;
+}) {
+  return (
+    <ScrollView contentContainerStyle={styles.screenContent}>
+      <View style={styles.panel}>
+        <SectionIntro
+          title={copy(language, "favorites.title")}
+          body={copy(language, "favorites.body")}
+        />
+        {favoriteDrugs.length ? (
+          <View style={styles.resultsList}>
+            {favoriteDrugs.map((drug) => (
+              <DrugRow
+                key={`favorite-${drug.id}`}
+                isSaved={favoriteDrugIds.includes(drug.id)}
+                language={language}
+                onPress={() => onOpenDrug(drug.id)}
+                result={{
+                  drug,
+                  score: Number.MAX_SAFE_INTEGER,
+                }}
+              />
+            ))}
+          </View>
+        ) : (
+          <NeutralEmptyCard
+            title={copy(language, "favorites.emptyTitle")}
+            body={copy(language, "favorites.emptyBody")}
+          />
+        )}
+      </View>
+    </ScrollView>
+  );
+}
+
+function InfoScreen({
+  activeDataset,
+  language,
+}: {
+  activeDataset: ReturnType<typeof getBundledActiveDataset>;
+  language: Language;
+}) {
+  return (
+    <ScrollView contentContainerStyle={styles.screenContent}>
+      <View style={styles.panel}>
+        <SectionIntro
+          title={copy(language, "info.title")}
+          body={copy(language, "info.body")}
+        />
+      </View>
+
+      <View style={styles.heroCard}>
+        <Text style={styles.heroMeta}>{copy(language, "info.releaseCardTitle")}</Text>
+        <Text style={styles.heroTitle}>{copy(language, "home.heroTitle")}</Text>
+        <Text style={styles.heroBody}>{copy(language, "home.heroBody")}</Text>
+        <Text style={styles.heroMetaSecondary}>
+          {copy(language, "home.release")}: {activeDataset.manifest.version}
+        </Text>
+        <Text style={styles.heroMetaSecondary}>
+          {copy(language, "home.datasetOrigin")}:{" "}
+          {copy(language, datasetOriginLabelKey(activeDataset.origin))}
+        </Text>
+        <Text style={styles.heroMetaSecondary}>
+          {copy(language, "home.approvedBy")}: {activeDataset.manifest.approvedBy}
+        </Text>
+        <Text style={styles.heroMetaSecondary}>
+          {copy(language, "home.releasedAt")}:{" "}
+          {formatReleaseDate(activeDataset.manifest.releasedAt, language)}
+        </Text>
+      </View>
+
+      <ComplianceCard language={language} />
+    </ScrollView>
   );
 }
 
@@ -270,19 +539,23 @@ function SourceCard({
 function NoteList({
   language,
   notes,
+  tone = "default",
 }: {
   language: Language;
   notes: TestNote[];
+  tone?: "default" | "warning";
 }) {
   return (
     <View style={styles.notesBlock}>
       {notes.map((note, index) => (
         <View
           key={`${note.kind}-${note.value.en}-${note.value.fr}-${index}`}
-          style={styles.noteRow}
+          style={[styles.noteRow, tone === "warning" && styles.noteRowWarning]}
         >
-          <View style={styles.noteBadge}>
-            <Text style={styles.noteBadgeText}>{noteLabel(language, note.kind)}</Text>
+          <View style={[styles.noteBadge, tone === "warning" && styles.noteBadgeWarning]}>
+            <Text style={[styles.noteBadgeText, tone === "warning" && styles.noteBadgeTextWarning]}>
+              {noteLabel(language, note.kind)}
+            </Text>
           </View>
           <Text style={styles.noteText}>{note.value[language]}</Text>
         </View>
@@ -408,6 +681,7 @@ function DetailScreen({
 }) {
   const [activeTab, setActiveTab] = useState<TestKind>(availableTests(drug)[0] ?? "prick");
   const [showSource, setShowSource] = useState(false);
+  const availableTestKinds = availableTests(drug);
 
   useEffect(() => {
     const nextAvailableTests = availableTests(drug);
@@ -432,6 +706,37 @@ function DetailScreen({
   const concentrationUnit = extractConcentrationUnit(test.maxConcentration ?? test.concentration);
   const shouldShowStandardConcentration =
     Boolean(test.concentration) && (activeTab !== "idr" || test.concentration !== test.maxConcentration);
+  const metricItems: DetailMetricItem[] = [];
+
+  if (shouldShowStandardConcentration) {
+    metricItems.push({
+      label: concentrationLabel(language, activeTab),
+      value: test.concentration ?? "",
+    });
+  }
+
+  if (test.maxConcentration) {
+    metricItems.push({
+      label: copy(language, "detail.idr.maxConcentration"),
+      value: test.maxConcentration,
+    });
+  }
+
+  if (test.dilutions.length) {
+    metricItems.push({
+      label: copy(language, "detail.idr.dilutions"),
+      value: test.dilutions.join(" -> "),
+      compact: true,
+    });
+  }
+
+  if (test.vehicle) {
+    metricItems.push({
+      label: copy(language, "detail.patch.vehicle"),
+      value: test.vehicle[language],
+      compact: true,
+    });
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.screenContent}>
@@ -442,44 +747,78 @@ function DetailScreen({
       <View style={styles.detailHeader}>
         <View style={styles.detailHeaderTop}>
           <View style={styles.detailHeaderTitleBlock}>
-            <Text style={styles.detailEyebrow}>{drug.className[language]}</Text>
+            <View style={styles.detailHeaderMetaRow}>
+              <View style={styles.detailClassBadge}>
+                <Text style={styles.detailClassBadgeText}>{drug.className[language]}</Text>
+              </View>
+              <View style={styles.detailIdBadge}>
+                <Text style={styles.detailIdBadgeText}>{drug.id}</Text>
+              </View>
+            </View>
             <Text style={styles.detailTitle}>{drug.name[language]}</Text>
+            <Text style={styles.detailSubtitle}>{copy(language, "detail.seedNotice")}</Text>
           </View>
           <SavePill language={language} isSaved={isSaved} onPress={onToggleFavorite} />
         </View>
-        <Text style={styles.detailSubtitle}>{copy(language, "detail.seedNotice")}</Text>
+        <View style={styles.detailAvailableTestsRow}>
+          {availableTestKinds.map((kind) => {
+            const selected = kind === activeTab;
+
+            return (
+              <View
+                key={`available-${kind}`}
+                style={[styles.detailTestChip, selected && styles.detailTestChipSelected]}
+              >
+                <Text
+                  style={[
+                    styles.detailTestChipText,
+                    selected && styles.detailTestChipTextSelected,
+                  ]}
+                >
+                  {testTitle(language, kind)}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
       </View>
 
       <ComplianceCard language={language} />
 
-      <View style={styles.tabRow}>
-        {TAB_ORDER.map((kind) => {
-          const selected = kind === activeTab;
-          const disabled = !isTestAvailable(drug, kind);
+      <View style={styles.detailTabsPanel}>
+        <View style={styles.detailTabsPanelHeader}>
+          <Text style={styles.sectionTitle}>{copy(language, "detail.validatedData")}</Text>
+          <Text style={styles.detailTabsPanelLabel}>{testTitle(language, activeTab)}</Text>
+        </View>
+        <View style={styles.tabRow}>
+          {TAB_ORDER.map((kind) => {
+            const selected = kind === activeTab;
+            const disabled = !isTestAvailable(drug, kind);
 
-          return (
-            <Pressable
-              key={kind}
-              disabled={disabled}
-              onPress={() => setActiveTab(kind)}
-              style={[
-                styles.tabButton,
-                selected && styles.tabButtonSelected,
-                disabled && styles.tabButtonDisabled,
-              ]}
-            >
-              <Text
+            return (
+              <Pressable
+                key={kind}
+                disabled={disabled}
+                onPress={() => setActiveTab(kind)}
                 style={[
-                  styles.tabButtonText,
-                  selected && styles.tabButtonTextSelected,
-                  disabled && styles.tabButtonTextDisabled,
+                  styles.tabButton,
+                  selected && styles.tabButtonSelected,
+                  disabled && styles.tabButtonDisabled,
                 ]}
               >
-                {testTitle(language, kind)}
-              </Text>
-            </Pressable>
-          );
-        })}
+                <Text
+                  style={[
+                    styles.tabButtonText,
+                    selected && styles.tabButtonTextSelected,
+                    disabled && styles.tabButtonTextDisabled,
+                  ]}
+                >
+                  {testTitle(language, kind)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
 
       {!canShowProvenance ? (
@@ -495,49 +834,32 @@ function DetailScreen({
 
       {canShowProvenance ? (
         <View style={styles.panel}>
-          <Text style={styles.sectionTitle}>{copy(language, "detail.validatedData")}</Text>
+          <Text style={styles.sectionTitle}>{testTitle(language, activeTab)}</Text>
 
-          {shouldShowStandardConcentration ? (
-            <View style={styles.metricBlock}>
-              <Text style={styles.metricLabel}>{concentrationLabel(language, activeTab)}</Text>
-              <Text style={styles.metricValue}>{test.concentration}</Text>
+          {metricItems.length ? (
+            <View style={styles.metricGrid}>
+              {metricItems.map((item) => (
+                <View
+                  key={`${activeTab}-${item.label}`}
+                  style={[styles.metricCard, item.compact && styles.metricCardCompact]}
+                >
+                  <Text style={styles.metricLabel}>{item.label}</Text>
+                  <Text style={item.compact ? styles.metricValueSmall : styles.metricValue}>
+                    {item.value}
+                  </Text>
+                </View>
+              ))}
             </View>
-          ) : null}
-
-          {test.maxConcentration ? (
-            <View style={styles.metricBlock}>
-              <Text style={styles.metricLabel}>{copy(language, "detail.idr.maxConcentration")}</Text>
-              <Text style={styles.metricValue}>{test.maxConcentration}</Text>
-            </View>
-          ) : null}
-
-          {test.dilutions.length ? (
-            <View style={styles.metricBlock}>
-              <Text style={styles.metricLabel}>{copy(language, "detail.idr.dilutions")}</Text>
-              <Text style={styles.metricValueSmall}>{test.dilutions.join(" -> ")}</Text>
-            </View>
-          ) : null}
-
-          {test.vehicle ? (
-            <View style={styles.metricBlock}>
-              <Text style={styles.metricLabel}>{copy(language, "detail.patch.vehicle")}</Text>
-              <Text style={styles.metricValueSmall}>{test.vehicle[language]}</Text>
-            </View>
-          ) : null}
-
-          {!shouldShowStandardConcentration &&
-          !test.maxConcentration &&
-          !test.dilutions.length &&
-          !test.vehicle ? (
+          ) : (
             <Text style={styles.emptyState}>{copy(language, "detail.noTestData")}</Text>
-          ) : null}
+          )}
         </View>
       ) : null}
 
       {canShowProvenance && warnings.length ? (
         <View style={styles.warningPanel}>
           <Text style={styles.warningTitle}>{copy(language, "detail.warnings")}</Text>
-          <NoteList language={language} notes={warnings} />
+          <NoteList language={language} notes={warnings} tone="warning" />
         </View>
       ) : null}
 
@@ -558,6 +880,14 @@ function DetailScreen({
 
       {canShowProvenance && preferredSource ? (
         <View style={styles.panel}>
+          <View style={styles.sourceSummaryCard}>
+            <Text style={styles.sourceEyebrow}>{copy(language, "detail.preferredSource")}</Text>
+            <Text style={styles.sourceTitle}>{preferredSource.label}</Text>
+            <Text style={styles.sourceMeta}>
+              {preferredSource.organization} {preferredSource.year} • {preferredSource.version}
+            </Text>
+            <Text style={styles.sourceLabel}>{preferredSource.documentName[language]}</Text>
+          </View>
           <Pressable onPress={() => setShowSource((current) => !current)} style={styles.sourceToggle}>
             <View>
               <Text style={styles.sectionTitle}>{copy(language, "detail.source")}</Text>
@@ -592,35 +922,37 @@ function DetailScreen({
 
 export default function App() {
   const [activeDataset, setActiveDataset] = useState(() => getBundledActiveDataset());
-  const [language, setLanguage] = useState<Language>("en");
+  const [language, setLanguage] = useState<Language>("fr");
+  const [homeTab, setHomeTab] = useState<HomeTab>("search");
   const [query, setQuery] = useState("");
   const [selectedDrugId, setSelectedDrugId] = useState<string | null>(null);
   const [favoriteDrugIds, setFavoriteDrugIds] = useState<string[]>([]);
+  const [recentDrugIds, setRecentDrugIds] = useState<string[]>([]);
   const [favoritesHydrated, setFavoritesHydrated] = useState(false);
-  const deferredQuery = useDeferredValue(query);
+  const [recentHydrated, setRecentHydrated] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     async function hydrate() {
-      const [storedDataset, storedFavorites] = await Promise.all([
+      const [storedDataset, storedFavorites, storedRecents] = await Promise.all([
         loadActiveDataset(),
         loadFavoriteDrugIds(),
+        loadRecentDrugIds(),
       ]);
 
       if (cancelled) {
         return;
       }
 
+      const validDrugIds = storedDataset.dataset.drugs.map((drug) => drug.id);
+
       startTransition(() => {
         setActiveDataset(storedDataset);
-        setFavoriteDrugIds(
-          sanitizeFavoriteDrugIds(
-            storedFavorites,
-            storedDataset.dataset.drugs.map((drug) => drug.id)
-          )
-        );
+        setFavoriteDrugIds(sanitizeFavoriteDrugIds(storedFavorites, validDrugIds));
+        setRecentDrugIds(sanitizeRecentDrugIds(storedRecents, validDrugIds));
         setFavoritesHydrated(true);
+        setRecentHydrated(true);
       });
 
       const syncResult = await syncDatasetInBackground(storedDataset.manifest);
@@ -664,12 +996,38 @@ export default function App() {
     void persistFavoriteDrugIds(favoriteDrugIds);
   }, [favoriteDrugIds, favoritesHydrated]);
 
+  useEffect(() => {
+    if (!recentHydrated) {
+      return;
+    }
+
+    const sanitized = sanitizeRecentDrugIds(
+      recentDrugIds,
+      activeDataset.dataset.drugs.map((drug) => drug.id)
+    );
+
+    if (!arraysEqual(sanitized, recentDrugIds)) {
+      setRecentDrugIds(sanitized);
+    }
+  }, [activeDataset.dataset.drugs, recentDrugIds, recentHydrated]);
+
+  useEffect(() => {
+    if (!recentHydrated) {
+      return;
+    }
+
+    void persistRecentDrugIds(recentDrugIds);
+  }, [recentDrugIds, recentHydrated]);
+
   const selectedDrug = selectedDrugId
     ? activeDataset.dataset.drugs.find((drug) => drug.id === selectedDrugId) ?? null
     : null;
-  const searchResults = searchDrugs(activeDataset.dataset.drugs, deferredQuery, language);
-  const favoriteDrugSet = new Set(favoriteDrugIds);
+  const hasQuery = query.trim().length > 0;
+  const searchResults = hasQuery ? searchDrugs(activeDataset.dataset.drugs, query, language) : [];
   const favoriteDrugs = favoriteDrugIds
+    .map((drugId) => activeDataset.dataset.drugs.find((drug) => drug.id === drugId) ?? null)
+    .filter((drug): drug is DrugRecord => Boolean(drug));
+  const recentDrugs = recentDrugIds
     .map((drugId) => activeDataset.dataset.drugs.find((drug) => drug.id === drugId) ?? null)
     .filter((drug): drug is DrugRecord => Boolean(drug));
 
@@ -693,46 +1051,21 @@ export default function App() {
     });
   }
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
-        <View style={styles.topBar}>
-          <View>
-            <Text style={styles.eyebrow}>{copy(language, "home.eyebrow")}</Text>
-            <Text style={styles.title}>{copy(language, "home.title")}</Text>
-          </View>
-          <View style={styles.languageToggle}>
-            {(["en", "fr"] as Language[]).map((nextLanguage) => {
-              const selected = nextLanguage === language;
+  function openDrug(drugId: string) {
+    startTransition(() => {
+      setSelectedDrugId(drugId);
+      setRecentDrugIds((current) => recordRecentDrugId(current, drugId));
+    });
+  }
 
-              return (
-                <Pressable
-                  key={nextLanguage}
-                  onPress={() => setLanguage(nextLanguage)}
-                  style={[
-                    styles.languageButton,
-                    selected && styles.languageButtonSelected,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.languageButtonText,
-                      selected && styles.languageButtonTextSelected,
-                    ]}
-                  >
-                    {nextLanguage.toUpperCase()}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        {selectedDrug ? (
+  if (selectedDrug) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        <View style={styles.container}>
           <DetailScreen
             drug={selectedDrug}
-            isSaved={favoriteDrugSet.has(selectedDrug.id)}
+            isSaved={favoriteDrugIds.includes(selectedDrug.id)}
             language={language}
             onBack={() => {
               startTransition(() => setSelectedDrugId(null));
@@ -740,90 +1073,107 @@ export default function App() {
             onToggleFavorite={() => toggleFavorite(selectedDrug.id)}
             sources={activeDataset.dataset.sources}
           />
-        ) : (
-          <ScrollView contentContainerStyle={styles.screenContent}>
-            <View style={styles.heroCard}>
-              <Text style={styles.heroTitle}>{copy(language, "home.heroTitle")}</Text>
-              <Text style={styles.heroBody}>{copy(language, "home.heroBody")}</Text>
-              <Text style={styles.heroMeta}>
-                {copy(language, "home.release")}: {activeDataset.manifest.version}
-              </Text>
-              <Text style={styles.heroMetaSecondary}>
-                {copy(language, "home.datasetOrigin")}:{" "}
-                {copy(language, datasetOriginLabelKey(activeDataset.origin))}
-              </Text>
-              <Text style={styles.heroMetaSecondary}>
-                {copy(language, "home.approvedBy")}: {activeDataset.manifest.approvedBy}
-              </Text>
-              <Text style={styles.heroMetaSecondary}>
-                {copy(language, "home.releasedAt")}:{" "}
-                {formatReleaseDate(activeDataset.manifest.releasedAt, language)}
-              </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" />
+      <View style={styles.container}>
+        <View style={styles.topBar}>
+          <View style={styles.titleBlock}>
+            <Text style={styles.eyebrow}>{copy(language, "home.eyebrow")}</Text>
+            <Text style={styles.title}>{copy(language, "home.title")}</Text>
+          </View>
+          <View style={styles.topBarBody}>
+            <Text style={styles.topBarLabel}>{copy(language, "home.language")}</Text>
+            <View style={styles.languageToggle}>
+              {(["fr", "en"] as Language[]).map((nextLanguage) => {
+                const selected = nextLanguage === language;
+
+                return (
+                  <Pressable
+                    key={nextLanguage}
+                    onPress={() => setLanguage(nextLanguage)}
+                    style={[
+                      styles.languageButton,
+                      selected && styles.languageButtonSelected,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.languageButtonText,
+                        selected && styles.languageButtonTextSelected,
+                      ]}
+                    >
+                      {nextLanguage.toUpperCase()}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
+          </View>
+        </View>
 
-            <ComplianceCard language={language} />
+        <View style={styles.mainContent}>
+          {homeTab === "search" ? (
+            <SearchScreen
+              favoriteDrugIds={favoriteDrugIds}
+              language={language}
+              onChangeQuery={setQuery}
+              onOpenDrug={openDrug}
+              query={query}
+              recentDrugs={recentDrugs}
+              searchResults={searchResults}
+            />
+          ) : null}
 
-            {favoriteDrugs.length ? (
-              <View style={styles.panel}>
-                <Text style={styles.sectionTitle}>{copy(language, "home.favoritesTitle")}</Text>
-                <Text style={styles.panelBody}>{copy(language, "home.favoritesBody")}</Text>
-                <View style={styles.resultsList}>
-                  {favoriteDrugs.map((drug) => (
-                    <DrugRow
-                      key={`favorite-${drug.id}`}
-                      isSaved
-                      language={language}
-                      onPress={() => {
-                        startTransition(() => setSelectedDrugId(drug.id));
-                      }}
-                      result={{
-                        drug,
-                        score: Number.MAX_SAFE_INTEGER,
-                      }}
-                    />
-                  ))}
-                </View>
-              </View>
-            ) : null}
+          {homeTab === "favorites" ? (
+            <FavoritesScreen
+              favoriteDrugIds={favoriteDrugIds}
+              favoriteDrugs={favoriteDrugs}
+              language={language}
+              onOpenDrug={openDrug}
+            />
+          ) : null}
 
-            <View style={styles.searchCard}>
-              <Text style={styles.sectionTitle}>{copy(language, "search.title")}</Text>
-              <TextInput
-                autoCapitalize="none"
-                autoCorrect={false}
-                onChangeText={setQuery}
-                placeholder={copy(language, "search.placeholder")}
-                placeholderTextColor="#6D7B8A"
-                style={styles.searchInput}
-                value={query}
-              />
-              <Text style={styles.searchSummary}>
-                {searchResults.length} {copy(language, "search.results")}
-              </Text>
-            </View>
+          {homeTab === "info" ? (
+            <InfoScreen activeDataset={activeDataset} language={language} />
+          ) : null}
+        </View>
 
-            <View style={styles.resultsList}>
-              {searchResults.map((result) => (
-                <DrugRow
-                  key={result.drug.id}
-                  isSaved={favoriteDrugSet.has(result.drug.id)}
-                  language={language}
-                  onPress={() => {
-                    startTransition(() => setSelectedDrugId(result.drug.id));
-                  }}
-                  result={result}
-                />
-              ))}
-            </View>
+        <View style={styles.footer}>
+          <View style={styles.topLevelTabs}>
+            {HOME_TABS.map((tab) => {
+              const selected = tab === homeTab;
 
-            {!searchResults.length ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
-                <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
-              </View>
-            ) : null}
-          </ScrollView>
-        )}
+              return (
+              <Pressable
+                key={tab}
+                onPress={() => setHomeTab(tab)}
+                style={[styles.topLevelTab, selected && styles.topLevelTabSelected]}
+              >
+                <Text
+                  style={[
+                    styles.topLevelTabIcon,
+                    homeTabIconStyle(tab),
+                    selected && styles.topLevelTabIconSelected,
+                  ]}
+                >
+                  {homeTabIcon(tab, selected)}
+                </Text>
+                <Text
+                  style={[styles.topLevelTabText, selected && styles.topLevelTabTextSelected]}
+                >
+                  {copy(language, homeTabLabelKey(tab))}
+                </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -832,20 +1182,23 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F3F0E8",
+    backgroundColor: "#EEF3F8",
   },
   container: {
     flex: 1,
-    backgroundColor: "#F3F0E8",
+    backgroundColor: "#EEF3F8",
   },
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 12,
-    gap: 12,
+    paddingTop: 18,
+    paddingBottom: 10,
+    gap: 16,
+  },
+  titleBlock: {
+    flex: 1,
   },
   eyebrow: {
     color: "#0E6B66",
@@ -859,6 +1212,17 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "800",
     marginTop: 4,
+  },
+  topBarBody: {
+    alignItems: "flex-end",
+    gap: 8,
+  },
+  topBarLabel: {
+    color: "#536070",
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
   languageToggle: {
     flexDirection: "row",
@@ -884,10 +1248,83 @@ const styles = StyleSheet.create({
   languageButtonTextSelected: {
     color: "#FCFBF7",
   },
+  footer: {
+    paddingHorizontal: 14,
+    paddingTop: 8,
+    paddingBottom: 12,
+    backgroundColor: "#EEF3F8",
+    borderTopWidth: 1,
+    borderTopColor: "#D5DEE7",
+  },
+  topLevelTabs: {
+    flexDirection: "row",
+    padding: 10,
+    backgroundColor: "#F8FBFD",
+    borderRadius: 26,
+    borderWidth: 1,
+    borderColor: "#D5DEE7",
+  },
+  mainContent: {
+    flex: 1,
+  },
+  topLevelTab: {
+    flex: 1,
+    borderRadius: 18,
+    paddingVertical: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+  },
+  topLevelTabSelected: {
+    backgroundColor: "#E7F3F0",
+  },
+  topLevelTabIcon: {
+    color: "#6E7B8A",
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 2,
+  },
+  topLevelTabIconSearch: {
+    fontSize: 23,
+  },
+  topLevelTabIconSelected: {
+    color: "#0E6B66",
+  },
+  topLevelTabText: {
+    color: "#6E7B8A",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  topLevelTabTextSelected: {
+    color: "#0E6B66",
+  },
   screenContent: {
     paddingHorizontal: 20,
+    paddingTop: 10,
     paddingBottom: 28,
     gap: 16,
+  },
+  sectionIntro: {
+    gap: 6,
+  },
+  searchHeroCard: {
+    backgroundColor: "#16353D",
+    borderRadius: 28,
+    padding: 22,
+    gap: 16,
+  },
+  searchHeroTitle: {
+    color: "#F7F3EA",
+    fontSize: 24,
+    fontWeight: "800",
+  },
+  searchHeroBody: {
+    color: "#D7E6E2",
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  searchInputWrap: {
+    gap: 8,
   },
   heroCard: {
     backgroundColor: "#16353D",
@@ -951,6 +1388,22 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   panelBody: {
+    color: "#536070",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  neutralEmptyCard: {
+    backgroundColor: "#F4F7FA",
+    borderRadius: 18,
+    padding: 16,
+    gap: 8,
+  },
+  neutralEmptyTitle: {
+    color: "#16222E",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  neutralEmptyBody: {
     color: "#536070",
     fontSize: 14,
     lineHeight: 20,
@@ -1020,6 +1473,9 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 6,
   },
+  resultMetaRow: {
+    gap: 8,
+  },
   resultHeaderBadges: {
     alignItems: "flex-end",
     gap: 8,
@@ -1041,6 +1497,18 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "800",
     textTransform: "uppercase",
+  },
+  idBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#EEF2F5",
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+  idBadgeText: {
+    color: "#536070",
+    fontSize: 11,
+    fontWeight: "700",
   },
   savePill: {
     borderRadius: 999,
@@ -1120,11 +1588,41 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 8,
   },
+  detailHeaderMetaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
   detailEyebrow: {
     color: "#0E6B66",
     fontSize: 12,
     fontWeight: "800",
     textTransform: "uppercase",
+  },
+  detailClassBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#E6F2EF",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  detailClassBadgeText: {
+    color: "#0E6B66",
+    fontSize: 11,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  detailIdBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#EEF2F5",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  detailIdBadgeText: {
+    color: "#536070",
+    fontSize: 11,
+    fontWeight: "700",
   },
   detailTitle: {
     color: "#16222E",
@@ -1136,6 +1634,49 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  detailAvailableTestsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  detailTestChip: {
+    backgroundColor: "#F3F6F9",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  detailTestChipSelected: {
+    backgroundColor: "#E6F2EF",
+  },
+  detailTestChipText: {
+    color: "#536070",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  detailTestChipTextSelected: {
+    color: "#0E6B66",
+  },
+  detailTabsPanel: {
+    backgroundColor: "#FCFBF7",
+    borderRadius: 24,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#D8D4CB",
+    gap: 14,
+  },
+  detailTabsPanelHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
+  detailTabsPanelLabel: {
+    color: "#0E6B66",
+    fontSize: 12,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
   tabRow: {
     flexDirection: "row",
     gap: 8,
@@ -1143,28 +1684,45 @@ const styles = StyleSheet.create({
   tabButton: {
     flex: 1,
     borderRadius: 16,
-    backgroundColor: "#E4E9EE",
+    backgroundColor: "#EEF3F7",
     paddingVertical: 12,
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#D7E1E9",
   },
   tabButtonSelected: {
-    backgroundColor: "#B53E16",
+    backgroundColor: "#16353D",
+    borderColor: "#16353D",
   },
   tabButtonDisabled: {
-    opacity: 0.5,
+    backgroundColor: "#F4F7FA",
+    borderColor: "#E3E8EE",
+    opacity: 0.7,
   },
   tabButtonText: {
-    color: "#16222E",
+    color: "#536070",
     fontSize: 14,
     fontWeight: "800",
   },
   tabButtonTextSelected: {
-    color: "#FFF9F5",
+    color: "#F7FAFC",
   },
   tabButtonTextDisabled: {
     color: "#70808F",
   },
   metricBlock: {
+    gap: 6,
+  },
+  metricGrid: {
+    gap: 12,
+  },
+  metricCard: {
+    gap: 8,
+    backgroundColor: "#F4F7FA",
+    borderRadius: 20,
+    padding: 16,
+  },
+  metricCardCompact: {
     gap: 6,
   },
   metricLabel: {
@@ -1189,6 +1747,14 @@ const styles = StyleSheet.create({
   },
   noteRow: {
     gap: 8,
+    backgroundColor: "#F4F7FA",
+    borderRadius: 18,
+    padding: 14,
+  },
+  noteRowWarning: {
+    backgroundColor: "#FFF0E6",
+    borderWidth: 1,
+    borderColor: "#F2C1AB",
   },
   noteBadge: {
     alignSelf: "flex-start",
@@ -1197,11 +1763,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
+  noteBadgeWarning: {
+    backgroundColor: "#FCE1CF",
+  },
   noteBadgeText: {
     color: "#536070",
     fontSize: 11,
     fontWeight: "800",
     textTransform: "uppercase",
+  },
+  noteBadgeTextWarning: {
+    color: "#8A3312",
   },
   noteText: {
     color: "#223243",
@@ -1248,7 +1820,14 @@ const styles = StyleSheet.create({
   sourceToggle: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     gap: 12,
+  },
+  sourceSummaryCard: {
+    gap: 8,
+    backgroundColor: "#F4F7FA",
+    borderRadius: 18,
+    padding: 14,
   },
   sourceLabel: {
     color: "#536070",

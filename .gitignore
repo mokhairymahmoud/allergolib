@@ -2,4 +2,6 @@ node_modules/
 .expo/
 .DS_Store
 dist/
-
+admin/apps-script/.clasp.json
+.clasprc.json
+.clasprc

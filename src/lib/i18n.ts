@@ -19,9 +19,21 @@ export const dictionary = {
     "home.releasedAt": "Released",
     "home.favoritesTitle": "Saved drugs",
     "home.favoritesBody": "Pin frequent entries for one-tap access from the home screen.",
+    "home.tabSearch": "Search",
+    "home.tabFavorites": "Favorites",
+    "home.tabInfo": "Info",
+    "home.language": "Language",
+    "search.heroTitle": "Start with the drug name",
+    "search.heroBody":
+      "Search the offline reference directly, then open one record at a time for validated concentrations, notes, and provenance.",
     "search.title": "Drug search",
     "search.placeholder": "Search rocuronium, cefazolin, propofol...",
     "search.results": "matching drugs",
+    "search.recentTitle": "Recent searches",
+    "search.recentBody": "Reopen a recently consulted drug without typing again.",
+    "search.emptyRecentTitle": "No recent searches yet",
+    "search.emptyRecentBody":
+      "Search for a drug to start building a short recent history on this device.",
     "search.aliases": "Aliases",
     "search.matchAlias": "Matched alias",
     "search.matchClass": "Matched class",
@@ -30,7 +42,7 @@ export const dictionary = {
     "search.emptyTitle": "No seeded result",
     "search.emptyBody":
       "Try a generic name, a spelling variant, or one of the seeded aliases. This beta only covers the current curated offline dataset.",
-    "detail.back": "Back to search",
+    "detail.back": "Back",
     "detail.seedNotice":
       "Loaded from the active offline dataset. Verified background updates can replace the original bundle without blocking use.",
     "detail.concentration": "Maximum concentration",
@@ -65,10 +77,20 @@ export const dictionary = {
       "Enter a stock concentration and final volume to calculate ratios such as 1:10 and 1:100 offline.",
     "detail.calculatorInvalid": "Use positive numbers for both fields.",
     "detail.note.info": "Note",
+    "detail.note.warning": "Warning",
     "detail.note.cross-reactivity": "Cross-reactivity",
     "tests.prick": "Prick",
     "tests.idr": "IDR",
-    "tests.patch": "Patch"
+    "tests.patch": "Patch",
+    "favorites.title": "Saved drugs",
+    "favorites.body": "Keep your most-used references separate from the main search flow.",
+    "favorites.emptyTitle": "No saved drugs yet",
+    "favorites.emptyBody":
+      "Use the Save action on a drug to keep it available in this tab.",
+    "info.title": "About this release",
+    "info.body":
+      "This screen groups release metadata, provenance framing, and beta-use guidance away from clinical lookup.",
+    "info.releaseCardTitle": "Offline dataset status"
   },
   fr: {
     "compliance.badge": "Beta privee",
@@ -88,9 +110,21 @@ export const dictionary = {
     "home.releasedAt": "Publication",
     "home.favoritesTitle": "Medicaments enregistres",
     "home.favoritesBody": "Epinglez les entrees frequentes pour y revenir en un geste depuis l'accueil.",
+    "home.tabSearch": "Recherche",
+    "home.tabFavorites": "Favoris",
+    "home.tabInfo": "Info",
+    "home.language": "Langue",
+    "search.heroTitle": "Commencez par le nom du medicament",
+    "search.heroBody":
+      "Interrogez directement la reference hors ligne, puis ouvrez une fiche a la fois pour les concentrations validees, les notes et la provenance.",
     "search.title": "Recherche de medicament",
     "search.placeholder": "Rechercher rocuronium, cefazoline, propofol...",
     "search.results": "medicaments correspondants",
+    "search.recentTitle": "Recherches recentes",
+    "search.recentBody": "Rouvrez un medicament consulte recemment sans retaper la requete.",
+    "search.emptyRecentTitle": "Pas encore de recherches recentes",
+    "search.emptyRecentBody":
+      "Recherchez un medicament pour construire un court historique recent sur cet appareil.",
     "search.aliases": "Alias",
     "search.matchAlias": "Alias correspondant",
     "search.matchClass": "Classe correspondante",
@@ -99,7 +133,7 @@ export const dictionary = {
     "search.emptyTitle": "Aucun resultat graine",
     "search.emptyBody":
       "Essayez un nom generique, une variante d'orthographe ou un alias graine. Cette beta couvre seulement le jeu de donnees hors ligne actuellement cure.",
-    "detail.back": "Retour a la recherche",
+    "detail.back": "Retour",
     "detail.seedNotice":
       "Charge depuis le jeu de donnees hors ligne actif. Des mises a jour verifiees en arriere-plan peuvent remplacer le bundle d'origine sans bloquer l'usage.",
     "detail.concentration": "Concentration maximale",
@@ -134,10 +168,20 @@ export const dictionary = {
       "Saisissez une concentration de stock et un volume final pour calculer hors ligne des ratios comme 1:10 et 1:100.",
     "detail.calculatorInvalid": "Utilisez des nombres positifs pour les deux champs.",
     "detail.note.info": "Note",
+    "detail.note.warning": "Avertissement",
     "detail.note.cross-reactivity": "Reactivite croisee",
     "tests.prick": "Prick",
     "tests.idr": "IDR",
-    "tests.patch": "Patch"
+    "tests.patch": "Patch",
+    "favorites.title": "Medicaments enregistres",
+    "favorites.body": "Conservez vos references les plus utiles a part du flux principal de recherche.",
+    "favorites.emptyTitle": "Aucun medicament enregistre",
+    "favorites.emptyBody":
+      "Utilisez l'action Enregistrer sur une fiche pour la garder dans cet onglet.",
+    "info.title": "A propos de cette version",
+    "info.body":
+      "Cet ecran regroupe les metadonnees de version, le cadrage de provenance et les consignes d'usage beta hors du flux de recherche clinique.",
+    "info.releaseCardTitle": "Statut du jeu de donnees hors ligne"
   }
 } as const;
 
