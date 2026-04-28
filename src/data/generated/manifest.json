@@ -3,7 +3,7 @@
   "releasedAt": "2026-04-27T00:00:00Z",
   "minSupportedAppVersion": "0.1.0",
   "approvedBy": "Clinical dataset owner",
-  "checksum": "0b0690a32f438e2c0873e691d4f9c7fc42e396e5182a4f722d0986670621551d",
+  "checksum": "88f7f592d51345d2c96ac53045ddd37d88cee10455fb618e698d5d55eaf48bc5",
   "datasetFile": "dataset.json",
   "drugCount": 66,
   "sourceIds": [
