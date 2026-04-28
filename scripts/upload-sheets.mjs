@@ -28,6 +28,7 @@ const TAB_NAMES = [
   "aliases",
   "test_entries",
   "notes",
+  "cross_reactivity",
 ];
 
 // ── env loading ───────────────────────────────────────────────────────────────
@@ -147,19 +148,29 @@ async function clearAndUploadTab(tabName, rows, token) {
 
 const token = await getAccessToken();
 
-// Verify all expected tabs exist in the spreadsheet
+// Verify expected tabs exist, create missing ones
 const sheetMeta = await getSheetMetadata(token);
 const existingTitles = new Set(sheetMeta.map((s) => s.title));
 const missingTabs = TAB_NAMES.filter((t) => !existingTitles.has(t));
+
 if (missingTabs.length > 0) {
-  fail(
-    `The following tabs are missing from the spreadsheet and must be created manually: ${missingTabs.join(", ")}`
-  );
+  console.log(`Creating missing tabs: ${missingTabs.join(", ")}\n`);
+  for (const tabName of missingTabs) {
+    await sheetsRequest("POST", ":batchUpdate", {
+      requests: [{ addSheet: { properties: { title: tabName } } }],
+    }, token);
+  }
 }
 
-console.log(`Uploading ${TAB_NAMES.length} tabs to spreadsheet ${spreadsheetId()}\n`);
+// Filter to tabs that have a local TSV file
+const tsvTabNames = TAB_NAMES.filter((t) => {
+  const filePath = join(tsvDir, `${t}.tsv`);
+  return existsSync(filePath);
+});
 
-for (const tabName of TAB_NAMES) {
+console.log(`Uploading ${tsvTabNames.length} tabs to spreadsheet ${spreadsheetId()}\n`);
+
+for (const tabName of tsvTabNames) {
   const rows = parseTsv(tabName);
   const updatedCells = await clearAndUploadTab(tabName, rows, token);
   console.log(`  ✓ ${tabName.padEnd(20)} ${rows.length} rows, ${updatedCells} cells written`);
