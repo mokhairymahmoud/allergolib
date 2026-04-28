@@ -34,9 +34,9 @@ npm run admin:clasp:open       # Open admin panel in browser
 
 ### Entry Point & Navigation
 
-`App.tsx` is a ~2,700-line monolithic component containing all screens, state, and UI logic. Navigation is state-driven (no React Navigation): `homeTab` controls which tab is visible, `selectedDrugId` controls whether the drug detail overlay is shown.
+`App.tsx` is a ~2,700-line monolithic component containing all screens, state, and UI logic. Navigation is state-driven (no React Navigation): `homeTab` (`"search"` | `"favorites"` | `"info"`) controls which tab is visible, `selectedDrugId` controls whether the drug detail overlay slides in. The detail screen uses `PanResponder` for swipe-back gesture navigation.
 
-There is no routing library. All application state lives in the root `App` component and flows down via props.
+All application state lives in the root `App` component. On mount, a `hydrate()` effect loads the dataset, favorites, recents, and dark mode preference in parallel from AsyncStorage, then starts a non-blocking background dataset sync via `startTransition()`. State updates that could block the UI (tab switches, favorites, dataset sync) are also wrapped in `startTransition()`.
 
 ### Key Source Directories
 
@@ -62,20 +62,31 @@ Medical data is curated in Google Sheets by doctors, then published to the app:
 4. Files are published to a CDN; the manifest URL is set via `EXPO_PUBLIC_DATASET_MANIFEST_URL`
 5. At startup the app silently polls the manifest, downloads newer datasets, and caches them in AsyncStorage
 
+### Multi-Source Data Model
+
+The central domain complexity: a drug's test can cite multiple source documents with potentially different concentrations.
+
+- `TestRecord.sourceEntries` is an array of `TestSourceEntry` objects, each referencing a `SourceDocument` by `sourceId`
+- Exactly one entry has `isPreferred: true`; it drives the main display
+- When sources disagree on concentration, the detail screen shows a discrepancy prompt
+- The admin panel (Google Sheets) stores one `test_entries` row per source entry; `is_preferred=true` marks the preferred row
+- `runtimeDataset.ts` has backwards-compatible normalization that converts the legacy flat format (single `preferredSourceId` + `concentration`) into the multi-source `sourceEntries` array
+
 ### Offline-First & Storage
 
 All features must work without a network connection. Storage keys:
 - `@periop-skin-test/active-dataset` — cached remote dataset
 - `@periop-skin-test/favorite-drugs` — user favorites
-- `@periop-skin-test/recent-drugs` — recently viewed drugs
+- `@periop-skin-test/recent-searches` — recently viewed drugs (max 6)
+- `@allergolib/dark-mode` — dark mode override (`"dark"` | `"light"`)
 
 ### Localization
 
-All user-facing strings (UI labels and medical content) must support both `"en"` and `"fr"`. Translations live in `src/lib/i18n.ts`. The `copy()` helper resolves strings for the active language. The `LocalizedString` type is `Record<Language, string>`.
+All user-facing strings (UI labels and medical content) must support both `"en"` and `"fr"`. Translations live in `src/lib/i18n.ts` as a flat dictionary with dot-namespaced keys (e.g., `"detail.calculatorTitle"`). The `copy(language, key)` helper resolves strings — it has no interpolation support, so runtime formatting is done at the call site. Keys are type-checked: TypeScript enforces that every key exists in both language dictionaries. The `LocalizedString` type is `Record<Language, string>`.
 
 ### Theming
 
-A custom theme context provides light/dark mode (with system preference detection). No external theme library is used. Any new screens or components must respect the theme context.
+Light/dark mode via `ThemeContext` defined at the top of `App.tsx`. System preference is detected with `useColorScheme()`, with an optional user override persisted to AsyncStorage. Components use `useTheme()` and memoize styles with `useMemo(() => makeStyles(theme), [theme])`. No external theme library.
 
 ### TypeScript
 
