@@ -640,11 +640,18 @@ export async function loadActiveDataset(): Promise<ActiveDataset> {
   try {
     const parsed = asRecord(JSON.parse(cachedValue), "cached active dataset");
 
-    return createActiveDataset(
+    const cached = createActiveDataset(
       normalizeManifest(parsed.manifest, "cached manifest"),
       normalizeDataset(parsed.dataset, "cached dataset"),
       "cached"
     );
+
+    if (compareVersions(bundledActiveDataset.manifest.version, cached.manifest.version) > 0) {
+      await AsyncStorage.removeItem(STORAGE_KEY);
+      return bundledActiveDataset;
+    }
+
+    return cached;
   } catch (error) {
     await AsyncStorage.removeItem(STORAGE_KEY);
     console.warn("Discarded invalid cached dataset.", error);
@@ -665,10 +672,6 @@ export async function syncDatasetInBackground(
 
     if (compareVersions(APP_VERSION, remoteManifest.minSupportedAppVersion) < 0) {
       return { status: "unsupported" };
-    }
-
-    if (compareVersions(remoteManifest.version, currentManifest.version) < 0) {
-      return { status: "up-to-date" };
     }
 
     if (remoteManifest.checksum === currentManifest.checksum) {
