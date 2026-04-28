@@ -6,6 +6,7 @@ import {
   Animated,
   Dimensions,
   Linking,
+  Modal,
   PanResponder,
   Pressable,
   ScrollView,
@@ -38,6 +39,7 @@ import {
 } from "./src/lib/recentSearches";
 import { searchDrugs, type DrugSearchResult } from "./src/lib/drugSearch";
 import type {
+  CrossReactivityEntry,
   CrossReactivityGroup,
   CrossReactivityTier,
   DrugRecord,
@@ -1176,121 +1178,41 @@ function makeStyles(theme: Theme) {
     },
 
     // ─── Cross-Reactivity ─────────────────────────────────────────────────
-    crossReactivityGroup: {
-      gap: 10,
-      paddingTop: 12,
-      borderTopWidth: 1,
-      borderTopColor: theme.border,
-    },
-    crossReactivityGroupName: {
-      color: theme.textPrimary,
-      fontSize: 15,
-      fontWeight: "700",
-    },
-    crossReactivityEntry: {
+    crSummaryCard: {
       backgroundColor: theme.surfaceAlt,
       borderRadius: 10,
-      padding: 12,
+      padding: 14,
       borderWidth: 1,
       borderColor: theme.border,
-      gap: 6,
+      gap: 8,
     },
-    crossReactivityEntryHeader: {
+    crSummaryRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      gap: 10,
     },
-    crossReactivityDrugName: {
+    crSummaryCountCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.accentBg,
+      borderWidth: 1,
+      borderColor: theme.accentBorder,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    crSummaryCountText: {
       color: theme.accent,
-      fontSize: 14,
-      fontWeight: "700",
+      fontSize: 18,
+      fontWeight: "800",
+    },
+    crSummaryText: {
       flex: 1,
-    },
-    crossReactivityDrugNameInert: {
-      color: theme.textPrimary,
-      fontSize: 14,
-      fontWeight: "700",
-      flex: 1,
-    },
-    crossReactivityBadgeRow: {
-      flexDirection: "row",
-      gap: 6,
-      flexWrap: "wrap",
-    },
-    crossReactivityTierBadgeHigher: {
-      alignSelf: "flex-start",
-      backgroundColor: theme.warningBg,
-      borderRadius: 999,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderWidth: 1,
-      borderColor: theme.warningBorder,
-    },
-    crossReactivityTierTextHigher: {
-      color: theme.warningText,
-      fontSize: 10,
-      fontWeight: "800",
-      textTransform: "uppercase",
-    },
-    crossReactivityTierBadgeLower: {
-      alignSelf: "flex-start",
-      backgroundColor: theme.subclassBadgeBg,
-      borderRadius: 999,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-    },
-    crossReactivityTierTextLower: {
-      color: theme.subclassBadgeText,
-      fontSize: 10,
-      fontWeight: "800",
-      textTransform: "uppercase",
-    },
-    crossReactivityTierBadgeUncertain: {
-      alignSelf: "flex-start",
-      backgroundColor: theme.surfaceAlt,
-      borderRadius: 999,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    crossReactivityTierTextUncertain: {
-      color: theme.textSecondary,
-      fontSize: 10,
-      fontWeight: "800",
-      textTransform: "uppercase",
-    },
-    crossReactivityStructBadge: {
-      alignSelf: "flex-start",
-      backgroundColor: theme.surfaceAlt,
-      borderRadius: 999,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    crossReactivityStructBadgeText: {
-      color: theme.textSecondary,
-      fontSize: 10,
-      fontWeight: "700",
-      textTransform: "uppercase",
-    },
-    crossReactivityRationale: {
       color: theme.textSecondary,
       fontSize: 13,
       lineHeight: 18,
-      fontStyle: "italic",
     },
-    crossReactivitySourceCitation: {
-      color: theme.textDisabled,
-      fontSize: 11,
-    },
-    crossReactivityNotInDataset: {
-      color: theme.textDisabled,
-      fontSize: 11,
-      fontStyle: "italic",
-    },
-    crossReactivityPanelContainer: {
+    crPanelBanner: {
       backgroundColor: theme.accentBg,
       borderRadius: 10,
       padding: 12,
@@ -1298,24 +1220,19 @@ function makeStyles(theme: Theme) {
       borderColor: theme.accentBorder,
       gap: 8,
     },
-    crossReactivityPanelTitle: {
+    crPanelBannerLabel: {
       color: theme.accentText,
-      fontSize: 13,
-      fontWeight: "700",
+      fontSize: 11,
+      fontWeight: "800",
       textTransform: "uppercase",
-      letterSpacing: 0.5,
+      letterSpacing: 0.6,
     },
-    crossReactivityPanelBody: {
-      color: theme.textSecondary,
-      fontSize: 13,
-      lineHeight: 18,
-    },
-    crossReactivityPanelChipList: {
+    crPanelChipList: {
       flexDirection: "row",
       flexWrap: "wrap",
       gap: 8,
     },
-    crossReactivityPanelChip: {
+    crPanelChip: {
       flexDirection: "row",
       alignItems: "center",
       gap: 4,
@@ -1326,15 +1243,302 @@ function makeStyles(theme: Theme) {
       borderWidth: 1,
       borderColor: theme.accentBorder,
     },
-    crossReactivityPanelChipText: {
+    crPanelChipText: {
       color: theme.accent,
       fontSize: 13,
       fontWeight: "600",
     },
-    crossReactivityPanelChipTextInert: {
+    crPanelChipTextInert: {
       color: theme.textSecondary,
       fontSize: 13,
       fontWeight: "600",
+    },
+    crTierSection: {
+      gap: 8,
+    },
+    crTierHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingTop: 4,
+    },
+    crTierLabel: {
+      color: theme.textPrimary,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    crTierCount: {
+      color: theme.textDisabled,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    crDrugRowHigher: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 10,
+      padding: 14,
+      borderLeftWidth: 3,
+      borderLeftColor: theme.warningAccent,
+      borderWidth: 1,
+      borderColor: theme.border,
+      gap: 10,
+      minHeight: 56,
+    },
+    crDrugRowLower: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 10,
+      padding: 12,
+      borderLeftWidth: 3,
+      borderLeftColor: theme.subclassBadgeText,
+      borderWidth: 1,
+      borderColor: theme.border,
+      gap: 10,
+      minHeight: 48,
+    },
+    crDrugRowUncertain: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 10,
+      padding: 12,
+      borderLeftWidth: 3,
+      borderLeftColor: theme.borderMid,
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderStyle: "dashed",
+      gap: 10,
+      minHeight: 48,
+    },
+    crDrugRowContent: {
+      flex: 1,
+      gap: 2,
+    },
+    crDrugName: {
+      color: theme.textPrimary,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    crDrugHint: {
+      color: theme.textSecondary,
+      fontSize: 12,
+      lineHeight: 16,
+    },
+    crBadgeRow: {
+      flexDirection: "row",
+      gap: 6,
+      flexWrap: "wrap",
+      marginTop: 2,
+    },
+    crBadgeHigher: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: theme.warningBg,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderWidth: 1,
+      borderColor: theme.warningBorder,
+    },
+    crBadgeHigherText: {
+      color: theme.warningText,
+      fontSize: 10,
+      fontWeight: "800",
+      textTransform: "uppercase",
+    },
+    crBadgeLower: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: theme.subclassBadgeBg,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    crBadgeLowerText: {
+      color: theme.subclassBadgeText,
+      fontSize: 10,
+      fontWeight: "800",
+      textTransform: "uppercase",
+    },
+    crBadgeUncertain: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    crBadgeUncertainText: {
+      color: theme.textSecondary,
+      fontSize: 10,
+      fontWeight: "800",
+      textTransform: "uppercase",
+    },
+    crStructBadge: {
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    crStructBadgeText: {
+      color: theme.textSecondary,
+      fontSize: 10,
+      fontWeight: "700",
+      textTransform: "uppercase",
+    },
+    crNotInDataset: {
+      color: theme.textDisabled,
+      fontSize: 11,
+      fontStyle: "italic",
+    },
+    crEmptyIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: theme.surfaceAlt,
+      alignItems: "center",
+      justifyContent: "center",
+      alignSelf: "center",
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    crEmptyTitle: {
+      color: theme.textPrimary,
+      fontSize: 15,
+      fontWeight: "700",
+      textAlign: "center",
+    },
+    crEmptyBody: {
+      color: theme.textSecondary,
+      fontSize: 13,
+      lineHeight: 18,
+      textAlign: "center",
+    },
+    crHeaderBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: theme.warningBg,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderWidth: 1,
+      borderColor: theme.warningBorder,
+    },
+    crHeaderBadgeText: {
+      color: theme.warningText,
+      fontSize: 10,
+      fontWeight: "800",
+      textTransform: "uppercase",
+    },
+    // ─── Bottom Sheet ─────────────────────────────────────────────────────
+    sheetOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.4)",
+      justifyContent: "flex-end",
+    },
+    sheetContainer: {
+      backgroundColor: theme.surface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingTop: 12,
+      paddingHorizontal: 20,
+      paddingBottom: 34,
+      maxHeight: "80%",
+    },
+    sheetHandle: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: theme.borderMid,
+      alignSelf: "center",
+      marginBottom: 16,
+    },
+    sheetHeader: {
+      gap: 10,
+      marginBottom: 16,
+    },
+    sheetDrugName: {
+      color: theme.textPrimary,
+      fontSize: 20,
+      fontWeight: "800",
+    },
+    sheetBadgeRow: {
+      flexDirection: "row",
+      gap: 6,
+      flexWrap: "wrap",
+    },
+    sheetMechanismLabel: {
+      color: theme.textSecondary,
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
+    },
+    sheetMechanismDiagram: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 10,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    sheetMechanismDrugText: {
+      color: theme.accent,
+      fontSize: 13,
+      fontWeight: "700",
+    },
+    sheetMechanismArrow: {
+      color: theme.textDisabled,
+      fontSize: 13,
+    },
+    sheetMechanismLink: {
+      flex: 1,
+      color: theme.textSecondary,
+      fontSize: 12,
+      textAlign: "center",
+      fontStyle: "italic",
+    },
+    sheetRationale: {
+      color: theme.textPrimary,
+      fontSize: 14,
+      lineHeight: 22,
+    },
+    sheetSourceCitation: {
+      color: theme.textDisabled,
+      fontSize: 12,
+    },
+    sheetDivider: {
+      height: 1,
+      backgroundColor: theme.border,
+      marginVertical: 12,
+    },
+    sheetOpenButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      backgroundColor: theme.accentBg,
+      borderRadius: 10,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: theme.accentBorder,
+    },
+    sheetOpenButtonText: {
+      color: theme.accent,
+      fontSize: 15,
+      fontWeight: "700",
     },
   });
 }
@@ -2319,29 +2523,72 @@ function CrossReactivitySection({
 }) {
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
-
-  if (!drug.crossReactivity || drug.crossReactivity.length === 0) {
-    return null;
-  }
+  const [sheetEntry, setSheetEntry] = useState<{
+    entry: CrossReactivityEntry;
+    groupName: string;
+  } | null>(null);
 
   const drugNameById: Record<string, { en: string; fr: string }> = {};
   for (const d of allDrugs) {
     drugNameById[d.id] = d.name;
   }
 
-  function tierBadgeStyle(tier: CrossReactivityTier) {
+  if (!drug.crossReactivity || drug.crossReactivity.length === 0) {
+    return (
+      <View style={styles.panel}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Ionicons name="git-network-outline" size={18} color={theme.accent} />
+          <Text style={styles.sectionTitle}>
+            {copy(language, "crossReactivity.sectionTitle")}
+          </Text>
+        </View>
+        <View style={{ gap: 8, paddingVertical: 8 }}>
+          <View style={styles.crEmptyIcon}>
+            <Ionicons name="help-circle-outline" size={24} color={theme.textDisabled} />
+          </View>
+          <Text style={styles.crEmptyTitle}>{copy(language, "crossReactivity.emptyTitle")}</Text>
+          <Text style={styles.crEmptyBody}>{copy(language, "crossReactivity.emptyBody")}</Text>
+        </View>
+      </View>
+    );
+  }
+
+  const allEntries = drug.crossReactivity.flatMap((g) => g.entries);
+  const higherEntries = allEntries.filter((e) => e.tier === "higher-concern");
+  const lowerEntries = allEntries.filter((e) => e.tier === "lower-expected");
+  const uncertainEntries = allEntries.filter((e) => e.tier === "uncertain");
+
+  const allPanelDrugs = drug.crossReactivity.flatMap((g) => g.suggestedPanel);
+  const uniquePanelDrugs = [...new Set(allPanelDrugs)];
+
+  function findGroupForEntry(entry: CrossReactivityEntry): string {
+    for (const g of drug.crossReactivity!) {
+      if (g.entries.includes(entry)) return g.groupName[language];
+    }
+    return "";
+  }
+
+  function tierIcon(tier: CrossReactivityTier): React.ComponentProps<typeof Ionicons>["name"] {
     switch (tier) {
-      case "higher-concern": return styles.crossReactivityTierBadgeHigher;
-      case "lower-expected": return styles.crossReactivityTierBadgeLower;
-      case "uncertain": return styles.crossReactivityTierBadgeUncertain;
+      case "higher-concern": return "alert-circle";
+      case "lower-expected": return "checkmark-circle";
+      case "uncertain": return "help-circle";
     }
   }
 
-  function tierTextStyle(tier: CrossReactivityTier) {
+  function tierBadgeStyle(tier: CrossReactivityTier) {
     switch (tier) {
-      case "higher-concern": return styles.crossReactivityTierTextHigher;
-      case "lower-expected": return styles.crossReactivityTierTextLower;
-      case "uncertain": return styles.crossReactivityTierTextUncertain;
+      case "higher-concern": return styles.crBadgeHigher;
+      case "lower-expected": return styles.crBadgeLower;
+      case "uncertain": return styles.crBadgeUncertain;
+    }
+  }
+
+  function tierBadgeTextStyle(tier: CrossReactivityTier) {
+    switch (tier) {
+      case "higher-concern": return styles.crBadgeHigherText;
+      case "lower-expected": return styles.crBadgeLowerText;
+      case "uncertain": return styles.crBadgeUncertainText;
     }
   }
 
@@ -2353,6 +2600,30 @@ function CrossReactivitySection({
     }
   }
 
+  function tierSectionLabel(tier: CrossReactivityTier) {
+    switch (tier) {
+      case "higher-concern": return copy(language, "crossReactivity.investigate");
+      case "lower-expected": return copy(language, "crossReactivity.beAware");
+      case "uncertain": return copy(language, "crossReactivity.uncertainEvidence");
+    }
+  }
+
+  function tierIconColor(tier: CrossReactivityTier) {
+    switch (tier) {
+      case "higher-concern": return theme.warningAccent;
+      case "lower-expected": return theme.subclassBadgeText;
+      case "uncertain": return theme.textDisabled;
+    }
+  }
+
+  function drugRowStyle(tier: CrossReactivityTier) {
+    switch (tier) {
+      case "higher-concern": return styles.crDrugRowHigher;
+      case "lower-expected": return styles.crDrugRowLower;
+      case "uncertain": return styles.crDrugRowUncertain;
+    }
+  }
+
   function structuralLabel(rel: StructuralRelation) {
     switch (rel) {
       case "structurally-related": return copy(language, "crossReactivity.structurallyRelated");
@@ -2360,94 +2631,118 @@ function CrossReactivitySection({
     }
   }
 
+  function renderDrugRow(entry: CrossReactivityEntry) {
+    const name = drugNameById[entry.drugId];
+    const isNavigable = Boolean(name);
+    const rationale = entry.rationale[language];
+    const truncated = rationale.length > 60 ? rationale.slice(0, 57) + "..." : rationale;
+
+    return (
+      <Pressable
+        key={entry.drugId}
+        style={drugRowStyle(entry.tier)}
+        onPress={() => setSheetEntry({ entry, groupName: findGroupForEntry(entry) })}
+      >
+        <Ionicons name={tierIcon(entry.tier)} size={20} color={tierIconColor(entry.tier)} />
+        <View style={styles.crDrugRowContent}>
+          <Text style={styles.crDrugName}>
+            {name ? name[language] : entry.drugId}
+            {!isNavigable ? (
+              <Text style={styles.crNotInDataset}>{" "}{copy(language, "crossReactivity.drugNotInDataset")}</Text>
+            ) : null}
+          </Text>
+          <Text style={styles.crDrugHint} numberOfLines={1}>{truncated}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={theme.textDisabled} />
+      </Pressable>
+    );
+  }
+
+  const [expandedTiers, setExpandedTiers] = useState<Record<string, boolean>>({
+    "higher-concern": true,
+  });
+
+  function toggleTier(tier: CrossReactivityTier) {
+    setExpandedTiers((prev) => ({ ...prev, [tier]: !prev[tier] }));
+  }
+
+  function renderTierSection(tier: CrossReactivityTier, entries: CrossReactivityEntry[]) {
+    if (entries.length === 0) return null;
+    const expanded = Boolean(expandedTiers[tier]);
+    return (
+      <View style={styles.crTierSection}>
+        <Pressable style={styles.crTierHeader} onPress={() => toggleTier(tier)}>
+          <Ionicons name={tierIcon(tier)} size={16} color={tierIconColor(tier)} />
+          <Text style={[styles.crTierLabel, { flex: 1 }]}>{tierSectionLabel(tier)}</Text>
+          <Text style={styles.crTierCount}>{entries.length}</Text>
+          <Ionicons
+            name={expanded ? "chevron-up" : "chevron-down"}
+            size={16}
+            color={theme.textSecondary}
+          />
+        </Pressable>
+        {expanded ? entries.map(renderDrugRow) : null}
+      </View>
+    );
+  }
+
+  const [sectionExpanded, setSectionExpanded] = useState(false);
+
   return (
     <View style={styles.panel}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      {/* Section header — tappable to expand/collapse */}
+      <Pressable
+        style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+        onPress={() => setSectionExpanded((v) => !v)}
+      >
         <Ionicons name="git-network-outline" size={18} color={theme.accent} />
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { flex: 1 }]}>
           {copy(language, "crossReactivity.sectionTitle")}
         </Text>
+        <Text style={styles.crTierCount}>{allEntries.length}</Text>
+        <Ionicons
+          name={sectionExpanded ? "chevron-up" : "chevron-down"}
+          size={18}
+          color={theme.textSecondary}
+        />
+      </Pressable>
+
+      {/* Summary card — always visible */}
+      <View style={styles.crSummaryCard}>
+        <View style={styles.crSummaryRow}>
+          <View style={styles.crSummaryCountCircle}>
+            <Text style={styles.crSummaryCountText}>{allEntries.length}</Text>
+          </View>
+          <Text style={styles.crSummaryText}>
+            {allEntries.length} {copy(language, "crossReactivity.summaryDrugs")}
+            {" · "}{drug.crossReactivity.length} {copy(language, "crossReactivity.summaryGroups")}
+            {higherEntries.length > 0
+              ? ` · ${higherEntries.length} ${copy(language, "crossReactivity.summaryHigher")}`
+              : ""}
+          </Text>
+        </View>
       </View>
-      <Text style={styles.panelBody}>
-        {copy(language, "crossReactivity.sectionBody")}
-      </Text>
 
-      {drug.crossReactivity.map((group, gi) => (
-        <View key={`crg-${gi}`} style={styles.crossReactivityGroup}>
-          <Text style={styles.crossReactivityGroupName}>{group.groupName[language]}</Text>
-
-          {group.entries.map((entry, ei) => {
-            const name = drugNameById[entry.drugId];
-            const isNavigable = Boolean(name);
-            const sourceCitations = entry.sourceIds
-              .map((sid) => sources[sid]?.label)
-              .filter(Boolean);
-
-            return (
-              <Pressable
-                key={`cre-${ei}`}
-                style={styles.crossReactivityEntry}
-                onPress={isNavigable ? () => onOpenDrug(entry.drugId) : undefined}
-                disabled={!isNavigable}
-              >
-                <View style={styles.crossReactivityEntryHeader}>
-                  <Text style={isNavigable ? styles.crossReactivityDrugName : styles.crossReactivityDrugNameInert}>
-                    {name ? name[language] : entry.drugId}
-                  </Text>
-                  {isNavigable ? (
-                    <Ionicons name="chevron-forward" size={14} color={theme.accent} />
-                  ) : (
-                    <Text style={styles.crossReactivityNotInDataset}>
-                      {copy(language, "crossReactivity.drugNotInDataset")}
-                    </Text>
-                  )}
-                </View>
-                <View style={styles.crossReactivityBadgeRow}>
-                  <View style={tierBadgeStyle(entry.tier)}>
-                    <Text style={tierTextStyle(entry.tier)}>{tierLabel(entry.tier)}</Text>
-                  </View>
-                  <View style={styles.crossReactivityStructBadge}>
-                    <Text style={styles.crossReactivityStructBadgeText}>
-                      {structuralLabel(entry.structuralRelation)}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.crossReactivityRationale}>{entry.rationale[language]}</Text>
-                {sourceCitations.length > 0 ? (
-                  <Text style={styles.crossReactivitySourceCitation}>
-                    {copy(language, "crossReactivity.source")}: {sourceCitations.join(", ")}
-                  </Text>
-                ) : null}
-              </Pressable>
-            );
-          })}
-
-          {group.suggestedPanel.length > 0 ? (
-            <View style={styles.crossReactivityPanelContainer}>
-              <Text style={styles.crossReactivityPanelTitle}>
+      {sectionExpanded ? (
+        <>
+          {/* Suggested testing panel banner */}
+          {uniquePanelDrugs.length > 0 ? (
+            <View style={styles.crPanelBanner}>
+              <Text style={styles.crPanelBannerLabel}>
                 {copy(language, "crossReactivity.panelTitle")}
               </Text>
-              {group.panelRationale ? (
-                <Text style={styles.crossReactivityPanelBody}>
-                  {group.panelRationale[language]}
-                </Text>
-              ) : (
-                <Text style={styles.crossReactivityPanelBody}>
-                  {copy(language, "crossReactivity.panelBody")}
-                </Text>
-              )}
-              <View style={styles.crossReactivityPanelChipList}>
-                {group.suggestedPanel.map((panelDrugId) => {
+              <View style={styles.crPanelChipList}>
+                {uniquePanelDrugs.map((panelDrugId) => {
                   const pName = drugNameById[panelDrugId];
                   const pNavigable = Boolean(pName);
                   return (
                     <Pressable
                       key={panelDrugId}
-                      style={styles.crossReactivityPanelChip}
+                      style={styles.crPanelChip}
                       onPress={pNavigable ? () => onOpenDrug(panelDrugId) : undefined}
                       disabled={!pNavigable}
                     >
-                      <Text style={pNavigable ? styles.crossReactivityPanelChipText : styles.crossReactivityPanelChipTextInert}>
+                      <Text style={pNavigable ? styles.crPanelChipText : styles.crPanelChipTextInert}>
                         {pName ? pName[language] : panelDrugId}
                       </Text>
                       {pNavigable ? (
@@ -2459,8 +2754,101 @@ function CrossReactivitySection({
               </View>
             </View>
           ) : null}
-        </View>
-      ))}
+
+          {/* Tier-grouped drug lists */}
+          {renderTierSection("higher-concern", higherEntries)}
+          {renderTierSection("lower-expected", lowerEntries)}
+          {renderTierSection("uncertain", uncertainEntries)}
+        </>
+      ) : null}
+
+      {/* Bottom sheet */}
+      <Modal
+        visible={sheetEntry !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSheetEntry(null)}
+      >
+        <Pressable style={styles.sheetOverlay} onPress={() => setSheetEntry(null)}>
+          <Pressable style={styles.sheetContainer} onPress={() => {}}>
+            <View style={styles.sheetHandle} />
+            {sheetEntry ? (() => {
+              const { entry, groupName } = sheetEntry;
+              const name = drugNameById[entry.drugId];
+              const isNavigable = Boolean(name);
+              const sourceCitations = entry.sourceIds
+                .map((sid) => sources[sid]?.label)
+                .filter(Boolean);
+
+              return (
+                <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+                  {/* Header */}
+                  <View style={styles.sheetHeader}>
+                    <Text style={styles.sheetDrugName}>
+                      {name ? name[language] : entry.drugId}
+                    </Text>
+                    <View style={styles.sheetBadgeRow}>
+                      <View style={tierBadgeStyle(entry.tier)}>
+                        <Ionicons name={tierIcon(entry.tier)} size={12} color={tierIconColor(entry.tier)} />
+                        <Text style={tierBadgeTextStyle(entry.tier)}>{tierLabel(entry.tier)}</Text>
+                      </View>
+                      <View style={styles.crStructBadge}>
+                        <Text style={styles.crStructBadgeText}>{structuralLabel(entry.structuralRelation)}</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Mechanism diagram */}
+                  <Text style={styles.sheetMechanismLabel}>{copy(language, "crossReactivity.mechanism")}</Text>
+                  <View style={styles.sheetMechanismDiagram}>
+                    <Text style={styles.sheetMechanismDrugText}>{drug.name[language]}</Text>
+                    <Text style={styles.sheetMechanismArrow}>→</Text>
+                    <Text style={styles.sheetMechanismLink} numberOfLines={1}>{groupName}</Text>
+                    <Text style={styles.sheetMechanismArrow}>→</Text>
+                    <Text style={styles.sheetMechanismDrugText}>
+                      {name ? name[language] : entry.drugId}
+                    </Text>
+                  </View>
+
+                  <View style={styles.sheetDivider} />
+
+                  {/* Rationale */}
+                  <Text style={styles.sheetRationale}>{entry.rationale[language]}</Text>
+
+                  {/* Sources */}
+                  {sourceCitations.length > 0 ? (
+                    <>
+                      <View style={styles.sheetDivider} />
+                      <Text style={styles.sheetSourceCitation}>
+                        {copy(language, "crossReactivity.source")}: {sourceCitations.join(", ")}
+                      </Text>
+                    </>
+                  ) : null}
+
+                  {/* Open drug button */}
+                  {isNavigable ? (
+                    <>
+                      <View style={styles.sheetDivider} />
+                      <Pressable
+                        style={styles.sheetOpenButton}
+                        onPress={() => {
+                          setSheetEntry(null);
+                          onOpenDrug(entry.drugId);
+                        }}
+                      >
+                        <Ionicons name="open-outline" size={18} color={theme.accent} />
+                        <Text style={styles.sheetOpenButtonText}>
+                          {copy(language, "crossReactivity.openDrug")} — {name![language]}
+                        </Text>
+                      </Pressable>
+                    </>
+                  ) : null}
+                </ScrollView>
+              );
+            })() : null}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -2582,7 +2970,17 @@ function DetailScreen({
               <Text style={styles.detailIdBadgeText}>{drug.id}</Text>
             </View>
           </View>
-          <Text style={styles.detailTitle}>{drug.name[language]}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={[styles.detailTitle, { flex: 0 }]}>{drug.name[language]}</Text>
+            {drug.crossReactivity && drug.crossReactivity.length > 0 ? (
+              <View style={styles.crHeaderBadge}>
+                <Ionicons name="git-network-outline" size={10} color={theme.warningText} />
+                <Text style={styles.crHeaderBadgeText}>
+                  {drug.crossReactivity.reduce((s, g) => s + g.entries.length, 0)} {copy(language, "crossReactivity.headerBadge")}
+                </Text>
+              </View>
+            ) : null}
+          </View>
           {drug.aliases.length > 0 ? (
             <Text style={styles.detailSubtitle}>{drug.aliases.join(", ")}</Text>
           ) : null}
@@ -2750,9 +3148,11 @@ function DetailScreen({
             </View>
             <Pressable onPress={() => setShowSource((current) => !current)} style={styles.sourceToggle}>
               <Text style={styles.sectionTitle}>{copy(language, "detail.source")}</Text>
-              <Text style={styles.sourceToggleLabel}>
-                {showSource ? copy(language, "detail.hideSource") : copy(language, "detail.showSource")}
-              </Text>
+              <Ionicons
+                name={showSource ? "chevron-up" : "chevron-down"}
+                size={18}
+                color={theme.textSecondary}
+              />
             </Pressable>
 
             {showSource ? (
