@@ -16,14 +16,19 @@ if (!drug) {
   throw new Error("Fixture verification failed: cefazoline was not present in the built dataset.");
 }
 
-if (!drug.tests.idr.concentration || !drug.tests.idr.preferredSourceId) {
+const preferredEntry = drug.tests.idr.sourceEntries.find((e) => e.isPreferred);
+
+if (!preferredEntry || !preferredEntry.concentration) {
   throw new Error("Fixture verification failed: the applicable IDR test did not survive export.");
 }
 
-if (drug.tests.prick.concentration || drug.tests.patch.concentration) {
+if (
+  drug.tests.prick.sourceEntries.some((e) => e.concentration) ||
+  drug.tests.patch.sourceEntries.some((e) => e.concentration)
+) {
   throw new Error("Fixture verification failed: non-applicable tests should remain empty.");
 }
 
 console.log(`Verified admin fixture export compatibility for ${dataset.drugs.length} drug(s).`);
 console.log(`Fixture drug: ${drug.id}`);
-console.log(`Applicable test preserved: ${drug.tests.idr.preferredSourceId}`);
+console.log(`Applicable test preserved: ${preferredEntry.sourceId}`);

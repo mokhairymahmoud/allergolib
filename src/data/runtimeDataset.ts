@@ -3,12 +3,16 @@ import * as Crypto from "expo-crypto";
 
 import appConfig from "../../app.json";
 import type {
+  CrossReactivityEntry,
+  CrossReactivityGroup,
+  CrossReactivityTier,
   Dataset,
   DatasetManifest,
   NoteKind,
   DatasetRelease,
   LocalizedString,
   SourceDocument,
+  StructuralRelation,
   TestNote,
   TestKind,
   TestRecord,
@@ -328,6 +332,66 @@ function normalizeTestRecord(
   return { sourceEntries, dilutions, vehicle, notes };
 }
 
+function asCrossReactivityTier(value: unknown, context: string): CrossReactivityTier {
+  if (value !== "higher-concern" && value !== "lower-expected" && value !== "uncertain") {
+    fail(`${context} must be higher-concern, lower-expected, or uncertain.`);
+  }
+  return value;
+}
+
+function asStructuralRelation(value: unknown, context: string): StructuralRelation {
+  if (value !== "structurally-related" && value !== "structurally-distinct") {
+    fail(`${context} must be structurally-related or structurally-distinct.`);
+  }
+  return value;
+}
+
+function normalizeCrossReactivityEntry(
+  value: unknown,
+  context: string,
+  sourceIds: Set<string>
+): CrossReactivityEntry {
+  const record = asRecord(value, context);
+  const entrySourceIds = asStringArray(record.sourceIds, `${context}.sourceIds`);
+
+  for (const sid of entrySourceIds) {
+    if (!sourceIds.has(sid)) {
+      fail(`${context}.sourceIds references unknown source: ${sid}.`);
+    }
+  }
+
+  return {
+    drugId: asString(record.drugId, `${context}.drugId`),
+    tier: asCrossReactivityTier(record.tier, `${context}.tier`),
+    structuralRelation: asStructuralRelation(record.structuralRelation, `${context}.structuralRelation`),
+    rationale: asLocalizedString(record.rationale, `${context}.rationale`),
+    sourceIds: entrySourceIds,
+  };
+}
+
+function normalizeCrossReactivityGroup(
+  value: unknown,
+  context: string,
+  sourceIds: Set<string>
+): CrossReactivityGroup {
+  const record = asRecord(value, context);
+  const entries = Array.isArray(record.entries)
+    ? record.entries.map((e, i) =>
+        normalizeCrossReactivityEntry(e, `${context}.entries[${i}]`, sourceIds)
+      )
+    : [];
+  const panelRationale = record.panelRationale
+    ? asLocalizedString(record.panelRationale, `${context}.panelRationale`)
+    : undefined;
+
+  return {
+    groupName: asLocalizedString(record.groupName, `${context}.groupName`),
+    entries,
+    suggestedPanel: asStringArray(record.suggestedPanel, `${context}.suggestedPanel`),
+    ...(panelRationale ? { panelRationale } : {}),
+  };
+}
+
 function normalizeDataset(value: unknown, context: string): Dataset {
   const record = asRecord(value, context);
   const sourcesRecord = asRecord(record.sources, `${context}.sources`);
@@ -362,6 +426,18 @@ function normalizeDataset(value: unknown, context: string): Dataset {
         ? asLocalizedString(subclassNameRaw, `${context}.drugs[${index}].subclassName`)
         : undefined;
 
+    const crossReactivityRaw = drug.crossReactivity;
+    const crossReactivity =
+      Array.isArray(crossReactivityRaw) && crossReactivityRaw.length > 0
+        ? crossReactivityRaw.map((g, gi) =>
+            normalizeCrossReactivityGroup(
+              g,
+              `${context}.drugs[${index}].crossReactivity[${gi}]`,
+              sourceIds
+            )
+          )
+        : undefined;
+
     return {
       id: asString(drug.id, `${context}.drugs[${index}].id`),
       name: asLocalizedString(drug.name, `${context}.drugs[${index}].name`),
@@ -385,6 +461,7 @@ function normalizeDataset(value: unknown, context: string): Dataset {
           sourceIds
         ),
       },
+      ...(crossReactivity ? { crossReactivity } : {}),
     };
   });
 

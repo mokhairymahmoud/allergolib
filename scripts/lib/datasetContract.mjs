@@ -1,6 +1,8 @@
 const LANGUAGES = ["en", "fr"];
 const TEST_KINDS = ["prick", "idr", "patch"];
 const NOTE_KINDS = new Set(["info", "warning", "cross-reactivity"]);
+const CROSS_REACTIVITY_TIERS = new Set(["higher-concern", "lower-expected", "uncertain"]);
+const STRUCTURAL_RELATIONS = new Set(["structurally-related", "structurally-distinct"]);
 const REQUIRED_METADATA_KEYS = [
   "version",
   "releasedAt",
@@ -369,6 +371,93 @@ function buildTestEntriesLegacy(testRows, drugsById, sources) {
   }
 }
 
+function buildCrossReactivity(crossReactivityRows, drugsById, sources) {
+  const grouped = {};
+
+  for (const row of crossReactivityRows) {
+    assert(drugsById[row.drug_id], `cross_reactivity references unknown drug ${row.drug_id}.`);
+    requireLocalizedColumns(row, `CrossReactivity ${row.drug_id}`, "group_name");
+    requireTrimmedField(row, "related_drug_id", `CrossReactivity ${row.drug_id}`);
+    assert(
+      drugsById[row.related_drug_id],
+      `cross_reactivity references unknown related drug ${row.related_drug_id} for ${row.drug_id}.`
+    );
+    assert(
+      CROSS_REACTIVITY_TIERS.has(row.tier),
+      `Invalid tier "${row.tier}" in cross_reactivity for ${row.drug_id}/${row.related_drug_id}.`
+    );
+    assert(
+      STRUCTURAL_RELATIONS.has(row.structural_relation),
+      `Invalid structural_relation "${row.structural_relation}" in cross_reactivity for ${row.drug_id}/${row.related_drug_id}.`
+    );
+    requireLocalizedColumns(row, `CrossReactivity ${row.drug_id}/${row.related_drug_id}`, "rationale");
+
+    const key = `${row.drug_id}::${row.group_name_en}`;
+    if (!grouped[key]) {
+      grouped[key] = { drug_id: row.drug_id, rows: [] };
+    }
+    grouped[key].rows.push(row);
+  }
+
+  const parseSemicolonList = (value) =>
+    value ? value.split(";").map((s) => s.trim()).filter(Boolean) : [];
+
+  const crossReactivityByDrugId = {};
+
+  for (const { drug_id, rows } of Object.values(grouped)) {
+    const firstRow = rows[0];
+
+    for (const row of rows) {
+      for (const sid of parseSemicolonList(row.source_ids)) {
+        assert(
+          sources[sid],
+          `cross_reactivity references unknown source ${sid} for ${row.drug_id}/${row.related_drug_id}.`
+        );
+      }
+    }
+
+    const entries = rows.map((row) => ({
+      drugId: row.related_drug_id.trim(),
+      tier: row.tier,
+      structuralRelation: row.structural_relation,
+      rationale: { en: row.rationale_en, fr: row.rationale_fr },
+      sourceIds: parseSemicolonList(row.source_ids),
+    }));
+
+    const panelRow = rows.find((r) => r.panel_drug_ids?.trim());
+    const panelDrugIds = panelRow ? parseSemicolonList(panelRow.panel_drug_ids) : [];
+
+    for (const pid of panelDrugIds) {
+      assert(
+        drugsById[pid],
+        `cross_reactivity panel references unknown drug ${pid} for ${drug_id}.`
+      );
+    }
+
+    const panelRationale =
+      panelRow && (panelRow.panel_rationale_en?.trim() || panelRow.panel_rationale_fr?.trim())
+        ? (() => {
+            requireLocalizedColumns(panelRow, `CrossReactivity panel ${drug_id}`, "panel_rationale");
+            return { en: panelRow.panel_rationale_en, fr: panelRow.panel_rationale_fr };
+          })()
+        : undefined;
+
+    const group = {
+      groupName: { en: firstRow.group_name_en, fr: firstRow.group_name_fr },
+      entries,
+      suggestedPanel: panelDrugIds,
+      ...(panelRationale ? { panelRationale } : {}),
+    };
+
+    if (!crossReactivityByDrugId[drug_id]) {
+      crossReactivityByDrugId[drug_id] = [];
+    }
+    crossReactivityByDrugId[drug_id].push(group);
+  }
+
+  return crossReactivityByDrugId;
+}
+
 function buildDatasetFromTabRows(tabRowsByName) {
   const requiredTabs = ["release_metadata", "sources", "drugs", "aliases", "test_entries", "notes"];
 
@@ -388,6 +477,19 @@ function buildDatasetFromTabRows(tabRowsByName) {
   const sources = buildSources(sourceRows);
   const drugs = buildDrugs(drugRows, aliasRows, testRows, noteRows, sources);
 
+  const crossReactivityRawRows = tabRowsByName.cross_reactivity;
+  if (Array.isArray(crossReactivityRawRows) && crossReactivityRawRows.length >= 2) {
+    const crossReactivityRows = rowsToObjects("cross_reactivity", crossReactivityRawRows);
+    const drugsById = Object.fromEntries(drugs.map((d) => [d.id, d]));
+    const crossReactivityByDrugId = buildCrossReactivity(crossReactivityRows, drugsById, sources);
+
+    for (const drug of drugs) {
+      if (crossReactivityByDrugId[drug.id]) {
+        drug.crossReactivity = crossReactivityByDrugId[drug.id];
+      }
+    }
+  }
+
   return {
     release,
     sources,
@@ -396,6 +498,7 @@ function buildDatasetFromTabRows(tabRowsByName) {
 }
 
 export {
+  buildCrossReactivity,
   buildDatasetFromTabRows,
   buildDrugs,
   buildRelease,

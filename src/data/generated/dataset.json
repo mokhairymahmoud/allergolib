@@ -713,7 +713,99 @@
           "dilutions": [],
           "notes": []
         }
-      }
+      },
+      "crossReactivity": [
+        {
+          "groupName": {
+            "en": "Neuromuscular Blocking Agents",
+            "fr": "Curares"
+          },
+          "entries": [
+            {
+              "drugId": "succinylcholine",
+              "tier": "higher-concern",
+              "structuralRelation": "structurally-related",
+              "rationale": {
+                "en": "Shares quaternary ammonium epitope. Cross-reactivity between NMBAs via IgE directed against substituted ammonium ions is well documented.",
+                "fr": "Partage l'epitope ammonium quaternaire. La reactivite croisee entre curares via les IgE diriges contre les ions ammonium substitues est bien documentee."
+              },
+              "sourceIds": [
+                "sfar-sfa-2025-annex-4"
+              ]
+            },
+            {
+              "drugId": "cisatracurium",
+              "tier": "higher-concern",
+              "structuralRelation": "structurally-related",
+              "rationale": {
+                "en": "Benzylisoquinoline NMBA. Higher concern for cross-reactivity due to shared ammonium ion structures.",
+                "fr": "Curare benzylisoquinoline. Preoccupation plus elevee de reactivite croisee en raison des structures d'ions ammonium partagees."
+              },
+              "sourceIds": [
+                "sfar-sfa-2025-annex-4"
+              ]
+            },
+            {
+              "drugId": "atracurium",
+              "tier": "higher-concern",
+              "structuralRelation": "structurally-related",
+              "rationale": {
+                "en": "Benzylisoquinoline NMBA sharing the substituted ammonium epitope with rocuronium.",
+                "fr": "Curare benzylisoquinoline partageant l'epitope ammonium substitue avec le rocuronium."
+              },
+              "sourceIds": [
+                "sfar-sfa-2025-annex-4"
+              ]
+            },
+            {
+              "drugId": "vecuronium",
+              "tier": "higher-concern",
+              "structuralRelation": "structurally-related",
+              "rationale": {
+                "en": "Aminosteroid NMBA closely related to rocuronium. Highest structural similarity within the aminosteroid subgroup.",
+                "fr": "Curare aminosteroide etroitement apparente au rocuronium. Plus haute similarite structurelle au sein du sous-groupe aminosteroide."
+              },
+              "sourceIds": [
+                "sfar-sfa-2025-annex-4"
+              ]
+            },
+            {
+              "drugId": "pancuronium",
+              "tier": "lower-expected",
+              "structuralRelation": "structurally-related",
+              "rationale": {
+                "en": "Aminosteroid NMBA. Lower expected cross-reactivity compared to vecuronium despite shared aminosteroid backbone.",
+                "fr": "Curare aminosteroide. Reactivite croisee attendue moindre comparee au vecuronium malgre le squelette aminosteroide partage."
+              },
+              "sourceIds": [
+                "sfar-sfa-2025-annex-4"
+              ]
+            },
+            {
+              "drugId": "mivacurium",
+              "tier": "uncertain",
+              "structuralRelation": "structurally-related",
+              "rationale": {
+                "en": "Benzylisoquinoline NMBA. Limited evidence regarding cross-reactivity pattern with aminosteroid NMBAs.",
+                "fr": "Curare benzylisoquinoline. Evidence limitee concernant le profil de reactivite croisee avec les curares aminosteroides."
+              },
+              "sourceIds": []
+            }
+          ],
+          "suggestedPanel": [
+            "succinylcholine",
+            "cisatracurium",
+            "atracurium",
+            "vecuronium",
+            "pancuronium",
+            "mivacurium"
+          ],
+          "panelRationale": {
+            "en": "When rocuronium is the suspected culprit, consider evaluating all available NMBAs to identify potential alternatives for future procedures.",
+            "fr": "Lorsque le rocuronium est le culprit suspecte, envisager d'evaluer tous les curares disponibles pour identifier des alternatives potentielles pour les procedures futures."
+          }
+        }
+      ]
     },
     {
       "id": "succinylcholine",
@@ -786,7 +878,47 @@
           "dilutions": [],
           "notes": []
         }
-      }
+      },
+      "crossReactivity": [
+        {
+          "groupName": {
+            "en": "Neuromuscular Blocking Agents",
+            "fr": "Curares"
+          },
+          "entries": [
+            {
+              "drugId": "rocuronium",
+              "tier": "higher-concern",
+              "structuralRelation": "structurally-related",
+              "rationale": {
+                "en": "Aminosteroid NMBA. Shares quaternary ammonium epitope targeted by IgE in NMBA hypersensitivity.",
+                "fr": "Curare aminosteroide. Partage l'epitope ammonium quaternaire cible par les IgE dans l'hypersensibilite aux curares."
+              },
+              "sourceIds": [
+                "sfar-sfa-2025-annex-4"
+              ]
+            },
+            {
+              "drugId": "cisatracurium",
+              "tier": "lower-expected",
+              "structuralRelation": "structurally-distinct",
+              "rationale": {
+                "en": "Benzylisoquinoline NMBA. Structurally distinct from depolarizing agents; lower expected cross-reactivity but evaluation may be warranted.",
+                "fr": "Curare benzylisoquinoline. Structurellement distinct des agents depolarisants; reactivite croisee attendue moindre mais l'evaluation peut etre justifiee."
+              },
+              "sourceIds": [
+                "sfar-sfa-2025-annex-4"
+              ]
+            }
+          ],
+          "suggestedPanel": [
+            "rocuronium",
+            "cisatracurium",
+            "atracurium",
+            "vecuronium"
+          ]
+        }
+      ]
     },
     {
       "id": "fentanyl",

@@ -96,7 +96,18 @@ export const dictionary = {
     "info.title": "About this release",
     "info.body":
       "This screen groups release metadata, provenance framing, and beta-use guidance away from clinical lookup.",
-    "info.releaseCardTitle": "Offline dataset status"
+    "info.releaseCardTitle": "Offline dataset status",
+    "crossReactivity.sectionTitle": "Cross-Reactivity",
+    "crossReactivity.sectionBody": "Structurally related drugs that may warrant evaluation when this agent is the suspected culprit.",
+    "crossReactivity.tierHigher": "Higher concern",
+    "crossReactivity.tierLower": "Lower expected cross-reactivity",
+    "crossReactivity.tierUncertain": "Uncertain",
+    "crossReactivity.structurallyRelated": "Structurally related",
+    "crossReactivity.structurallyDistinct": "Structurally distinct",
+    "crossReactivity.panelTitle": "Suggested Testing Panel",
+    "crossReactivity.panelBody": "Drugs to consider in evaluation alongside the suspected culprit.",
+    "crossReactivity.source": "Source",
+    "crossReactivity.drugNotInDataset": "Not in current dataset"
   },
   fr: {
     "compliance.badge": "Beta privee",
@@ -193,7 +204,18 @@ export const dictionary = {
     "info.title": "A propos de cette version",
     "info.body":
       "Cet ecran regroupe les metadonnees de version, le cadrage de provenance et les consignes d'usage beta hors du flux de recherche clinique.",
-    "info.releaseCardTitle": "Statut du jeu de donnees hors ligne"
+    "info.releaseCardTitle": "Statut du jeu de donnees hors ligne",
+    "crossReactivity.sectionTitle": "Reactivite croisee",
+    "crossReactivity.sectionBody": "Medicaments structurellement apparentes pouvant justifier une evaluation lorsque cet agent est le culprit suspecte.",
+    "crossReactivity.tierHigher": "Preoccupation plus elevee",
+    "crossReactivity.tierLower": "Reactivite croisee attendue moindre",
+    "crossReactivity.tierUncertain": "Incertain",
+    "crossReactivity.structurallyRelated": "Structurellement apparente",
+    "crossReactivity.structurallyDistinct": "Structurellement distinct",
+    "crossReactivity.panelTitle": "Panel de test suggere",
+    "crossReactivity.panelBody": "Medicaments a considerer dans l'evaluation en plus du culprit suspecte.",
+    "crossReactivity.source": "Source",
+    "crossReactivity.drugNotInDataset": "Absent du jeu de donnees actuel"
   }
 } as const;
 

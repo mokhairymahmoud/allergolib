@@ -50,6 +50,24 @@ export type TestRecord = {
   notes: TestNote[];
 };
 
+export type CrossReactivityTier = "higher-concern" | "lower-expected" | "uncertain";
+export type StructuralRelation = "structurally-related" | "structurally-distinct";
+
+export type CrossReactivityEntry = {
+  drugId: string;
+  tier: CrossReactivityTier;
+  structuralRelation: StructuralRelation;
+  rationale: LocalizedString;
+  sourceIds: string[];
+};
+
+export type CrossReactivityGroup = {
+  groupName: LocalizedString;
+  entries: CrossReactivityEntry[];
+  suggestedPanel: string[];
+  panelRationale?: LocalizedString;
+};
+
 export type DrugRecord = {
   id: string;
   name: LocalizedString;
@@ -57,6 +75,7 @@ export type DrugRecord = {
   subclassName?: LocalizedString;
   aliases: string[];
   tests: Record<TestKind, TestRecord>;
+  crossReactivity?: CrossReactivityGroup[];
 };
 
 export type Dataset = {

@@ -18,6 +18,9 @@ const SHEET_RANGES = {
   test_entries: "test_entries!A:Z",
   notes: "notes!A:Z",
 };
+const OPTIONAL_SHEET_RANGES = {
+  cross_reactivity: "cross_reactivity!A:Z",
+};
 
 function loadEnvFile(filename) {
   const filePath = join(rootDir, filename);
@@ -103,7 +106,7 @@ async function authHeaders() {
 }
 
 async function fetchSheetRows(tabName) {
-  const range = SHEET_RANGES[tabName];
+  const range = SHEET_RANGES[tabName] || OPTIONAL_SHEET_RANGES[tabName];
   const headers = await authHeaders();
   const url = new URL(
     `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId()}/values/${encodeURIComponent(range)}`
@@ -128,12 +131,25 @@ async function fetchSheetRows(tabName) {
   return json.values ?? [];
 }
 
+async function fetchOptionalSheetRows(tabName) {
+  try {
+    return await fetchSheetRows(tabName);
+  } catch {
+    return [];
+  }
+}
+
 async function buildDataset() {
   const tabRowsByName = Object.fromEntries(
     await Promise.all(
       Object.keys(SHEET_RANGES).map(async (tabName) => [tabName, await fetchSheetRows(tabName)])
     )
   );
+
+  const optionalEntries = await Promise.all(
+    Object.keys(OPTIONAL_SHEET_RANGES).map(async (tabName) => [tabName, await fetchOptionalSheetRows(tabName)])
+  );
+  Object.assign(tabRowsByName, Object.fromEntries(optionalEntries));
 
   return buildDatasetFromTabRows(tabRowsByName);
 }
