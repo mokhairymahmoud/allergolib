@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import Svg, { Path, Text as SvgText, TextPath, Defs } from "react-native-svg";
 
 import {
   getBundledActiveDataset,
@@ -2743,6 +2744,63 @@ function detailTabLabel(language: Language, tab: DetailTab) {
   }
 }
 
+function formatOrbitText(label: string, maxLineLength: number, maxLines: number) {
+  const normalized = label.replace(/\s+/g, " ").trim();
+  if (!normalized) return label;
+
+  const words = normalized.split(" ");
+  if (words.length === 1) {
+    if (normalized.length <= maxLineLength || maxLines === 1) {
+      return normalized;
+    }
+
+    const splitAt = Math.ceil(normalized.length / Math.min(maxLines, 2));
+    return `${normalized.slice(0, splitAt)}\n${normalized.slice(splitAt)}`;
+  }
+
+  const lines: string[] = [];
+  let currentLine = "";
+
+  for (const word of words) {
+    const nextLine = currentLine ? `${currentLine} ${word}` : word;
+    if (nextLine.length <= maxLineLength || currentLine.length === 0) {
+      currentLine = nextLine;
+      continue;
+    }
+
+    lines.push(currentLine);
+    currentLine = word;
+
+    if (lines.length === maxLines - 1) {
+      break;
+    }
+  }
+
+  const consumedWords = lines.join(" ").split(" ").filter(Boolean).length;
+  const remainingWords = words.slice(consumedWords);
+  const trailingLine = [currentLine, ...remainingWords.slice(currentLine ? 1 : 0)].filter(Boolean).join(" ");
+  if (trailingLine) {
+    lines.push(trailingLine);
+  }
+
+  return lines.slice(0, maxLines).join("\n");
+}
+
+function centerFontSize(name: string, radius: number): number {
+  const diameter = radius * 2;
+  const usableWidth = diameter * 0.75;
+  const words = name.trim().split(/\s+/);
+  const longest = words.length >= 2 ? Math.max(...words.map((w) => w.length)) : name.length;
+  const fitted = Math.floor(usableWidth / (longest * 0.58));
+  return Math.min(Math.max(fitted, 9), 16);
+}
+
+function getInitials(name: string): string {
+  const words = name.replace(/[()]/g, "").replace(/\s+/g, " ").trim().split(" ");
+  if (words.length === 1) return words[0].substring(0, 3).toUpperCase();
+  return words.map((w) => w[0]).join("").toUpperCase().substring(0, 4);
+}
+
 function OrbitNode({
   nx,
   ny,
@@ -2750,6 +2808,9 @@ function OrbitNode({
   bg,
   label,
   onPress,
+  borderColor,
+  textColor,
+  sublabel,
 }: {
   nx: number;
   ny: number;
@@ -2757,6 +2818,9 @@ function OrbitNode({
   bg: string;
   label: string;
   onPress: () => void;
+  borderColor?: string;
+  textColor?: string;
+  sublabel?: string;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -2767,6 +2831,10 @@ function OrbitNode({
   function handlePressOut() {
     Animated.spring(scale, { toValue: 1, useNativeDriver: true, friction: 6, tension: 120 }).start();
   }
+
+  const isGroupNode = Boolean(borderColor);
+  const displayLabel = isGroupNode ? sublabel ?? "" : formatOrbitText(label, 11, 2);
+  const initials = isGroupNode ? getInitials(label) : "";
 
   return (
     <Animated.View
@@ -2789,6 +2857,8 @@ function OrbitNode({
           height: nodeR * 2,
           borderRadius: nodeR,
           backgroundColor: bg,
+          borderWidth: borderColor ? 2 : 0,
+          borderColor: borderColor,
           alignItems: "center",
           justifyContent: "center",
           shadowColor: "#000",
@@ -2798,12 +2868,35 @@ function OrbitNode({
           elevation: 3,
         }}
       >
-        <Text
-          style={{ color: "#FFFFFF", fontSize: 8, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}
-          numberOfLines={1}
-        >
-          {label.length > 9 ? label.slice(0, 8) + "." : label}
-        </Text>
+        {isGroupNode ? (
+          <View style={{ alignItems: "center" }}>
+            <Text
+              style={{
+                color: textColor ?? "#FFFFFF",
+                fontSize: 10,
+                fontWeight: "700",
+                textAlign: "center",
+                letterSpacing: 0.5,
+                opacity: 0.75,
+              }}
+              numberOfLines={1}
+            >
+              {initials}
+            </Text>
+            <Text
+              style={{
+                color: textColor ?? "#FFFFFF",
+                fontSize: 18,
+                fontWeight: "800",
+                textAlign: "center",
+                marginTop: -1,
+              }}
+              numberOfLines={1}
+            >
+              {displayLabel}
+            </Text>
+          </View>
+        ) : null}
       </Pressable>
     </Animated.View>
   );
@@ -2829,6 +2922,17 @@ function OrbitMap({
     groupName: string;
   } | null>(null);
 
+  const [expandedGroupIdx, setExpandedGroupIdx] = useState<number | null>(null);
+  const [tooltipGroupIdx, setTooltipGroupIdx] = useState<number | null>(null);
+  const sheetSlide = useRef(new Animated.Value(400)).current;
+
+  const prevSheetEntry = useRef(sheetEntry);
+  if (sheetEntry && !prevSheetEntry.current) {
+    sheetSlide.setValue(400);
+    Animated.spring(sheetSlide, { toValue: 0, useNativeDriver: true, friction: 10, tension: 65 }).start();
+  }
+  prevSheetEntry.current = sheetEntry;
+
   const drugNameById: Record<string, { en: string; fr: string }> = {};
   for (const d of allDrugs) {
     drugNameById[d.id] = d.name;
@@ -2846,16 +2950,13 @@ function OrbitMap({
     );
   }
 
-  const allEntries = drug.crossReactivity.flatMap((g) => g.entries);
-  const higherEntries = allEntries.filter((e) => e.tier === "higher-concern");
-  const lowerEntries = allEntries.filter((e) => e.tier === "lower-expected");
-  const uncertainEntries = allEntries.filter((e) => e.tier === "uncertain");
+  const groups = drug.crossReactivity;
+  const singleGroup = groups.length === 1;
 
-  function findGroupForEntry(entry: CrossReactivityEntry): string {
-    for (const g of drug.crossReactivity!) {
-      if (g.entries.includes(entry)) return g.groupName[language];
-    }
-    return "";
+  function highestTier(entries: CrossReactivityEntry[]): CrossReactivityTier {
+    if (entries.some((e) => e.tier === "higher-concern")) return "higher-concern";
+    if (entries.some((e) => e.tier === "lower-expected")) return "lower-expected";
+    return "uncertain";
   }
 
   function tierIcon(tier: CrossReactivityTier): React.ComponentProps<typeof Ionicons>["name"] {
@@ -2865,7 +2966,6 @@ function OrbitMap({
       case "uncertain": return "help-circle";
     }
   }
-
   function tierBadgeStyle(tier: CrossReactivityTier) {
     switch (tier) {
       case "higher-concern": return styles.crBadgeHigher;
@@ -2873,7 +2973,6 @@ function OrbitMap({
       case "uncertain": return styles.crBadgeUncertain;
     }
   }
-
   function tierBadgeTextStyle(tier: CrossReactivityTier) {
     switch (tier) {
       case "higher-concern": return styles.crBadgeHigherText;
@@ -2881,7 +2980,6 @@ function OrbitMap({
       case "uncertain": return styles.crBadgeUncertainText;
     }
   }
-
   function tierLabel(tier: CrossReactivityTier) {
     switch (tier) {
       case "higher-concern": return copy(language, "crossReactivity.tierHigher");
@@ -2889,7 +2987,6 @@ function OrbitMap({
       case "uncertain": return copy(language, "crossReactivity.tierUncertain");
     }
   }
-
   function tierIconColor(tier: CrossReactivityTier) {
     switch (tier) {
       case "higher-concern": return theme.warningAccent;
@@ -2897,14 +2994,6 @@ function OrbitMap({
       case "uncertain": return theme.textDisabled;
     }
   }
-
-  function structuralLabel(rel: StructuralRelation) {
-    switch (rel) {
-      case "structurally-related": return copy(language, "crossReactivity.structurallyRelated");
-      case "structurally-distinct": return copy(language, "crossReactivity.structurallyDistinct");
-    }
-  }
-
   function nodeColor(tier: CrossReactivityTier) {
     switch (tier) {
       case "higher-concern": return theme.warningAccent;
@@ -2912,7 +3001,20 @@ function OrbitMap({
       case "uncertain": return theme.borderMid;
     }
   }
-
+  function nodeBgColor(tier: CrossReactivityTier) {
+    switch (tier) {
+      case "higher-concern": return theme.warningBg;
+      case "lower-expected": return theme.subclassBadgeBg;
+      case "uncertain": return theme.surfaceAlt;
+    }
+  }
+  function nodeBorderColor(tier: CrossReactivityTier) {
+    switch (tier) {
+      case "higher-concern": return theme.warningBorder;
+      case "lower-expected": return theme.subclassBadgeText;
+      case "uncertain": return theme.borderMid;
+    }
+  }
   function nodeTextColor(tier: CrossReactivityTier) {
     switch (tier) {
       case "higher-concern": return theme.warningText;
@@ -2920,319 +3022,263 @@ function OrbitMap({
       case "uncertain": return theme.textSecondary;
     }
   }
-
-  function arcColor(tier: CrossReactivityTier) {
-    switch (tier) {
-      case "higher-concern": return theme.warningBorder;
-      case "lower-expected": return theme.subclassBadgeText;
-      case "uncertain": return theme.borderMid;
+  function structuralLabel(rel: StructuralRelation) {
+    switch (rel) {
+      case "structurally-related": return copy(language, "crossReactivity.structurallyRelated");
+      case "structurally-distinct": return copy(language, "crossReactivity.structurallyDistinct");
     }
   }
 
-  // Collect active tiers — inner to outer: higher → lower → uncertain
-  const activeTiers: { tier: CrossReactivityTier; entries: CrossReactivityEntry[] }[] = [];
-  if (higherEntries.length) activeTiers.push({ tier: "higher-concern", entries: higherEntries });
-  if (lowerEntries.length) activeTiers.push({ tier: "lower-expected", entries: lowerEntries });
-  if (uncertainEntries.length) activeTiers.push({ tier: "uncertain", entries: uncertainEntries });
 
   // Layout
   const screenW = Dimensions.get("window").width - 32;
-  const centerR = 28;
-  const nodeR = 22;
-  const labelH = 14;
-  const ringGap = nodeR * 2 + labelH + 16;
 
-  // Each tier gets its own orbit radius
-  const ringRadii = activeTiers.map((_, i) => centerR + ringGap * (i + 1));
-  const outermost = ringRadii.length > 0 ? ringRadii[ringRadii.length - 1] : centerR;
-  const size = Math.min(Math.max((outermost + nodeR + labelH + 10) * 2, 220), screenW);
-  const cx = size / 2;
-  const cy = size / 2;
-
-  // Build arc dots: approximate an arc behind each tier's nodes using small dots
-  function buildArcDots(radius: number, entries: CrossReactivityEntry[], color: string, tierIdx: number) {
-    const count = entries.length;
-    if (count === 0) return null;
-
-    // Angle spread for this tier's nodes
-    const startOffset = -Math.PI / 2;
-    const angleShift = tierIdx % 2 === 1 ? Math.PI / 8 : 0;
-    const nodeAngles = entries.map((_, idx) => {
-      if (count === 1) return startOffset + angleShift;
-      const spread = Math.min(Math.PI * 1.4, (Math.PI * 0.45) * count);
-      return startOffset + angleShift - spread / 2 + (spread * idx) / (count - 1);
-    });
-
-    // Arc extends from first node angle to last, with padding
-    const first = nodeAngles[0];
-    const last = nodeAngles[nodeAngles.length - 1];
-    const arcPad = 0.25;
-    const arcStart = first - arcPad;
-    const arcEnd = last + arcPad;
-    const arcSweep = arcEnd - arcStart;
-
-    // Place small dots along the arc
-    const dotCount = Math.max(Math.round(arcSweep / 0.06), 8);
-    const dots = [];
-    for (let d = 0; d <= dotCount; d++) {
-      const a = arcStart + (arcSweep * d) / dotCount;
-      const dx = cx + radius * Math.cos(a);
-      const dy = cy + radius * Math.sin(a);
-      dots.push(
-        <View
-          key={`arc-${tierIdx}-${d}`}
-          style={{
-            position: "absolute",
-            left: dx - 1.5,
-            top: dy - 1.5,
-            width: 3,
-            height: 3,
-            borderRadius: 1.5,
-            backgroundColor: color,
-            opacity: 0.3,
-            zIndex: 0,
-          }}
-        />
-      );
-    }
-    return { dots, nodeAngles };
+  function evenAngles(count: number, startAngle = -Math.PI / 2) {
+    return Array.from({ length: count }, (_, i) =>
+      startAngle + (2 * Math.PI * i) / Math.max(count, 1)
+    );
   }
 
-  // Precompute per-tier layout
-  const tierLayouts = activeTiers.map(({ tier, entries }, i) => {
-    const radius = ringRadii[i];
-    const result = buildArcDots(radius, entries, arcColor(tier), i);
-    return { tier, entries, radius, dots: result?.dots ?? [], nodeAngles: result?.nodeAngles ?? [] };
-  });
+  const centerR = 42;
+  const arcThickness = 36;
+  const ringGap = 8;
+  const firstRingOffset = 10;
+  const tierRadii: Record<CrossReactivityTier, number> = {
+    "higher-concern": centerR + firstRingOffset,
+    "lower-expected": centerR + firstRingOffset + arcThickness + ringGap,
+    "uncertain": centerR + firstRingOffset + (arcThickness + ringGap) * 2,
+  };
+
+  // Build arc data: group arcs by tier, distribute angles within each tier ring
+  const tierOrder: CrossReactivityTier[] = ["higher-concern", "lower-expected", "uncertain"];
+  type ArcData = { group: CrossReactivityGroup; idx: number; tier: CrossReactivityTier; orbitR: number; startAngle: number; sweepAngle: number; midAngle: number };
+  const arcs: ArcData[] = [];
+
+  const tierBaseOffsets: Record<CrossReactivityTier, number> = {
+    "higher-concern": -Math.PI / 2,
+    "lower-expected": -Math.PI / 2 + (2 * Math.PI) / 3,
+    "uncertain": -Math.PI / 2 - (2 * Math.PI) / 3,
+  };
+
+  for (const tier of tierOrder) {
+    const tierGroups = groups
+      .map((g, i) => ({ group: g, idx: i }))
+      .filter(({ group }) => highestTier(group.entries) === tier);
+    if (tierGroups.length === 0) continue;
+
+    const orbitR = tierRadii[tier];
+    const n = tierGroups.length;
+    const gapAngle = 0.15;
+    const sweepPerGroup = (2 * Math.PI - gapAngle * n) / n;
+    const clampedSweep = Math.min(sweepPerGroup, Math.PI * 0.8);
+
+    const totalUsed = clampedSweep * n + gapAngle * n;
+    let angle = tierBaseOffsets[tier] - totalUsed / 2 + gapAngle / 2;
+
+    for (const { group, idx } of tierGroups) {
+      arcs.push({ group, idx, tier, orbitR, startAngle: angle, sweepAngle: clampedSweep, midAngle: angle + clampedSweep / 2 });
+      angle += clampedSweep + gapAngle;
+    }
+  }
+
+  const maxR = Math.max(...arcs.map((a) => a.orbitR + arcThickness), centerR + 40);
+  const sz = (maxR + 70) * 2;
+  const c = sz / 2;
+
+  function arcPath(sa: number, sweep: number, innerR: number, outerR: number): string {
+    const ea = sa + sweep;
+    const large = sweep > Math.PI ? 1 : 0;
+    const ox1 = c + outerR * Math.cos(sa);
+    const oy1 = c + outerR * Math.sin(sa);
+    const ox2 = c + outerR * Math.cos(ea);
+    const oy2 = c + outerR * Math.sin(ea);
+    const ix2 = c + innerR * Math.cos(ea);
+    const iy2 = c + innerR * Math.sin(ea);
+    const ix1 = c + innerR * Math.cos(sa);
+    const iy1 = c + innerR * Math.sin(sa);
+    return [
+      `M ${ox1} ${oy1}`,
+      `A ${outerR} ${outerR} 0 ${large} 1 ${ox2} ${oy2}`,
+      `L ${ix2} ${iy2}`,
+      `A ${innerR} ${innerR} 0 ${large} 0 ${ix1} ${iy1}`,
+      "Z",
+    ].join(" ");
+  }
 
   return (
     <View style={{ gap: 16 }}>
-      {/* Orbit diagram */}
-      <View style={{ width: size, height: size, alignSelf: "center" }}>
-        {/* Arc dots behind each tier */}
-        {tierLayouts.map(({ dots }) => dots)}
-
-        {/* Center node */}
-        <View
-          style={{
-            position: "absolute",
-            left: cx - centerR,
-            top: cy - centerR,
-            width: centerR * 2,
-            height: centerR * 2,
-            borderRadius: centerR,
-            backgroundColor: theme.accent,
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 10,
-            shadowColor: "#000",
-            shadowOpacity: 0.2,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: 3 },
-            elevation: 6,
-          }}
-        >
-          <Text
-            style={{ color: "#FFFFFF", fontSize: 9, fontWeight: "800", textAlign: "center", paddingHorizontal: 3 }}
-            numberOfLines={2}
-          >
-            {drug.name[language]}
-          </Text>
-        </View>
-
-        {/* Dashed lines from center to each node */}
-        {tierLayouts.map(({ entries, radius, nodeAngles }) =>
-          entries.map((entry, idx) => {
-            const angle = nodeAngles[idx];
-            const dx = radius * Math.cos(angle);
-            const dy = radius * Math.sin(angle);
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const rotation = (angle * 180) / Math.PI;
-            const midX = cx + dx / 2 - dist / 2;
-            const midY = cy + dy / 2;
+      <Pressable style={{ width: sz, height: sz, alignSelf: "center" }} onPress={() => setTooltipGroupIdx(null)}>
+        <Svg width={sz} height={sz}>
+          {/* Dashed orbit guide rings */}
+          {[...new Set(arcs.map((a) => a.orbitR))].map((r) => {
+            const gr = r + arcThickness / 2;
             return (
-              <View
-                key={`line-${entry.drugId}`}
-                style={{
-                  position: "absolute",
-                  left: midX,
-                  top: midY,
-                  width: dist,
-                  height: 1,
-                  borderTopWidth: 1,
-                  borderTopColor: theme.borderMid,
-                  borderStyle: "dashed",
-                  transform: [{ rotate: `${rotation}deg` }],
-                  zIndex: 1,
-                  opacity: 0.2,
-                }}
+              <Path
+                key={`guide-${r}`}
+                d={`M ${c - gr} ${c} A ${gr} ${gr} 0 1 1 ${c + gr} ${c} A ${gr} ${gr} 0 1 1 ${c - gr} ${c}`}
+                fill="none"
+                stroke={theme.borderMid}
+                strokeWidth={1}
+                strokeDasharray="4,6"
+                opacity={0.25}
               />
             );
-          })
-        )}
+          })}
+          {/* Arcs */}
+          {arcs.map(({ tier, orbitR, startAngle, sweepAngle, idx: gIdx }) => (
+            <Path
+              key={`arc-${gIdx}`}
+              d={arcPath(startAngle, sweepAngle, orbitR, orbitR + arcThickness)}
+              fill={nodeColor(tier)}
+              opacity={0.9}
+              onPress={() => {
+                if (tooltipGroupIdx === gIdx) { setTooltipGroupIdx(null); setExpandedGroupIdx(gIdx); }
+                else { setTooltipGroupIdx(gIdx); }
+              }}
+            />
+          ))}
+          {/* Text label paths — full arc for centered text */}
+          <Defs>
+            {arcs.map(({ startAngle, sweepAngle, orbitR, idx: gIdx, midAngle }) => {
+              const textR = orbitR + arcThickness / 2;
+              const sa = startAngle;
+              const ea = startAngle + sweepAngle;
+              const normMid = ((midAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+              const isBottom = normMid > Math.PI * 0.15 && normMid < Math.PI * 0.85;
+              if (isBottom) {
+                const sx = c + textR * Math.cos(ea);
+                const sy = c + textR * Math.sin(ea);
+                const ex = c + textR * Math.cos(sa);
+                const ey = c + textR * Math.sin(sa);
+                return <Path key={`tp-${gIdx}`} id={`textarc-${gIdx}`} d={`M ${sx} ${sy} A ${textR} ${textR} 0 0 0 ${ex} ${ey}`} fill="none" />;
+              }
+              const sx = c + textR * Math.cos(sa);
+              const sy = c + textR * Math.sin(sa);
+              const ex = c + textR * Math.cos(ea);
+              const ey = c + textR * Math.sin(ea);
+              return <Path key={`tp-${gIdx}`} id={`textarc-${gIdx}`} d={`M ${sx} ${sy} A ${textR} ${textR} 0 0 1 ${ex} ${ey}`} fill="none" />;
+            })}
+          </Defs>
+          {arcs.map(({ group, idx: gIdx }) => (
+            <SvgText key={`txt-${gIdx}`} fill="#FFF" fontSize={10} fontWeight="700" dy={4} textAnchor="middle" onPress={() => {
+              if (tooltipGroupIdx === gIdx) { setTooltipGroupIdx(null); setExpandedGroupIdx(gIdx); }
+              else { setTooltipGroupIdx(gIdx); }
+            }}>
+              <TextPath href={`#textarc-${gIdx}`} startOffset="50%">
+                {group.groupName[language]}
+              </TextPath>
+            </SvgText>
+          ))}
+        </Svg>
 
-        {/* Satellite nodes + labels */}
-        {tierLayouts.map(({ tier, entries, radius, nodeAngles }) =>
-          entries.map((entry, idx) => {
-            const angle = nodeAngles[idx];
-            const nx = cx + radius * Math.cos(angle);
-            const ny = cy + radius * Math.sin(angle);
-            const name = drugNameById[entry.drugId];
-            const fullLabel = name ? name[language] : entry.drugId;
-            const isBelow = Math.sin(angle) >= -0.25;
-            const labelTop = isBelow ? ny + nodeR + 2 : ny - nodeR - labelH - 1;
+        {/* Tooltip */}
+        {tooltipGroupIdx !== null ? (() => {
+          const arc = arcs.find((a) => a.idx === tooltipGroupIdx);
+          if (!arc) return null;
+          const tipR = arc.orbitR + arcThickness + 12;
+          const tx = c + tipR * Math.cos(arc.midAngle);
+          const ty = c + tipR * Math.sin(arc.midAngle);
+          const tipW = 200;
+          return (
+            <View style={{ position: "absolute", left: tx - tipW / 2, top: ty - 18, width: tipW, zIndex: 50, alignItems: "center" }} pointerEvents="none">
+              <View style={{ backgroundColor: theme.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8, borderWidth: 1, borderColor: theme.border }}>
+                <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: "700", textAlign: "center" }}>{arc.group.groupName[language]}</Text>
+                <Text style={{ color: nodeColor(arc.tier), fontSize: 12, fontWeight: "800", textAlign: "center", marginTop: 2 }}>{arc.group.entries.length} {copy(language, "crossReactivity.drugs")}</Text>
+                <Text style={{ color: theme.textSecondary, fontSize: 10, textAlign: "center", marginTop: 2 }}>{copy(language, "crossReactivity.tapToExplore")}</Text>
+              </View>
+            </View>
+          );
+        })() : null}
 
-            return (
-              <React.Fragment key={entry.drugId}>
-                <OrbitNode
-                  nx={nx}
-                  ny={ny}
-                  nodeR={nodeR}
-                  bg={nodeColor(tier)}
-                  label={fullLabel}
-                  onPress={() => setSheetEntry({ entry, groupName: findGroupForEntry(entry) })}
-                />
-                <View
-                  style={{
-                    position: "absolute",
-                    left: nx - 44,
-                    top: labelTop,
-                    width: 88,
-                    alignItems: "center",
-                    zIndex: 4,
-                  }}
-                  pointerEvents="none"
-                >
-                  <Text
-                    style={{ color: nodeTextColor(entry.tier), fontSize: 10, fontWeight: "700", textAlign: "center" }}
-                    numberOfLines={1}
-                  >
-                    {fullLabel}
-                  </Text>
-                </View>
-              </React.Fragment>
-            );
-          })
-        )}
-      </View>
-
-      {/* Legend */}
-      <View style={styles.orbitStatsRow}>
-        {activeTiers.map(({ tier, entries }) => (
+        {/* Center node */}
+        <View style={{ position: "absolute", left: c - centerR, top: c - centerR, width: centerR * 2, height: centerR * 2, zIndex: 10 }}>
           <View
-            key={tier}
-            style={[
-              styles.orbitStatChip,
-              tier === "higher-concern" ? styles.orbitStatChipHigher
-                : tier === "lower-expected" ? styles.orbitStatChipLower
-                : styles.orbitStatChipUncertain,
-            ]}
+            style={{ width: centerR * 2, height: centerR * 2, borderRadius: centerR, backgroundColor: theme.accent, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 3 }, elevation: 8, borderWidth: 3, borderColor: theme.surface }}
           >
-            <Ionicons name={tierIcon(tier)} size={14} color={tierIconColor(tier)} />
-            <Text style={[
-              styles.orbitStatCount, { fontSize: 16 },
-              tier === "higher-concern" ? styles.orbitStatCountHigher
-                : tier === "lower-expected" ? styles.orbitStatCountLower
-                : styles.orbitStatCountUncertain,
-            ]}>{entries.length}</Text>
-            <Text style={[
-              styles.orbitStatLabel,
-              tier === "higher-concern" ? styles.orbitStatLabelHigher
-                : tier === "lower-expected" ? styles.orbitStatLabelLower
-                : styles.orbitStatLabelUncertain,
-            ]}>{tierLabel(tier)}</Text>
+            <Text style={{ color: "#FFF", fontSize: centerFontSize(drug.name[language], centerR), fontWeight: "800", textAlign: "center", paddingHorizontal: 4, lineHeight: centerFontSize(drug.name[language], centerR) + 3 }} numberOfLines={drug.name[language].trim().split(/\s+/).length >= 2 ? 2 : 1}>{drug.name[language]}</Text>
           </View>
-        ))}
-      </View>
+        </View>
+      </Pressable>
 
-      {/* Bottom sheet — node detail */}
-      <Modal
-        visible={sheetEntry !== null}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setSheetEntry(null)}
-      >
-        <Pressable style={styles.sheetOverlay} onPress={() => setSheetEntry(null)}>
-          <Pressable style={styles.sheetContainer} onPress={() => {}}>
-            <View style={styles.sheetHandle} />
-            {sheetEntry ? (() => {
-              const { entry, groupName } = sheetEntry;
-              const name = drugNameById[entry.drugId];
-              const isNavigable = Boolean(name);
-              const displayName = name ? name[language] : entry.drugId;
-              const sourceCitations = entry.sourceIds
-                .map((sid) => sources[sid]?.label)
-                .filter(Boolean);
-
+      {/* Group drill-down overlay */}
+      <Modal visible={expandedGroupIdx !== null} transparent animationType="fade" onRequestClose={() => setExpandedGroupIdx(null)}>
+        <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.82)", justifyContent: "center", alignItems: "center" }} onPress={() => setExpandedGroupIdx(null)}>
+          <Pressable onPress={() => {}} style={{ width: screenW, alignItems: "center" }}>
+            {expandedGroupIdx !== null ? (() => {
+              const eGroup = groups[expandedGroupIdx];
+              if (!eGroup) return null;
+              const entries = eGroup.entries;
+              const eTier = highestTier(entries);
+              const eGR = 48;
+              const eNR = 28;
+              const eLabelW = 120;
+              const eOrbitR = eGR + eNR + 44;
+              const ePad = 32;
+              const eSz = (eOrbitR + eNR + ePad) * 2;
+              const eC = eSz / 2;
+              const eAngles = evenAngles(entries.length);
+              const eFontSize = centerFontSize(eGroup.groupName[language], eGR);
               return (
-                <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-                  {/* Title row: Drug A ↔ Drug B */}
-                  <View style={styles.sheetTitleRow}>
-                    <Text style={styles.sheetDrugPill}>{drug.name[language]}</Text>
-                    <Text style={styles.sheetArrow}>↔</Text>
-                    <Text style={[styles.sheetDrugPill, { flex: 1 }]} numberOfLines={1}>{displayName}</Text>
+                <View style={{ width: eSz, height: eSz, overflow: "visible" }}>
+                  {/* Orbit ring */}
+                  <View style={{ position: "absolute", left: eC - eOrbitR, top: eC - eOrbitR, width: eOrbitR * 2, height: eOrbitR * 2, borderRadius: eOrbitR, borderWidth: 1.5, borderColor: nodeBorderColor(eTier), borderStyle: "dashed", opacity: 0.25 }} />
+                  {/* Center: group name */}
+                  <View style={{ position: "absolute", left: eC - eGR, top: eC - eGR, width: eGR * 2, height: eGR * 2, borderRadius: eGR, backgroundColor: nodeBgColor(eTier), borderWidth: 2.5, borderColor: nodeBorderColor(eTier), alignItems: "center", justifyContent: "center", zIndex: 10, shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8 }}>
+                    <Text style={{ color: nodeColor(eTier), fontSize: eFontSize, fontWeight: "800", textAlign: "center", paddingHorizontal: 6, lineHeight: eFontSize + 3 }} numberOfLines={eGroup.groupName[language].trim().split(/\s+/).length >= 2 ? 2 : 1}>{eGroup.groupName[language]}</Text>
                   </View>
-
-                  {/* Tier + structural badges */}
-                  <View style={[styles.sheetBadgeRow, { marginBottom: 16 }]}>
-                    <View style={tierBadgeStyle(entry.tier)}>
-                      <Ionicons name={tierIcon(entry.tier)} size={12} color={tierIconColor(entry.tier)} />
-                      <Text style={tierBadgeTextStyle(entry.tier)}>{tierLabel(entry.tier)}</Text>
-                    </View>
-                    <View style={styles.crStructBadge}>
-                      <Text style={styles.crStructBadgeText}>{structuralLabel(entry.structuralRelation)}</Text>
-                    </View>
-                  </View>
-
-                  {/* Why linked */}
-                  <View style={styles.sheetSection}>
-                    <Text style={styles.sheetSectionLabel}>{copy(language, "crossReactivity.whyLinked")}</Text>
-                    <View style={styles.sheetRationaleBox}>
-                      <Text style={styles.sheetMechanismLink}>{groupName}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.sheetDivider} />
-
-                  {/* Clinical note / rationale */}
-                  <View style={styles.sheetSection}>
-                    <Text style={styles.sheetSectionLabel}>{copy(language, "crossReactivity.clinicalNote")}</Text>
-                    <Text style={styles.sheetRationale}>{entry.rationale[language]}</Text>
-                  </View>
-
-                  {/* Sources */}
-                  {sourceCitations.length > 0 ? (
-                    <>
-                      <View style={styles.sheetDivider} />
-                      <Text style={styles.sheetSourceCitation}>
-                        {copy(language, "crossReactivity.source")}: {sourceCitations.join(", ")}
-                      </Text>
-                    </>
-                  ) : null}
-
-                  {/* Open drug action */}
-                  {isNavigable ? (
-                    <>
-                      <View style={styles.sheetDivider} />
-                      <Pressable
-                        style={styles.sheetActionButton}
-                        onPress={() => {
-                          setSheetEntry(null);
-                          onOpenDrug(entry.drugId);
-                        }}
-                      >
-                        <Ionicons name="open-outline" size={16} color={theme.accent} />
-                        <Text style={styles.sheetActionText}>
-                          {copy(language, "crossReactivity.openDrug")} — {displayName}
-                        </Text>
-                      </Pressable>
-                    </>
-                  ) : null}
-                </ScrollView>
+                  {/* Drug nodes */}
+                  {entries.map((entry, idx) => {
+                    const angle = eAngles[idx];
+                    const nx = eC + eOrbitR * Math.cos(angle);
+                    const ny = eC + eOrbitR * Math.sin(angle);
+                    const name = drugNameById[entry.drugId];
+                    const label = name ? name[language] : entry.drugId;
+                    const isBelow = Math.sin(angle) >= -0.25;
+                    const labelTop = isBelow ? ny + eNR + 3 : ny - eNR - 28;
+                    const labelLeft = nx - eLabelW / 2;
+                    return (
+                      <React.Fragment key={entry.drugId}>
+                        <OrbitNode nx={nx} ny={ny} nodeR={eNR} bg={nodeColor(entry.tier)} label={label} onPress={() => setSheetEntry({ entry, groupName: eGroup.groupName[language] })} />
+                        <View style={{ position: "absolute", left: labelLeft, top: labelTop, width: eLabelW, alignItems: "center", zIndex: 4 }} pointerEvents="none">
+                          <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700", textAlign: "center", lineHeight: 15 }} numberOfLines={2}>{label}</Text>
+                        </View>
+                      </React.Fragment>
+                    );
+                  })}
+                </View>
               );
             })() : null}
           </Pressable>
         </Pressable>
+
+        {/* Bottom sheet — inside the group overlay so it layers on top */}
+        {sheetEntry ? (
+          <Pressable style={[styles.sheetOverlay, { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }]} onPress={() => setSheetEntry(null)}>
+            <Animated.View style={[styles.sheetContainer, { transform: [{ translateY: sheetSlide }] }]}>
+              <Pressable onPress={() => {}} style={{ width: "100%" }}>
+              <View style={styles.sheetHandle} />
+              {(() => {
+                const { entry, groupName } = sheetEntry;
+                const name = drugNameById[entry.drugId];
+                const isNavigable = Boolean(name);
+                const displayName = name ? name[language] : entry.drugId;
+                const sourceCitations = entry.sourceIds.map((sid) => sources[sid]?.label).filter(Boolean);
+                return (
+                  <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+                    <View style={styles.sheetTitleRow}><Text style={styles.sheetDrugPill}>{drug.name[language]}</Text><Text style={styles.sheetArrow}>↔</Text><Text style={[styles.sheetDrugPill, { flex: 1 }]} numberOfLines={1}>{displayName}</Text></View>
+                    <View style={[styles.sheetBadgeRow, { marginBottom: 16 }]}><View style={tierBadgeStyle(entry.tier)}><Ionicons name={tierIcon(entry.tier)} size={12} color={tierIconColor(entry.tier)} /><Text style={tierBadgeTextStyle(entry.tier)}>{tierLabel(entry.tier)}</Text></View><View style={styles.crStructBadge}><Text style={styles.crStructBadgeText}>{structuralLabel(entry.structuralRelation)}</Text></View></View>
+                    <View style={styles.sheetSection}><Text style={styles.sheetSectionLabel}>{copy(language, "crossReactivity.whyLinked")}</Text><View style={styles.sheetRationaleBox}><Text style={styles.sheetMechanismLink}>{groupName}</Text></View></View>
+                    <View style={styles.sheetDivider} />
+                    <View style={styles.sheetSection}><Text style={styles.sheetSectionLabel}>{copy(language, "crossReactivity.clinicalNote")}</Text><Text style={styles.sheetRationale}>{entry.rationale[language]}</Text></View>
+                    {sourceCitations.length > 0 ? (<><View style={styles.sheetDivider} /><Text style={styles.sheetSourceCitation}>{copy(language, "crossReactivity.source")}: {sourceCitations.join(", ")}</Text></>) : null}
+                    {isNavigable ? (<><View style={styles.sheetDivider} /><Pressable style={styles.sheetActionButton} onPress={() => { setSheetEntry(null); setExpandedGroupIdx(null); onOpenDrug(entry.drugId); }}><Ionicons name="open-outline" size={16} color={theme.accent} /><Text style={styles.sheetActionText}>{copy(language, "crossReactivity.openDrug")} — {displayName}</Text></Pressable></>) : null}
+                  </ScrollView>
+                );
+              })()}
+              </Pressable>
+            </Animated.View>
+          </Pressable>
+        ) : null}
       </Modal>
     </View>
   );
@@ -3285,7 +3331,7 @@ function DetailScreen({
   const sourcesDisagree = nonPreferredEntries.some(
     (e) => e.concentration && e.concentration !== preferredEntry?.concentration
   );
-  const [headerExpanded, setHeaderExpanded] = useState(true);
+  const [headerExpanded, setHeaderExpanded] = useState(false);
 
   const metricItems: DetailMetricItem[] = [];
 
