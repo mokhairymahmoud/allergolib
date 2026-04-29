@@ -1,44 +1,55 @@
 <script>
 (function () {
-  const state = {
+  var state = {
     defaultSourceId: "",
     deleteConfirmation: "",
+    deleteConfirmingId: null,
     form: null,
     lookups: [],
     mode: "create",
     noteKinds: ["info", "warning", "cross-reactivity"],
     originalId: "",
-    query: "",
+    searchQuery: "",
     sources: [],
     testKinds: ["prick", "idr", "patch"],
+    crossReactivityTiers: ["higher-concern", "lower-expected", "uncertain"],
+    structuralRelations: ["structurally-related", "structurally-distinct"],
     validation: emptyValidation(),
+    view: "list",
   };
 
-  const elements = {};
+  var elements = {};
 
   document.addEventListener("DOMContentLoaded", init);
 
   function init() {
-    elements.actionNote = document.getElementById("actionNote");
-    elements.lookupQuery = document.getElementById("lookupQuery");
-    elements.lookupBody = document.getElementById("lookupBody");
-    elements.lookupResults = document.getElementById("lookupResults");
-    elements.lookupMeta = document.getElementById("lookupMeta");
-    elements.formSections = document.getElementById("formSections");
+    elements.listView = document.getElementById("listView");
+    elements.editView = document.getElementById("editView");
+    elements.searchBox = document.getElementById("searchBox");
+    elements.cardGrid = document.getElementById("cardGrid");
+    elements.listMeta = document.getElementById("listMeta");
+    elements.listSubtitle = document.getElementById("listSubtitle");
+    elements.createDrugButton = document.getElementById("createDrugButton");
+    elements.publishAllButton = document.getElementById("publishAllButton");
+    elements.backToListButton = document.getElementById("backToListButton");
+    elements.cancelButton = document.getElementById("cancelButton");
     elements.statusBanner = document.getElementById("statusBanner");
+    elements.editStatusBanner = document.getElementById("editStatusBanner");
     elements.modeTitle = document.getElementById("modeTitle");
-    elements.newDrugButton = document.getElementById("newDrugButton");
+    elements.formSections = document.getElementById("formSections");
     elements.drugForm = document.getElementById("drugForm");
     elements.saveButton = document.getElementById("saveButton");
-    elements.publishButton = document.getElementById("publishButton");
+    elements.actionNote = document.getElementById("actionNote");
 
-    elements.lookupQuery.addEventListener("input", handleLookupInput);
-    elements.newDrugButton.addEventListener("click", handleNewDrug);
-    elements.lookupResults.addEventListener("click", handleLookupClick);
+    elements.searchBox.addEventListener("input", handleSearchInput);
+    elements.createDrugButton.addEventListener("click", handleCreateDrug);
+    elements.publishAllButton.addEventListener("click", handlePublish);
+    elements.backToListButton.addEventListener("click", handleBackToList);
+    elements.cancelButton.addEventListener("click", handleBackToList);
+    elements.cardGrid.addEventListener("click", handleCardClick);
     elements.formSections.addEventListener("click", handleFormClick);
     elements.formSections.addEventListener("change", handleFormChange);
     elements.drugForm.addEventListener("submit", handleSave);
-    elements.publishButton.addEventListener("click", handlePublish);
 
     setStatus("Loading spreadsheet data…", "info");
 
@@ -48,58 +59,107 @@
       .bootstrapAdminApp();
   }
 
+  // ── Bootstrap & Server ───────────────────────────────
+
   function handleBootstrapSuccess(payload) {
     state.defaultSourceId = payload.defaultSourceId || "";
     state.lookups = payload.lookups || [];
     state.mode = "create";
     state.noteKinds = payload.noteKinds || state.noteKinds;
     state.originalId = "";
-    state.query = "";
+    state.searchQuery = "";
     state.sources = payload.sources || [];
     state.testKinds = payload.testKinds || state.testKinds;
+    state.crossReactivityTiers = payload.crossReactivityTiers || state.crossReactivityTiers;
+    state.structuralRelations = payload.structuralRelations || state.structuralRelations;
     state.form = emptyDrug(state.defaultSourceId);
     state.validation = emptyValidation();
     state.deleteConfirmation = "";
+    state.deleteConfirmingId = null;
 
     applyUiText(payload.uiText);
     setStatus(payload.connectedStatus, "success");
-    renderLookupResults();
-    renderForm();
+    showListView();
   }
 
   function handleServerError(error) {
-    const message =
+    var message =
       error && error.message ? error.message : "The admin app could not complete the request.";
     setStatus(message, "error");
   }
 
-  function handleLookupInput(event) {
-    state.query = event.target.value;
-    renderLookupResults();
+  // ── View Switching ───────────────────────────────────
+
+  function showListView() {
+    state.view = "list";
+    state.deleteConfirmingId = null;
+    elements.listView.classList.remove("isHidden");
+    elements.editView.classList.add("isHidden");
+    renderCardGrid();
   }
 
-  function handleNewDrug() {
-    syncFormFromDom();
+  function showEditView() {
+    state.view = "edit";
+    elements.listView.classList.add("isHidden");
+    elements.editView.classList.remove("isHidden");
+    renderForm();
+    window.scrollTo(0, 0);
+  }
+
+  // ── List View Handlers ───────────────────────────────
+
+  function handleSearchInput(event) {
+    state.searchQuery = event.target.value;
+    renderCardGrid();
+  }
+
+  function handleCreateDrug() {
     state.mode = "create";
     state.originalId = "";
     state.form = emptyDrug(state.defaultSourceId);
     state.validation = emptyValidation();
     state.deleteConfirmation = "";
-    setStatus("Create mode ready.", "info");
-    renderLookupResults();
-    renderForm();
-    elements.lookupQuery.focus();
+    setEditStatus("Create mode ready.", "info");
+    showEditView();
   }
 
-  function handleLookupClick(event) {
-    const button = event.target.closest("[data-load-drug]");
+  function handleBackToList() {
+    setEditStatus("", "");
+    showListView();
+  }
 
-    if (!button) {
+  function handleCardClick(event) {
+    var target = event.target.closest("[data-action]");
+    if (!target) return;
+
+    var action = target.getAttribute("data-action");
+    var drugId = target.getAttribute("data-drug-id");
+
+    if (action === "edit-drug") {
+      loadAndEditDrug(drugId);
       return;
     }
 
-    syncFormFromDom();
-    const drugId = button.getAttribute("data-load-drug");
+    if (action === "start-delete") {
+      state.deleteConfirmingId = drugId;
+      renderCardGrid();
+      return;
+    }
+
+    if (action === "cancel-delete") {
+      state.deleteConfirmingId = null;
+      renderCardGrid();
+      return;
+    }
+
+    if (action === "confirm-delete-card") {
+      var confirmInput = document.getElementById("delete-confirm-" + drugId);
+      var confirmation = confirmInput ? confirmInput.value.trim() : "";
+      executeCardDelete(drugId, confirmation);
+    }
+  }
+
+  function loadAndEditDrug(drugId) {
     setStatus("Loading " + drugId + "…", "info");
 
     google.script.run
@@ -109,21 +169,127 @@
         state.form = normalizeLoadedDrug(payload.drug);
         state.validation = emptyValidation();
         state.deleteConfirmation = "";
-        setStatus("Loaded " + payload.originalId + ".", "success");
-        renderLookupResults();
-        renderForm();
+        setStatus("", "");
+        setEditStatus("Loaded " + payload.originalId + ".", "success");
+        showEditView();
       })
       .withFailureHandler(handleServerError)
       .loadDrugForAdmin(drugId);
   }
 
-  function handleFormClick(event) {
-    const action = event.target.getAttribute("data-action");
-
-    if (!action) {
+  function executeCardDelete(drugId, confirmation) {
+    if (confirmation !== drugId) {
+      setStatus("Delete confirmation does not match the drug id.", "error");
       return;
     }
 
+    setStatus("Deleting " + drugId + "…", "info");
+
+    google.script.run
+      .withSuccessHandler(function (payload) {
+        state.lookups = payload.lookups || state.lookups;
+        state.sources = payload.sources || state.sources;
+        state.deleteConfirmingId = null;
+        setStatus(payload.message, "success");
+        renderCardGrid();
+      })
+      .withFailureHandler(handleServerError)
+      .deleteDrugFromAdmin({
+        drugId: drugId,
+        confirmation: confirmation,
+      });
+  }
+
+  function handlePublish() {
+    elements.publishAllButton.disabled = true;
+    setStatus("Triggering GitHub workflow…", "info");
+
+    google.script.run
+      .withSuccessHandler(function (payload) {
+        elements.publishAllButton.disabled = false;
+        setStatus(payload.message, "success");
+      })
+      .withFailureHandler(function (error) {
+        elements.publishAllButton.disabled = false;
+        handleServerError(error);
+      })
+      .publishDatasetFromAdmin();
+  }
+
+  // ── Card Grid Rendering ──────────────────────────────
+
+  function renderCardGrid() {
+    var normalizedQuery = normalize(state.searchQuery);
+    var items = filteredLookups(normalizedQuery);
+
+    elements.listMeta.textContent =
+      items.length + " drug" + (items.length === 1 ? "" : "s") +
+      " in the dataset";
+
+    if (!items.length) {
+      elements.cardGrid.innerHTML =
+        '<div class="emptyState">No drugs match your search.</div>';
+      return;
+    }
+
+    elements.cardGrid.innerHTML = items
+      .map(function (item) {
+        var isDeleting = state.deleteConfirmingId === item.id;
+        return renderDrugCard(item, isDeleting);
+      })
+      .join("");
+  }
+
+  function renderDrugCard(item, isDeleting) {
+    var cardClass = "drugCard" + (isDeleting ? " isDeleting" : "");
+    var primaryName = item.name.fr || item.name.en || item.id;
+    var secondaryName = item.name.en || "";
+    var className = item.className.fr || item.className.en || "";
+
+    var html =
+      '<div class="' + cardClass + '">' +
+        '<div class="drugCardHeader">' +
+          '<div>' +
+            '<h3 class="drugCardName">' + escapeHtml(primaryName) + '</h3>' +
+            '<div class="drugCardMeta">' +
+              (secondaryName ? escapeHtml(secondaryName) : "") +
+              (className ? (secondaryName ? " &middot; " : "") + escapeHtml(className) : "") +
+            '</div>' +
+          '</div>' +
+          '<span class="pill">' + escapeHtml(item.id) + '</span>' +
+        '</div>';
+
+    if (isDeleting) {
+      html +=
+        '<div class="drugCardDeleteConfirm">' +
+          '<label class="fieldLabel" for="delete-confirm-' + escapeHtml(item.id) + '" style="margin-top:0">' +
+            'Type "' + escapeHtml(item.id) + '" to confirm deletion' +
+          '</label>' +
+          '<input id="delete-confirm-' + escapeHtml(item.id) + '" class="textField" type="text" placeholder="' + escapeHtml(item.id) + '" />' +
+          '<div class="buttonGroup">' +
+            '<button type="button" class="dangerButton smallButton" data-action="confirm-delete-card" data-drug-id="' + escapeHtml(item.id) + '">Confirm Delete</button>' +
+            '<button type="button" class="ghostButton smallButton" data-action="cancel-delete" data-drug-id="' + escapeHtml(item.id) + '">Cancel</button>' +
+          '</div>' +
+        '</div>';
+    } else {
+      html +=
+        '<div class="drugCardActions">' +
+          '<button type="button" class="primaryButton smallButton" data-action="edit-drug" data-drug-id="' + escapeHtml(item.id) + '">Edit</button>' +
+          '<button type="button" class="dangerButton smallButton" data-action="start-delete" data-drug-id="' + escapeHtml(item.id) + '">Delete</button>' +
+        '</div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  // ── Edit Form Handlers ───────────────────────────────
+
+  function handleFormClick(event) {
+    var target = event.target.closest("[data-action]");
+    if (!target) return;
+
+    var action = target.getAttribute("data-action");
     syncFormFromDom();
 
     if (action === "add-alias") {
@@ -133,19 +299,15 @@
     }
 
     if (action === "remove-alias") {
-      const index = Number(event.target.getAttribute("data-index"));
+      var index = Number(target.getAttribute("data-index"));
       state.form.aliases.splice(index, 1);
-
-      if (!state.form.aliases.length) {
-        state.form.aliases.push("");
-      }
-
+      if (!state.form.aliases.length) state.form.aliases.push("");
       renderForm();
       return;
     }
 
     if (action === "add-source-entry") {
-      const testKind = event.target.getAttribute("data-test-kind");
+      var testKind = target.getAttribute("data-test-kind");
       state.form.tests[testKind].sourceEntries.push({
         sourceId: state.defaultSourceId || "",
         concentration: "",
@@ -157,11 +319,10 @@
     }
 
     if (action === "remove-source-entry") {
-      const testKind = event.target.getAttribute("data-test-kind");
-      const index = Number(event.target.getAttribute("data-index"));
+      var testKind = target.getAttribute("data-test-kind");
+      var index = Number(target.getAttribute("data-index"));
       state.form.tests[testKind].sourceEntries.splice(index, 1);
-      // Ensure at least one preferred entry remains.
-      const entries = state.form.tests[testKind].sourceEntries;
+      var entries = state.form.tests[testKind].sourceEntries;
       if (entries.length && !entries.some(function (e) { return e.isPreferred; })) {
         entries[0].isPreferred = true;
       }
@@ -170,8 +331,8 @@
     }
 
     if (action === "set-preferred-source-entry") {
-      const testKind = event.target.getAttribute("data-test-kind");
-      const index = Number(event.target.getAttribute("data-index"));
+      var testKind = target.getAttribute("data-test-kind");
+      var index = Number(target.getAttribute("data-index"));
       state.form.tests[testKind].sourceEntries.forEach(function (e, i) {
         e.isPreferred = (i === index);
       });
@@ -180,18 +341,15 @@
     }
 
     if (action === "add-note") {
-      const testKind = event.target.getAttribute("data-test-kind");
-      state.form.tests[testKind].notes.push({
-        kind: "info",
-        value: { en: "", fr: "" },
-      });
+      var testKind = target.getAttribute("data-test-kind");
+      state.form.tests[testKind].notes.push({ kind: "info", value: { en: "", fr: "" } });
       renderForm();
       return;
     }
 
     if (action === "remove-note") {
-      const testKind = event.target.getAttribute("data-test-kind");
-      const index = Number(event.target.getAttribute("data-index"));
+      var testKind = target.getAttribute("data-test-kind");
+      var index = Number(target.getAttribute("data-index"));
       state.form.tests[testKind].notes.splice(index, 1);
       renderForm();
       return;
@@ -204,8 +362,36 @@
     }
 
     if (action === "remove-source") {
-      const index = Number(event.target.getAttribute("data-index"));
+      var index = Number(target.getAttribute("data-index"));
       state.form.sources.splice(index, 1);
+      renderForm();
+      return;
+    }
+
+    if (action === "add-cr-group") {
+      state.form.crossReactivity.push(emptyCrGroup());
+      renderForm();
+      return;
+    }
+
+    if (action === "remove-cr-group") {
+      var gi = Number(target.getAttribute("data-group-index"));
+      state.form.crossReactivity.splice(gi, 1);
+      renderForm();
+      return;
+    }
+
+    if (action === "add-cr-entry") {
+      var gi = Number(target.getAttribute("data-group-index"));
+      state.form.crossReactivity[gi].entries.push(emptyCrEntry());
+      renderForm();
+      return;
+    }
+
+    if (action === "remove-cr-entry") {
+      var gi = Number(target.getAttribute("data-group-index"));
+      var ei = Number(target.getAttribute("data-entry-index"));
+      state.form.crossReactivity[gi].entries.splice(ei, 1);
       renderForm();
       return;
     }
@@ -216,11 +402,8 @@
   }
 
   function handleFormChange(event) {
-    const target = event.target;
-
-    if (!target) {
-      return;
-    }
+    var target = event.target;
+    if (!target) return;
 
     if (
       target.matches("[data-test-enabled]") ||
@@ -241,33 +424,31 @@
   }
 
   function maybeInjectDiscrepancyNote(testKind) {
-    const test = state.form.tests[testKind];
-    const MARKER = "<!-- discrepancy-auto -->";
+    var test = state.form.tests[testKind];
+    var MARKER = "<!-- discrepancy-auto -->";
 
     test.notes = test.notes.filter(function (note) {
       return note.value.en.indexOf(MARKER) === -1;
     });
 
-    const preferredEntry = test.sourceEntries.find(function (e) { return e.isPreferred; });
-    const nonPreferred = test.sourceEntries.filter(function (e) { return !e.isPreferred; });
-    const hasDiscrepancy = nonPreferred.some(function (e) {
+    var preferredEntry = test.sourceEntries.find(function (e) { return e.isPreferred; });
+    var nonPreferred = test.sourceEntries.filter(function (e) { return !e.isPreferred; });
+    var hasDiscrepancy = nonPreferred.some(function (e) {
       return e.concentration && e.concentration !== (preferredEntry && preferredEntry.concentration);
     });
 
-    if (!hasDiscrepancy || !preferredEntry) {
-      return;
-    }
+    if (!hasDiscrepancy || !preferredEntry) return;
 
-    const allSources = combinedSources();
+    var allSources = combinedSources();
     function labelFor(id) {
-      const src = allSources.find(function (s) { return s.id === id; });
+      var src = allSources.find(function (s) { return s.id === id; });
       return src ? (src.label || src.id) : id;
     }
 
-    const lines = test.sourceEntries.map(function (e) {
+    var lines = test.sourceEntries.map(function (e) {
       return labelFor(e.sourceId) + ": " + (e.concentration || "—") + (e.isPreferred ? " (preferred)" : "");
     });
-    const linesFr = test.sourceEntries.map(function (e) {
+    var linesFr = test.sourceEntries.map(function (e) {
       return labelFor(e.sourceId) + " : " + (e.concentration || "—") + (e.isPreferred ? " (prefere)" : "");
     });
 
@@ -287,12 +468,12 @@
     renderForm();
 
     if (hasValidationErrors(state.validation)) {
-      setStatus("Fix the validation issues before saving.", "error");
+      setEditStatus("Fix the validation issues before saving.", "error");
       return;
     }
 
     elements.saveButton.disabled = true;
-    setStatus("Saving to Google Sheets…", "info");
+    setEditStatus("Saving to Google Sheets…", "info");
 
     google.script.run
       .withSuccessHandler(function (payload) {
@@ -304,13 +485,15 @@
         state.validation = emptyValidation();
         state.deleteConfirmation = "";
         elements.saveButton.disabled = false;
-        setStatus(payload.message, "success");
-        renderLookupResults();
+        setEditStatus(payload.message, "success");
         renderForm();
       })
       .withFailureHandler(function (error) {
         elements.saveButton.disabled = false;
-        handleServerError(error);
+        setEditStatus(
+          error && error.message ? error.message : "The admin app could not complete the request.",
+          "error"
+        );
       })
       .saveDrugFromAdmin({
         originalId: state.originalId,
@@ -319,100 +502,78 @@
       });
   }
 
-  function handlePublish() {
-    elements.publishButton.disabled = true;
-    setStatus("Triggering GitHub workflow…", "info");
-
-    google.script.run
-      .withSuccessHandler(function (payload) {
-        elements.publishButton.disabled = false;
-        setStatus(payload.message, "success");
-      })
-      .withFailureHandler(function (error) {
-        elements.publishButton.disabled = false;
-        handleServerError(error);
-      })
-      .publishDatasetFromAdmin();
-  }
-
   function handleDelete() {
     syncFormFromDom();
 
-    if (state.mode !== "edit" || !state.originalId) {
-      return;
-    }
+    if (state.mode !== "edit" || !state.originalId) return;
 
     if (state.deleteConfirmation !== state.originalId) {
       state.validation.fields["delete-confirmation"] =
         "Type the current drug id exactly before deleting.";
       renderForm();
-      setStatus("Delete confirmation does not match the current drug id.", "error");
+      setEditStatus("Delete confirmation does not match the current drug id.", "error");
       return;
     }
 
     state.validation = emptyValidation();
     renderForm();
-    setStatus("Deleting from Google Sheets…", "info");
+    setEditStatus("Deleting from Google Sheets…", "info");
 
     google.script.run
       .withSuccessHandler(function (payload) {
         state.lookups = payload.lookups || state.lookups;
         state.sources = payload.sources || state.sources;
-        state.mode = payload.record.mode;
-        state.originalId = payload.record.originalId;
-        state.form = normalizeLoadedDrug(payload.record.drug);
+        state.mode = "create";
+        state.originalId = "";
+        state.form = emptyDrug(state.defaultSourceId);
         state.validation = emptyValidation();
         state.deleteConfirmation = "";
         setStatus(payload.message, "success");
-        renderLookupResults();
-        renderForm();
+        showListView();
       })
-      .withFailureHandler(handleServerError)
+      .withFailureHandler(function (error) {
+        setEditStatus(
+          error && error.message ? error.message : "Delete failed.",
+          "error"
+        );
+      })
       .deleteDrugFromAdmin({
         drugId: state.originalId,
         confirmation: state.deleteConfirmation,
       });
   }
 
-  function syncFormFromDom() {
-    if (!state.form || !document.getElementById("drug-id")) {
-      return;
-    }
+  // ── Sync Form from DOM ───────────────────────────────
 
-    const nextForm = cloneDrug(state.form);
+  function syncFormFromDom() {
+    if (!state.form || !document.getElementById("drug-id")) return;
+
+    var nextForm = cloneDrug(state.form);
     nextForm.id = readValue("drug-id");
     nextForm.name.fr = readValue("name-fr");
     nextForm.name.en = readValue("name-en");
     nextForm.className.fr = readValue("class-fr");
     nextForm.className.en = readValue("class-en");
     nextForm.aliases = Array.from(document.querySelectorAll("[data-alias-row]")).map(function (row) {
-      const input = row.querySelector("input");
+      var input = row.querySelector("input");
       return input ? input.value : "";
     });
 
     nextForm.applicableTests = state.testKinds.filter(function (testKind) {
-      const input = document.getElementById("test-enabled-" + testKind);
+      var input = document.getElementById("test-enabled-" + testKind);
       return input ? input.checked : nextForm.applicableTests.indexOf(testKind) >= 0;
     });
 
     state.testKinds.forEach(function (testKind) {
       nextForm.tests[testKind] = cloneTest(nextForm.tests[testKind] || emptyTest(state.defaultSourceId));
 
-      const dilutions = document.getElementById("test-" + testKind + "-dilutions");
-      const vehicleFr = document.getElementById("test-" + testKind + "-vehicle-fr");
-      const vehicleEn = document.getElementById("test-" + testKind + "-vehicle-en");
+      var dilutions = document.getElementById("test-" + testKind + "-dilutions");
+      var vehicleFr = document.getElementById("test-" + testKind + "-vehicle-fr");
+      var vehicleEn = document.getElementById("test-" + testKind + "-vehicle-en");
 
-      if (dilutions) {
-        nextForm.tests[testKind].dilutions = dilutions.value;
-      }
-
-      if (vehicleFr) {
-        nextForm.tests[testKind].vehicle.fr = vehicleFr.value;
-      }
-
-      if (vehicleEn) {
-        nextForm.tests[testKind].vehicle.en = vehicleEn.value;
-      }
+      if (dilutions) nextForm.tests[testKind].dilutions = dilutions.value;
+      if (vehicleFr) nextForm.tests[testKind].vehicle.fr = vehicleFr.value;
+      if (vehicleEn) nextForm.tests[testKind].vehicle.en = vehicleEn.value;
 
       nextForm.tests[testKind].sourceEntries = Array.from(
         document.querySelectorAll('[data-source-entry-row="' + testKind + '"]')
@@ -460,56 +621,44 @@
       };
     });
 
+    nextForm.crossReactivity = Array.from(
+      document.querySelectorAll("[data-cr-group-row]")
+    ).map(function (groupEl) {
+      var entries = Array.from(groupEl.querySelectorAll("[data-cr-entry-row]")).map(function (entryEl) {
+        return {
+          relatedDrugId: readNestedField(entryEl, '[data-cr-field="relatedDrugId"]'),
+          tier: readNestedField(entryEl, '[data-cr-field="tier"]'),
+          structuralRelation: readNestedField(entryEl, '[data-cr-field="structuralRelation"]'),
+          rationale: {
+            en: readNestedField(entryEl, '[data-cr-field="rationale-en"]'),
+            fr: readNestedField(entryEl, '[data-cr-field="rationale-fr"]'),
+          },
+          sourceIds: readNestedField(entryEl, '[data-cr-field="sourceIds"]'),
+        };
+      });
+
+      return {
+        groupName: {
+          en: readNestedField(groupEl, '[data-cr-field="groupName-en"]'),
+          fr: readNestedField(groupEl, '[data-cr-field="groupName-fr"]'),
+        },
+        entries: entries,
+        suggestedPanel: readNestedField(groupEl, '[data-cr-field="suggestedPanel"]'),
+        panelRationale: {
+          en: readNestedField(groupEl, '[data-cr-field="panelRationale-en"]'),
+          fr: readNestedField(groupEl, '[data-cr-field="panelRationale-fr"]'),
+        },
+      };
+    });
+
     state.form = nextForm;
     state.deleteConfirmation = readValue("delete-confirmation");
   }
 
-  function renderLookupResults() {
-    const normalizedQuery = normalize(state.query);
-    const items = filteredLookups(normalizedQuery);
-
-    elements.lookupMeta.textContent =
-      items.length + " result" + (items.length === 1 ? "" : "s") + " in the local lookup index";
-
-    if (!items.length) {
-      elements.lookupResults.innerHTML =
-        '<div class="emptyState">No drug matched that id or localized name.</div>';
-      return;
-    }
-
-    elements.lookupResults.innerHTML = items
-      .map(function (item) {
-        const selected =
-          state.mode === "edit" && state.form && state.form.id === item.id ? " isSelected" : "";
-
-        return (
-          '<button type="button" class="lookupItem' +
-          selected +
-          '" data-load-drug="' +
-          escapeHtml(item.id) +
-          '">' +
-          '<div class="lookupItemTitle">' +
-          "<span>" +
-          escapeHtml(item.name.fr || item.name.en || item.id) +
-          "</span>" +
-          '<span class="pill">' +
-          escapeHtml(item.id) +
-          "</span>" +
-          "</div>" +
-          '<div class="lookupItemMeta">' +
-          escapeHtml(item.name.en || "") +
-          (item.className.fr ? " · " + escapeHtml(item.className.fr) : "") +
-          "</div>" +
-          "</button>"
-        );
-      })
-      .join("");
-  }
+  // ── Form Rendering ───────────────────────────────────
 
   function renderForm() {
-    if (!state.form) {
-      return;
-    }
+    if (!state.form) return;
 
     elements.modeTitle.textContent =
       state.mode === "edit" ? "Edit " + state.originalId : "Create a new drug";
@@ -520,113 +669,80 @@
       renderAliasesSection() +
       renderApplicableTestsSection() +
       renderTestsSection() +
+      renderCrossReactivitySection() +
       renderSourcesSection() +
       renderDeleteSection();
   }
 
   function renderValidationSummary() {
-    const messages = validationMessages();
-
-    if (!messages.length) {
-      return "";
-    }
+    var messages = validationMessages();
+    if (!messages.length) return "";
 
     return (
       '<section class="sectionCard validationSummary">' +
       "<h3>Validation summary</h3>" +
       "<ul>" +
-      messages
-        .map(function (message) {
-          return "<li>" + escapeHtml(message) + "</li>";
-        })
-        .join("") +
-      "</ul>" +
-      "</section>"
+      messages.map(function (m) { return "<li>" + escapeHtml(m) + "</li>"; }).join("") +
+      "</ul></section>"
     );
   }
 
   function renderCoreSection() {
     return (
       '<section class="sectionCard">' +
-      '<div class="sectionHead">' +
-      "<div>" +
+      '<div class="sectionHead"><div>' +
       "<h3>Core drug info</h3>" +
       '<p class="sectionIntro">French remains the primary authoring path, but both languages are required before save.</p>' +
       "</div>" +
-      '<span class="pill">' +
-      escapeHtml(state.mode === "edit" ? "Edit mode" : "Create mode") +
-      "</span>" +
-      "</div>" +
+      '<span class="pill">' + escapeHtml(state.mode === "edit" ? "Edit mode" : "Create mode") + "</span></div>" +
       '<div class="grid2">' +
       field("Drug id", "drug-id", state.form.id, "text") +
       field("French name", "name-fr", state.form.name.fr, "text") +
       field("English name", "name-en", state.form.name.en, "text") +
       field("French class", "class-fr", state.form.className.fr, "text") +
       field("English class", "class-en", state.form.className.en, "text") +
-      "</div>" +
-      "</section>"
+      "</div></section>"
     );
   }
 
   function renderAliasesSection() {
     return (
       '<section class="sectionCard">' +
-      '<div class="sectionHead">' +
-      "<div>" +
+      '<div class="sectionHead"><div>' +
       "<h3>Aliases</h3>" +
       '<p class="sectionIntro">At least one alias is required. One row per alias writes to <code>aliases</code>.</p>' +
       "</div>" +
-      '<button type="button" class="ghostButton" data-action="add-alias">Add alias</button>' +
-      "</div>" +
+      '<button type="button" class="ghostButton" data-action="add-alias">Add alias</button></div>' +
       '<div class="aliasList">' +
-      state.form.aliases
-        .map(function (alias, index) {
-          return (
-            '<div class="aliasRow" data-alias-row>' +
-            field("Alias " + (index + 1), "alias-" + index, alias, "text") +
-            '<button type="button" class="dangerButton" data-action="remove-alias" data-index="' +
-            index +
-            '">Remove</button>' +
-            "</div>"
-          );
-        })
-        .join("") +
-      "</div>" +
-      "</section>"
+      state.form.aliases.map(function (alias, index) {
+        return (
+          '<div class="aliasRow" data-alias-row>' +
+          field("Alias " + (index + 1), "alias-" + index, alias, "text") +
+          '<button type="button" class="dangerButton smallButton" data-action="remove-alias" data-index="' + index + '">Remove</button>' +
+          "</div>"
+        );
+      }).join("") +
+      "</div></section>"
     );
   }
 
   function renderApplicableTestsSection() {
-    const error = state.validation.fields["applicable-tests"];
-
+    var error = state.validation.fields["applicable-tests"];
     return (
       '<section class="sectionCard">' +
-      '<div class="sectionHead">' +
-      "<div>" +
+      '<div class="sectionHead"><div>' +
       "<h3>Applicable test types</h3>" +
       '<p class="sectionIntro">Select only the test kinds that exist for this drug. At least one is required.</p>' +
-      "</div>" +
-      "</div>" +
+      "</div></div>" +
       '<div class="toggleList">' +
-      state.testKinds
-        .map(function (testKind) {
-          const checked = state.form.applicableTests.indexOf(testKind) >= 0 ? ' checked="checked"' : "";
-          return (
-            '<label class="toggleItem">' +
-            '<input id="test-enabled-' +
-            escapeHtml(testKind) +
-            '" data-test-enabled="' +
-            escapeHtml(testKind) +
-            '" type="checkbox"' +
-            checked +
-            " />" +
-            "<span>" +
-            escapeHtml(testKind.toUpperCase()) +
-            "</span>" +
-            "</label>"
-          );
-        })
-        .join("") +
+      state.testKinds.map(function (testKind) {
+        var checked = state.form.applicableTests.indexOf(testKind) >= 0 ? ' checked="checked"' : "";
+        return (
+          '<label class="toggleItem">' +
+          '<input id="test-enabled-' + escapeHtml(testKind) + '" data-test-enabled="' + escapeHtml(testKind) + '" type="checkbox"' + checked + " />" +
+          "<span>" + escapeHtml(testKind.toUpperCase()) + "</span></label>"
+        );
+      }).join("") +
       "</div>" +
       (error ? '<div class="fieldError">' + escapeHtml(error) + "</div>" : "") +
       "</section>"
@@ -637,12 +753,9 @@
     if (!state.form.applicableTests.length) {
       return (
         '<section class="sectionCard">' +
-        '<div class="sectionHead">' +
-        "<div>" +
-        "<h3>Test sections</h3>" +
+        '<div class="sectionHead"><div><h3>Test sections</h3>' +
         '<p class="sectionIntro">Each selected test must include meaningful clinical content and a valid preferred source.</p>' +
-        "</div>" +
-        "</div>" +
+        "</div></div>" +
         '<div class="emptyState">Select one or more applicable test types to enter concentrations, dilutions, vehicles, notes, and sources.</div>' +
         "</section>"
       );
@@ -650,36 +763,28 @@
 
     return (
       '<section class="sectionCard">' +
-      '<div class="sectionHead">' +
-      "<div>" +
-      "<h3>Test sections</h3>" +
+      '<div class="sectionHead"><div><h3>Test sections</h3>' +
       '<p class="sectionIntro">Only selected test kinds will be written to <code>test_entries</code> and <code>notes</code>.</p>' +
-      "</div>" +
-      "</div>" +
+      "</div></div>" +
       '<div class="testGrid">' +
-      state.form.applicableTests
-        .map(function (testKind) {
-          return renderTestCard(testKind, state.form.tests[testKind]);
-        })
-        .join("") +
-      "</div>" +
-      "</section>"
+      state.form.applicableTests.map(function (testKind) {
+        return renderTestCard(testKind, state.form.tests[testKind]);
+      }).join("") +
+      "</div></section>"
     );
   }
 
   function renderTestCard(testKind, test) {
     return (
       '<article class="testCard">' +
-      '<div class="testTitleRow">' +
-      "<div>" +
+      '<div class="testTitleRow"><div>' +
       "<h3>" + escapeHtml(testKind.toUpperCase()) + "</h3>" +
       '<div class="fieldHint">Add at least one source entry with a concentration, or a note, for this test.</div>' +
       "</div>" +
       '<div class="testTitleActions">' +
-      '<button type="button" class="ghostButton" data-action="add-source-entry" data-test-kind="' + escapeHtml(testKind) + '">Add source</button>' +
-      '<button type="button" class="ghostButton" data-action="add-note" data-test-kind="' + escapeHtml(testKind) + '">Add note</button>' +
-      "</div>" +
-      "</div>" +
+      '<button type="button" class="ghostButton smallButton" data-action="add-source-entry" data-test-kind="' + escapeHtml(testKind) + '">Add source</button>' +
+      '<button type="button" class="ghostButton smallButton" data-action="add-note" data-test-kind="' + escapeHtml(testKind) + '">Add note</button>' +
+      "</div></div>" +
       renderSourceEntries(testKind, test.sourceEntries) +
       '<div class="grid3">' +
       field("Dilutions", "test-" + testKind + "-dilutions", test.dilutions, "text", "Shared across sources. Use semicolons, e.g. 1:10; 1:100") +
@@ -699,48 +804,21 @@
     return (
       '<div class="sourceEntryList">' +
       entries.map(function (entry, index) {
-        const isOnlyEntry = entries.length === 1;
+        var isOnlyEntry = entries.length === 1;
         return (
           '<div class="sourceEntryRow" data-source-entry-row="' + escapeHtml(testKind) + '">' +
           '<div class="grid3" style="margin-bottom:4px;">' +
-          field(
-            "Source",
-            "test-" + testKind + "-source-entry-source-" + index,
-            sourceOptions(entry.sourceId),
-            "select",
-            "",
-            'data-source-entry="' + escapeHtml(testKind) + '" data-source-entry-field="sourceId"'
-          ) +
-          field(
-            "Concentration",
-            "test-" + testKind + "-source-entry-conc-" + index,
-            entry.concentration,
-            "text",
-            "",
-            'data-source-entry="' + escapeHtml(testKind) + '" data-source-entry-field="concentration"'
-          ) +
-          field(
-            "Max concentration",
-            "test-" + testKind + "-source-entry-max-" + index,
-            entry.maxConcentration,
-            "text",
-            "",
-            'data-source-entry="' + escapeHtml(testKind) + '" data-source-entry-field="maxConcentration"'
-          ) +
+          field("Source", "test-" + testKind + "-source-entry-source-" + index, sourceOptions(entry.sourceId), "select", "", 'data-source-entry="' + escapeHtml(testKind) + '" data-source-entry-field="sourceId"') +
+          field("Concentration", "test-" + testKind + "-source-entry-conc-" + index, entry.concentration, "text", "", 'data-source-entry="' + escapeHtml(testKind) + '" data-source-entry-field="concentration"') +
+          field("Max concentration", "test-" + testKind + "-source-entry-max-" + index, entry.maxConcentration, "text", "", 'data-source-entry="' + escapeHtml(testKind) + '" data-source-entry-field="maxConcentration"') +
           "</div>" +
           '<div class="sourceEntryActions">' +
           '<label class="sourceEntryPreferredLabel">' +
-          '<input type="checkbox"' +
-          (entry.isPreferred ? ' checked="checked"' : "") +
+          '<input type="checkbox"' + (entry.isPreferred ? ' checked="checked"' : "") +
           ' data-action="set-preferred-source-entry" data-test-kind="' + escapeHtml(testKind) + '" data-index="' + index + '"' +
-          ' data-source-entry="' + escapeHtml(testKind) + '" data-source-entry-field="isPreferred">' +
-          " Preferred source" +
-          "</label>" +
-          (!isOnlyEntry
-            ? '<button type="button" class="dangerButton" data-action="remove-source-entry" data-test-kind="' + escapeHtml(testKind) + '" data-index="' + index + '">Remove</button>'
-            : "") +
-          "</div>" +
-          "</div>"
+          ' data-source-entry="' + escapeHtml(testKind) + '" data-source-entry-field="isPreferred"> Preferred source</label>' +
+          (!isOnlyEntry ? '<button type="button" class="dangerButton smallButton" data-action="remove-source-entry" data-test-kind="' + escapeHtml(testKind) + '" data-index="' + index + '">Remove</button>' : "") +
+          "</div></div>"
         );
       }).join("") +
       "</div>"
@@ -754,73 +832,123 @@
 
     return (
       '<div class="noteList">' +
-      notes
-        .map(function (note, index) {
-          return (
-            '<div class="noteRow" data-note-kind-row="' +
-            escapeHtml(testKind) +
-            '">' +
-            '<div class="grid3">' +
-            field(
-              "Note type",
-              "test-" + testKind + "-note-kind-" + index,
-              noteKindOptions(note.kind),
-              "select",
-              "",
-              'data-note-field="kind"'
-            ) +
-            field(
-              "French note",
-              "test-" + testKind + "-note-fr-" + index,
-              note.value.fr,
-              "textarea",
-              "",
-              'data-note-field="fr"'
-            ) +
-            field(
-              "English note",
-              "test-" + testKind + "-note-en-" + index,
-              note.value.en,
-              "textarea",
-              "",
-              'data-note-field="en"'
-            ) +
-            "</div>" +
-            '<div class="cardActions">' +
-            '<button type="button" class="dangerButton" data-action="remove-note" data-test-kind="' +
-            escapeHtml(testKind) +
-            '" data-index="' +
-            index +
-            '">Remove note</button>' +
-            "</div>" +
-            "</div>"
-          );
-        })
-        .join("") +
+      notes.map(function (note, index) {
+        return (
+          '<div class="noteRow" data-note-kind-row="' + escapeHtml(testKind) + '">' +
+          '<div class="grid3">' +
+          field("Note type", "test-" + testKind + "-note-kind-" + index, noteKindOptions(note.kind), "select", "", 'data-note-field="kind"') +
+          field("French note", "test-" + testKind + "-note-fr-" + index, note.value.fr, "textarea", "", 'data-note-field="fr"') +
+          field("English note", "test-" + testKind + "-note-en-" + index, note.value.en, "textarea", "", 'data-note-field="en"') +
+          "</div>" +
+          '<div class="cardActions">' +
+          '<button type="button" class="dangerButton smallButton" data-action="remove-note" data-test-kind="' + escapeHtml(testKind) + '" data-index="' + index + '">Remove note</button>' +
+          "</div></div>"
+        );
+      }).join("") +
       "</div>"
     );
   }
 
+  // ── Cross-Reactivity Section ─────────────────────────
+
+  function renderCrossReactivitySection() {
+    var groups = state.form.crossReactivity || [];
+
+    return (
+      '<section class="sectionCard">' +
+      '<div class="sectionHead"><div>' +
+      "<h3>Cross-Reactivity</h3>" +
+      '<p class="sectionIntro">Define cross-reactivity groups and entries for this drug. Each group represents a chemical class or category.</p>' +
+      "</div>" +
+      '<button type="button" class="ghostButton" data-action="add-cr-group">Add group</button></div>' +
+      (groups.length
+        ? '<div class="crGroupList">' + groups.map(function (group, gi) {
+            return renderCrGroup(group, gi);
+          }).join("") + "</div>"
+        : '<div class="emptyState">No cross-reactivity groups defined for this drug.</div>') +
+      "</section>"
+    );
+  }
+
+  function renderCrGroup(group, gi) {
+    return (
+      '<article class="crGroupCard" data-cr-group-row>' +
+      '<div class="crGroupHeader">' +
+      "<h3>Group " + (gi + 1) + "</h3>" +
+      '<div class="buttonGroup">' +
+      '<button type="button" class="ghostButton smallButton" data-action="add-cr-entry" data-group-index="' + gi + '">Add entry</button>' +
+      '<button type="button" class="dangerButton smallButton" data-action="remove-cr-group" data-group-index="' + gi + '">Remove group</button>' +
+      "</div></div>" +
+      '<div class="grid2">' +
+      field("Group name (FR)", "cr-group-name-fr-" + gi, group.groupName.fr, "text", "", 'data-cr-field="groupName-fr"') +
+      field("Group name (EN)", "cr-group-name-en-" + gi, group.groupName.en, "text", "", 'data-cr-field="groupName-en"') +
+      "</div>" +
+      field("Suggested panel (drug IDs, semicolon-separated)", "cr-panel-" + gi,
+        Array.isArray(group.suggestedPanel) ? group.suggestedPanel.join("; ") : (group.suggestedPanel || ""),
+        "text", "e.g. vecuronium; pancuronium; cisatracurium", 'data-cr-field="suggestedPanel"') +
+      '<div class="grid2">' +
+      field("Panel rationale (FR)", "cr-panel-rat-fr-" + gi, group.panelRationale.fr, "textarea", "", 'data-cr-field="panelRationale-fr"') +
+      field("Panel rationale (EN)", "cr-panel-rat-en-" + gi, group.panelRationale.en, "textarea", "", 'data-cr-field="panelRationale-en"') +
+      "</div>" +
+      renderCrEntries(group.entries, gi) +
+      "</article>"
+    );
+  }
+
+  function renderCrEntries(entries, gi) {
+    if (!entries || !entries.length) {
+      return '<div class="emptyState">No entries yet. Use "Add entry" to add cross-reactive drugs.</div>';
+    }
+
+    return (
+      '<div class="crEntryList">' +
+      entries.map(function (entry, ei) {
+        return renderCrEntry(entry, gi, ei);
+      }).join("") +
+      "</div>"
+    );
+  }
+
+  function renderCrEntry(entry, gi, ei) {
+    return (
+      '<div class="crEntryRow" data-cr-entry-row>' +
+      '<div class="grid3">' +
+      field("Related drug ID", "cr-entry-drug-" + gi + "-" + ei,
+        drugIdOptions(entry.relatedDrugId), "select", "", 'data-cr-field="relatedDrugId"') +
+      field("Tier", "cr-entry-tier-" + gi + "-" + ei,
+        tierOptions(entry.tier), "select", "", 'data-cr-field="tier"') +
+      field("Structural relation", "cr-entry-struct-" + gi + "-" + ei,
+        structuralRelationOptions(entry.structuralRelation), "select", "", 'data-cr-field="structuralRelation"') +
+      "</div>" +
+      '<div class="grid2">' +
+      field("Rationale (FR)", "cr-entry-rat-fr-" + gi + "-" + ei, entry.rationale.fr, "textarea", "", 'data-cr-field="rationale-fr"') +
+      field("Rationale (EN)", "cr-entry-rat-en-" + gi + "-" + ei, entry.rationale.en, "textarea", "", 'data-cr-field="rationale-en"') +
+      "</div>" +
+      field("Source IDs (semicolon-separated)", "cr-entry-src-" + gi + "-" + ei,
+        Array.isArray(entry.sourceIds) ? entry.sourceIds.join("; ") : (entry.sourceIds || ""),
+        "text", "", 'data-cr-field="sourceIds"') +
+      '<div class="crEntryActions">' +
+      '<button type="button" class="dangerButton smallButton" data-action="remove-cr-entry" data-group-index="' + gi + '" data-entry-index="' + ei + '">Remove entry</button>' +
+      "</div></div>"
+    );
+  }
+
+  // ── Sources Section ──────────────────────────────────
+
   function renderSourcesSection() {
     return (
       '<section class="sectionCard">' +
-      '<div class="sectionHead">' +
-      "<div>" +
+      '<div class="sectionHead"><div>' +
       "<h3>Sources</h3>" +
       '<p class="sectionIntro">Reuse existing source ids from the test dropdowns or create a new source inline before save.</p>' +
       "</div>" +
-      '<button type="button" class="ghostButton" data-action="add-source">Add new source</button>' +
-      "</div>" +
-      '<div class="sourceReferenceMeta">Existing reusable sources: ' +
-      escapeHtml(String(state.sources.length)) +
-      "</div>" +
+      '<button type="button" class="ghostButton" data-action="add-source">Add new source</button></div>' +
+      '<div class="sourceReferenceMeta">Existing reusable sources: ' + escapeHtml(String(state.sources.length)) + "</div>" +
       (state.form.sources.length
         ? '<div class="sourceList">' +
-          state.form.sources
-            .map(function (source, index) {
-              return renderSourceCard(source, index);
-            })
-            .join("") +
+          state.form.sources.map(function (source, index) {
+            return renderSourceCard(source, index);
+          }).join("") +
           "</div>"
         : '<div class="emptyState">No new inline sources yet. Existing sources remain available in the test source dropdowns.</div>') +
       "</section>"
@@ -831,267 +959,144 @@
     return (
       '<article class="sourceCard" data-source-row>' +
       '<div class="sourceRowHead">' +
-      "<h3>New source " +
-      escapeHtml(String(index + 1)) +
-      "</h3>" +
-      '<button type="button" class="dangerButton" data-action="remove-source" data-index="' +
-      index +
-      '">Remove source</button>' +
-      "</div>" +
+      "<h3>New source " + escapeHtml(String(index + 1)) + "</h3>" +
+      '<button type="button" class="dangerButton smallButton" data-action="remove-source" data-index="' + index + '">Remove source</button></div>' +
       '<div class="grid3">' +
       sourceField("Source id", "source-id-" + index, source.id, "text", index, "id") +
       sourceField("Label", "source-label-" + index, source.label, "text", index, "label") +
-      sourceField(
-        "Organization",
-        "source-organization-" + index,
-        source.organization,
-        "text",
-        index,
-        "organization"
-      ) +
+      sourceField("Organization", "source-organization-" + index, source.organization, "text", index, "organization") +
       sourceField("Year", "source-year-" + index, source.year, "text", index, "year") +
       sourceField("Version", "source-version-" + index, source.version, "text", index, "version") +
       sourceField("Status", "source-status-" + index, source.status, "text", index, "status") +
       "</div>" +
-      sourceField(
-        "Document / Reference URL",
-        "source-url-" + index,
-        source.url || "",
-        "text",
-        index,
-        "url"
-      ) +
+      sourceField("Document / Reference URL", "source-url-" + index, source.url || "", "text", index, "url") +
       '<div class="grid3">' +
-      sourceField(
-        "Document name (FR)",
-        "source-document-name-fr-" + index,
-        source.documentName.fr,
-        "text",
-        index,
-        "document-name-fr"
-      ) +
-      sourceField(
-        "Document name (EN)",
-        "source-document-name-en-" + index,
-        source.documentName.en,
-        "text",
-        index,
-        "document-name-en"
-      ) +
-      sourceField(
-        "Excerpt (FR)",
-        "source-excerpt-fr-" + index,
-        source.excerpt.fr,
-        "textarea",
-        index,
-        "excerpt-fr"
-      ) +
-      sourceField(
-        "Excerpt (EN)",
-        "source-excerpt-en-" + index,
-        source.excerpt.en,
-        "textarea",
-        index,
-        "excerpt-en"
-      ) +
-      "</div>" +
-      "</article>"
+      sourceField("Document name (FR)", "source-document-name-fr-" + index, source.documentName.fr, "text", index, "document-name-fr") +
+      sourceField("Document name (EN)", "source-document-name-en-" + index, source.documentName.en, "text", index, "document-name-en") +
+      sourceField("Excerpt (FR)", "source-excerpt-fr-" + index, source.excerpt.fr, "textarea", index, "excerpt-fr") +
+      sourceField("Excerpt (EN)", "source-excerpt-en-" + index, source.excerpt.en, "textarea", index, "excerpt-en") +
+      "</div></article>"
     );
   }
 
   function renderDeleteSection() {
-    if (state.mode !== "edit" || !state.originalId) {
-      return "";
-    }
+    if (state.mode !== "edit" || !state.originalId) return "";
 
     return (
       '<section class="sectionCard dangerSection">' +
-      '<div class="sectionHead">' +
-      "<div>" +
+      '<div class="sectionHead"><div>' +
       "<h3>Delete</h3>" +
-      '<p class="sectionIntro">This permanently deletes the drug row and its linked aliases, test entries, and notes. Sources stay in place.</p>' +
+      '<p class="sectionIntro">This permanently deletes the drug row and its linked aliases, test entries, notes, and cross-reactivity data. Sources stay in place.</p>' +
       "</div>" +
-      '<span class="pill dangerPill">Permanent</span>' +
-      "</div>" +
-      field(
-        'Type "' + state.originalId + '" to confirm',
-        "delete-confirmation",
-        state.deleteConfirmation,
-        "text"
-      ) +
+      '<span class="pill dangerPill">Permanent</span></div>' +
+      field('Type "' + state.originalId + '" to confirm', "delete-confirmation", state.deleteConfirmation, "text") +
       '<div class="actionRow dangerActions">' +
       '<button type="button" class="dangerButton" data-action="delete-drug">Delete drug</button>' +
-      "</div>" +
-      "</section>"
+      "</div></section>"
     );
   }
 
+  // ── Field Helpers ────────────────────────────────────
+
   function field(label, id, value, kind, hint, extraAttributes) {
-    const attributes = extraAttributes ? " " + extraAttributes : "";
-    const hintMarkup = hint ? '<div class="fieldHint">' + escapeHtml(hint) + "</div>" : "";
-    const error = state.validation.fields[id];
-    const controlClass = error ? " hasError" : "";
-    const errorMarkup = error ? '<div class="fieldError">' + escapeHtml(error) + "</div>" : "";
+    var attributes = extraAttributes ? " " + extraAttributes : "";
+    var hintMarkup = hint ? '<div class="fieldHint">' + escapeHtml(hint) + "</div>" : "";
+    var error = state.validation.fields[id];
+    var controlClass = error ? " hasError" : "";
+    var errorMarkup = error ? '<div class="fieldError">' + escapeHtml(error) + "</div>" : "";
 
     if (kind === "select") {
       return (
-        '<div class="fieldBlock">' +
-        '<label class="fieldLabel" for="' +
-        escapeHtml(id) +
-        '">' +
-        escapeHtml(label) +
-        "</label>" +
-        '<select id="' +
-        escapeHtml(id) +
-        '" class="selectField' +
-        controlClass +
-        '"' +
-        attributes +
-        ">" +
-        value +
-        "</select>" +
-        hintMarkup +
-        errorMarkup +
-        "</div>"
+        '<div class="fieldBlock"><label class="fieldLabel" for="' + escapeHtml(id) + '">' + escapeHtml(label) + "</label>" +
+        '<select id="' + escapeHtml(id) + '" class="selectField' + controlClass + '"' + attributes + ">" + value + "</select>" +
+        hintMarkup + errorMarkup + "</div>"
       );
     }
 
     if (kind === "textarea") {
       return (
-        '<div class="fieldBlock">' +
-        '<label class="fieldLabel" for="' +
-        escapeHtml(id) +
-        '">' +
-        escapeHtml(label) +
-        "</label>" +
-        '<textarea id="' +
-        escapeHtml(id) +
-        '" class="textArea' +
-        controlClass +
-        '"' +
-        attributes +
-        ">" +
-        escapeHtml(value || "") +
-        "</textarea>" +
-        hintMarkup +
-        errorMarkup +
-        "</div>"
+        '<div class="fieldBlock"><label class="fieldLabel" for="' + escapeHtml(id) + '">' + escapeHtml(label) + "</label>" +
+        '<textarea id="' + escapeHtml(id) + '" class="textArea' + controlClass + '"' + attributes + ">" + escapeHtml(value || "") + "</textarea>" +
+        hintMarkup + errorMarkup + "</div>"
       );
     }
 
     return (
-      '<div class="fieldBlock">' +
-      '<label class="fieldLabel" for="' +
-      escapeHtml(id) +
-      '">' +
-      escapeHtml(label) +
-      "</label>" +
-      '<input id="' +
-      escapeHtml(id) +
-      '" class="textField' +
-      controlClass +
-      '" type="' +
-      escapeHtml(kind || "text") +
-      '" value="' +
-      escapeHtml(value || "") +
-      '"' +
-      attributes +
-      " />" +
-      hintMarkup +
-      errorMarkup +
-      "</div>"
+      '<div class="fieldBlock"><label class="fieldLabel" for="' + escapeHtml(id) + '">' + escapeHtml(label) + "</label>" +
+      '<input id="' + escapeHtml(id) + '" class="textField' + controlClass + '" type="' + escapeHtml(kind || "text") + '" value="' + escapeHtml(value || "") + '"' + attributes + " />" +
+      hintMarkup + errorMarkup + "</div>"
     );
   }
 
   function sourceField(label, id, value, kind, index, sourceFieldName) {
-    return field(
-      label,
-      id,
-      value,
-      kind,
-      "",
-      'data-source-field="' + escapeHtml(sourceFieldName) + '" data-source-index="' + index + '"'
-    );
+    return field(label, id, value, kind, "", 'data-source-field="' + escapeHtml(sourceFieldName) + '" data-source-index="' + index + '"');
   }
 
-  function sourceOptions(selectedId, includeBlank) {
-    const options = [];
-    const sources = combinedSources();
-
-    if (includeBlank) {
-      options.push('<option value="">None</option>');
-    }
+  function sourceOptions(selectedId) {
+    var options = [];
+    var sources = combinedSources();
 
     sources.forEach(function (source) {
-      const selected = source.id === selectedId ? ' selected="selected"' : "";
-      const label =
-        source.id +
-        " · " +
-        (source.label || source.documentName.fr || source.documentName.en || source.organization);
-
-      options.push(
-        '<option value="' +
-          escapeHtml(source.id) +
-          '"' +
-          selected +
-          ">" +
-          escapeHtml(label) +
-          "</option>"
-      );
+      var selected = source.id === selectedId ? ' selected="selected"' : "";
+      var label = source.id + " · " + (source.label || source.documentName.fr || source.documentName.en || source.organization);
+      options.push('<option value="' + escapeHtml(source.id) + '"' + selected + ">" + escapeHtml(label) + "</option>");
     });
 
     return options.join("");
   }
 
   function noteKindOptions(selectedValue) {
-    return state.noteKinds
-      .map(function (kind) {
-        const selected = kind === selectedValue ? ' selected="selected"' : "";
-        return (
-          '<option value="' +
-          escapeHtml(kind) +
-          '"' +
-          selected +
-          ">" +
-          escapeHtml(kind) +
-          "</option>"
-        );
-      })
-      .join("");
+    return state.noteKinds.map(function (kind) {
+      var selected = kind === selectedValue ? ' selected="selected"' : "";
+      return '<option value="' + escapeHtml(kind) + '"' + selected + ">" + escapeHtml(kind) + "</option>";
+    }).join("");
   }
 
-  function filteredLookups(normalizedQuery) {
-    const items = state.lookups.slice();
+  function drugIdOptions(selectedId) {
+    var options = ['<option value="">-- Select drug --</option>'];
+    state.lookups.forEach(function (item) {
+      var selected = item.id === selectedId ? ' selected="selected"' : "";
+      var label = item.id + " · " + (item.name.fr || item.name.en || item.id);
+      options.push('<option value="' + escapeHtml(item.id) + '"' + selected + ">" + escapeHtml(label) + "</option>");
+    });
+    return options.join("");
+  }
 
-    if (!normalizedQuery) {
-      return items.slice(0, 30);
-    }
+  function tierOptions(selectedValue) {
+    return state.crossReactivityTiers.map(function (tier) {
+      var selected = tier === selectedValue ? ' selected="selected"' : "";
+      return '<option value="' + escapeHtml(tier) + '"' + selected + ">" + escapeHtml(tier) + "</option>";
+    }).join("");
+  }
+
+  function structuralRelationOptions(selectedValue) {
+    return state.structuralRelations.map(function (rel) {
+      var selected = rel === selectedValue ? ' selected="selected"' : "";
+      return '<option value="' + escapeHtml(rel) + '"' + selected + ">" + escapeHtml(rel) + "</option>";
+    }).join("");
+  }
+
+  // ── Search / Filter ──────────────────────────────────
+
+  function filteredLookups(normalizedQuery) {
+    var items = state.lookups.slice();
+
+    if (!normalizedQuery) return items;
 
     return items
       .map(function (item) {
-        return {
-          item: item,
-          score: scoreLookup(item, normalizedQuery),
-        };
+        return { item: item, score: scoreLookup(item, normalizedQuery) };
       })
-      .filter(function (entry) {
-        return entry.score > 0;
-      })
+      .filter(function (entry) { return entry.score > 0; })
       .sort(function (left, right) {
-        if (right.score !== left.score) {
-          return right.score - left.score;
-        }
-
+        if (right.score !== left.score) return right.score - left.score;
         return (left.item.name.fr || left.item.id).localeCompare(right.item.name.fr || right.item.id);
       })
-      .slice(0, 30)
-      .map(function (entry) {
-        return entry.item;
-      });
+      .map(function (entry) { return entry.item; });
   }
 
   function scoreLookup(item, normalizedQuery) {
-    const names = [
+    var names = [
       { value: normalize(item.id), score: 180 },
       { value: normalize(item.name.fr), score: 170 },
       { value: normalize(item.name.en), score: 160 },
@@ -1099,24 +1104,14 @@
       { value: normalize(item.className.en), score: 80 },
     ];
 
-    let best = 0;
-
+    var best = 0;
     names.forEach(function (candidate) {
-      if (!candidate.value) {
-        return;
-      }
-
+      if (!candidate.value) return;
       if (candidate.value === normalizedQuery) {
         best = Math.max(best, 300 + candidate.score);
-        return;
-      }
-
-      if (candidate.value.indexOf(normalizedQuery) === 0) {
+      } else if (candidate.value.indexOf(normalizedQuery) === 0) {
         best = Math.max(best, 200 + candidate.score);
-        return;
-      }
-
-      if (candidate.value.indexOf(normalizedQuery) >= 0) {
+      } else if (candidate.value.indexOf(normalizedQuery) >= 0) {
         best = Math.max(best, 100 + candidate.score);
       }
     });
@@ -1124,23 +1119,17 @@
     return best;
   }
 
+  // ── Validation ───────────────────────────────────────
+
   function validateForm(form) {
-    const validation = emptyValidation();
-    const existingDrugIds = new Set(
-      state.lookups.map(function (lookup) {
-        return lookup.id;
-      })
+    var validation = emptyValidation();
+    var existingDrugIds = new Set(state.lookups.map(function (l) { return l.id; }));
+    var applicableTests = form.applicableTests.slice();
+    var draftSourceResult = validateDraftSources(form.sources);
+    var availableSourceIds = new Set(
+      combinedSources().map(function (s) { return s.id; }).filter(Boolean)
     );
-    const applicableTests = form.applicableTests.slice();
-    const draftSourceResult = validateDraftSources(form.sources);
-    const availableSourceIds = new Set(
-      combinedSources()
-        .map(function (source) {
-          return source.id;
-        })
-        .filter(Boolean)
-    );
-    const usedSourceIds = {};
+    var usedSourceIds = {};
 
     Object.assign(validation.fields, draftSourceResult.fields);
 
@@ -1150,96 +1139,55 @@
       validation.fields["drug-id"] = "Drug id already exists.";
     }
 
-    if (!form.name.fr.trim()) {
-      validation.fields["name-fr"] = "French name is required.";
-    }
+    if (!form.name.fr.trim()) validation.fields["name-fr"] = "French name is required.";
+    if (!form.name.en.trim()) validation.fields["name-en"] = "English name is required.";
+    if (!form.className.fr.trim()) validation.fields["class-fr"] = "French class is required.";
+    if (!form.className.en.trim()) validation.fields["class-en"] = "English class is required.";
 
-    if (!form.name.en.trim()) {
-      validation.fields["name-en"] = "English name is required.";
-    }
+    var aliasValues = form.aliases.map(function (a) { return a.trim(); }).filter(Boolean);
+    if (!aliasValues.length) validation.fields["alias-0"] = "At least one alias is required.";
 
-    if (!form.className.fr.trim()) {
-      validation.fields["class-fr"] = "French class is required.";
-    }
-
-    if (!form.className.en.trim()) {
-      validation.fields["class-en"] = "English class is required.";
-    }
-
-    const aliasValues = form.aliases
-      .map(function (alias) {
-        return alias.trim();
-      })
-      .filter(Boolean);
-
-    if (!aliasValues.length) {
-      validation.fields["alias-0"] = "At least one alias is required.";
-    }
-
-    if (!applicableTests.length) {
-      validation.fields["applicable-tests"] = "Select at least one applicable test type.";
-    }
+    if (!applicableTests.length) validation.fields["applicable-tests"] = "Select at least one applicable test type.";
 
     applicableTests.forEach(function (testKind) {
-      const test = form.tests[testKind];
-      const contentError =
-        "Add at least one clinical field, dilution, bilingual vehicle, or note for " +
-        testKind.toUpperCase() +
-        ".";
+      var test = form.tests[testKind];
 
       if (!hasMeaningfulTestContent(test)) {
-        validation.fields["test-" + testKind + "-source-entries"] = contentError;
+        validation.fields["test-" + testKind + "-source-entries"] =
+          "Add at least one clinical field, dilution, bilingual vehicle, or note for " + testKind.toUpperCase() + ".";
       }
 
-      const preferredCount = test.sourceEntries.filter(function (e) { return e.isPreferred; }).length;
+      var preferredCount = test.sourceEntries.filter(function (e) { return e.isPreferred; }).length;
       if (test.sourceEntries.length > 0 && preferredCount !== 1) {
         validation.fields["test-" + testKind + "-source-entries"] =
           "Exactly one preferred source is required for " + testKind.toUpperCase() + ".";
       }
 
-      const seenEntryIds = {};
+      var seenEntryIds = {};
       test.sourceEntries.forEach(function (entry, index) {
         if (!entry.sourceId) {
-          validation.fields["test-" + testKind + "-source-entry-source-" + index] =
-            "Source is required.";
+          validation.fields["test-" + testKind + "-source-entry-source-" + index] = "Source is required.";
         } else if (!availableSourceIds.has(entry.sourceId)) {
-          validation.fields["test-" + testKind + "-source-entry-source-" + index] =
-            "Source id is not available in the source catalog.";
+          validation.fields["test-" + testKind + "-source-entry-source-" + index] = "Source id is not available in the source catalog.";
         } else {
           usedSourceIds[entry.sourceId] = true;
         }
-
         if (seenEntryIds[entry.sourceId]) {
-          validation.fields["test-" + testKind + "-source-entry-source-" + index] =
-            "Duplicate source in " + testKind.toUpperCase() + ".";
+          validation.fields["test-" + testKind + "-source-entry-source-" + index] = "Duplicate source in " + testKind.toUpperCase() + ".";
         }
-        if (entry.sourceId) {
-          seenEntryIds[entry.sourceId] = true;
-        }
+        if (entry.sourceId) seenEntryIds[entry.sourceId] = true;
       });
 
       if (Boolean(test.vehicle.fr.trim()) !== Boolean(test.vehicle.en.trim())) {
-        validation.fields["test-" + testKind + "-vehicle-fr"] =
-          "Vehicle must be provided in French and English.";
-        validation.fields["test-" + testKind + "-vehicle-en"] =
-          "Vehicle must be provided in French and English.";
+        validation.fields["test-" + testKind + "-vehicle-fr"] = "Vehicle must be provided in French and English.";
+        validation.fields["test-" + testKind + "-vehicle-en"] = "Vehicle must be provided in French and English.";
       }
 
       if (test.dilutions.trim()) {
-        const dilutions = test.dilutions
-          .split(";")
-          .map(function (item) {
-            return item.trim();
-          })
-          .filter(Boolean);
-
-        const invalidDilution = dilutions.find(function (dilution) {
-          return !/^[1-9]\d*:[1-9]\d*$/.test(dilution);
-        });
-
+        var dilutions = test.dilutions.split(";").map(function (i) { return i.trim(); }).filter(Boolean);
+        var invalidDilution = dilutions.find(function (d) { return !/^[1-9]\d*:[1-9]\d*$/.test(d); });
         if (invalidDilution) {
-          validation.fields["test-" + testKind + "-dilutions"] =
-            'Dilutions must use positive ratios like "1:10".';
+          validation.fields["test-" + testKind + "-dilutions"] = 'Dilutions must use positive ratios like "1:10".';
         }
       }
 
@@ -1247,15 +1195,11 @@
         if (state.noteKinds.indexOf(note.kind) === -1) {
           validation.fields["test-" + testKind + "-note-kind-" + index] = "Invalid note type.";
         }
-
-        const hasFrench = note.value.fr.trim().length > 0;
-        const hasEnglish = note.value.en.trim().length > 0;
-
+        var hasFrench = note.value.fr.trim().length > 0;
+        var hasEnglish = note.value.en.trim().length > 0;
         if (hasFrench !== hasEnglish) {
-          validation.fields["test-" + testKind + "-note-fr-" + index] =
-            "Notes must be bilingual.";
-          validation.fields["test-" + testKind + "-note-en-" + index] =
-            "Notes must be bilingual.";
+          validation.fields["test-" + testKind + "-note-fr-" + index] = "Notes must be bilingual.";
+          validation.fields["test-" + testKind + "-note-en-" + index] = "Notes must be bilingual.";
         }
       });
     });
@@ -1264,24 +1208,66 @@
       validation.form.push("At least one valid source must be attached to a selected test.");
     }
 
+    validateCrossReactivity(form, validation);
+
     return validation;
   }
 
-  function validateDraftSources(sources) {
-    const result = { fields: {}, valid: [] };
-    const existingSourceIds = new Set(
-      state.sources.map(function (source) {
-        return source.id;
-      })
-    );
-    const seenDraftIds = {};
+  function validateCrossReactivity(form, validation) {
+    var groups = form.crossReactivity || [];
+    var drugIds = new Set(state.lookups.map(function (l) { return l.id; }));
 
-    sources.forEach(function (source, index) {
-      if (isBlankSource(source)) {
-        return;
+    groups.forEach(function (group, gi) {
+      if (!group.groupName.fr.trim() || !group.groupName.en.trim()) {
+        validation.fields["cr-group-name-fr-" + gi] = "Bilingual group name is required.";
+        validation.fields["cr-group-name-en-" + gi] = "Bilingual group name is required.";
       }
 
-      const prefix = "source-";
+      var panelRatEn = group.panelRationale.en.trim();
+      var panelRatFr = group.panelRationale.fr.trim();
+      if (Boolean(panelRatEn) !== Boolean(panelRatFr)) {
+        validation.fields["cr-panel-rat-fr-" + gi] = "Panel rationale must be bilingual.";
+        validation.fields["cr-panel-rat-en-" + gi] = "Panel rationale must be bilingual.";
+      }
+
+      var entries = group.entries || [];
+      if (!entries.length) {
+        validation.form.push("Cross-reactivity group " + (gi + 1) + " must have at least one entry.");
+      }
+
+      entries.forEach(function (entry, ei) {
+        if (!entry.relatedDrugId) {
+          validation.fields["cr-entry-drug-" + gi + "-" + ei] = "Related drug id is required.";
+        } else if (!drugIds.has(entry.relatedDrugId)) {
+          validation.fields["cr-entry-drug-" + gi + "-" + ei] = "Unknown drug id.";
+        }
+
+        if (state.crossReactivityTiers.indexOf(entry.tier) === -1) {
+          validation.fields["cr-entry-tier-" + gi + "-" + ei] = "Invalid tier.";
+        }
+
+        if (state.structuralRelations.indexOf(entry.structuralRelation) === -1) {
+          validation.fields["cr-entry-struct-" + gi + "-" + ei] = "Invalid structural relation.";
+        }
+
+        var ratFr = (entry.rationale.fr || "").trim();
+        var ratEn = (entry.rationale.en || "").trim();
+        if (!ratFr || !ratEn) {
+          validation.fields["cr-entry-rat-fr-" + gi + "-" + ei] = "Bilingual rationale is required.";
+          validation.fields["cr-entry-rat-en-" + gi + "-" + ei] = "Bilingual rationale is required.";
+        }
+      });
+    });
+  }
+
+  function validateDraftSources(sources) {
+    var result = { fields: {}, valid: [] };
+    var existingSourceIds = new Set(state.sources.map(function (s) { return s.id; }));
+    var seenDraftIds = {};
+
+    sources.forEach(function (source, index) {
+      if (isBlankSource(source)) return;
+      var prefix = "source-";
 
       if (!source.id.trim()) {
         result.fields[prefix + "id-" + index] = "Source id is required.";
@@ -1293,43 +1279,15 @@
         seenDraftIds[source.id.trim()] = true;
       }
 
-      if (!source.label.trim()) {
-        result.fields[prefix + "label-" + index] = "Label is required.";
-      }
-
-      if (!source.organization.trim()) {
-        result.fields[prefix + "organization-" + index] = "Organization is required.";
-      }
-
-      if (!source.year.trim()) {
-        result.fields[prefix + "year-" + index] = "Year is required.";
-      }
-
-      if (!source.version.trim()) {
-        result.fields[prefix + "version-" + index] = "Version is required.";
-      }
-
-      if (!source.status.trim()) {
-        result.fields[prefix + "status-" + index] = "Status is required.";
-      }
-
-      if (!source.documentName.fr.trim()) {
-        result.fields[prefix + "document-name-fr-" + index] =
-          "French document name is required.";
-      }
-
-      if (!source.documentName.en.trim()) {
-        result.fields[prefix + "document-name-en-" + index] =
-          "English document name is required.";
-      }
-
-      if (!source.excerpt.fr.trim()) {
-        result.fields[prefix + "excerpt-fr-" + index] = "French excerpt is required.";
-      }
-
-      if (!source.excerpt.en.trim()) {
-        result.fields[prefix + "excerpt-en-" + index] = "English excerpt is required.";
-      }
+      if (!source.label.trim()) result.fields[prefix + "label-" + index] = "Label is required.";
+      if (!source.organization.trim()) result.fields[prefix + "organization-" + index] = "Organization is required.";
+      if (!source.year.trim()) result.fields[prefix + "year-" + index] = "Year is required.";
+      if (!source.version.trim()) result.fields[prefix + "version-" + index] = "Version is required.";
+      if (!source.status.trim()) result.fields[prefix + "status-" + index] = "Status is required.";
+      if (!source.documentName.fr.trim()) result.fields[prefix + "document-name-fr-" + index] = "French document name is required.";
+      if (!source.documentName.en.trim()) result.fields[prefix + "document-name-en-" + index] = "English document name is required.";
+      if (!source.excerpt.fr.trim()) result.fields[prefix + "excerpt-fr-" + index] = "French excerpt is required.";
+      if (!source.excerpt.en.trim()) result.fields[prefix + "excerpt-en-" + index] = "English excerpt is required.";
 
       result.valid.push(source);
     });
@@ -1342,99 +1300,98 @@
   }
 
   function validationMessages() {
-    const messages = state.validation.form.slice();
-
+    var messages = state.validation.form.slice();
     Object.keys(state.validation.fields).forEach(function (fieldId) {
-      const message = state.validation.fields[fieldId];
-      if (messages.indexOf(message) === -1) {
-        messages.push(message);
-      }
+      var message = state.validation.fields[fieldId];
+      if (messages.indexOf(message) === -1) messages.push(message);
     });
-
     return messages;
   }
 
+  // ── Data Helpers ─────────────────────────────────────
+
   function combinedSources() {
-    const existing = state.sources.slice();
-    const draftSources = state.form
-      ? state.form.sources.filter(function (source) {
-          return source.id && !isBlankSource(source);
-        })
+    var existing = state.sources.slice();
+    var draftSources = state.form
+      ? state.form.sources.filter(function (s) { return s.id && !isBlankSource(s); })
       : [];
-    const seen = {};
+    var seen = {};
 
-    return existing
-      .concat(draftSources)
-      .filter(function (source) {
-        if (!source.id || seen[source.id]) {
-          return false;
-        }
-
-        seen[source.id] = true;
-        return true;
-      });
+    return existing.concat(draftSources).filter(function (source) {
+      if (!source.id || seen[source.id]) return false;
+      seen[source.id] = true;
+      return true;
+    });
   }
 
   function sanitizeDrugForSave(form) {
+    var MARKER = "<!-- discrepancy-auto -->";
     return {
       id: form.id.trim(),
-      name: {
-        fr: form.name.fr.trim(),
-        en: form.name.en.trim(),
-      },
-      className: {
-        fr: form.className.fr.trim(),
-        en: form.className.en.trim(),
-      },
+      name: { fr: form.name.fr.trim(), en: form.name.en.trim() },
+      className: { fr: form.className.fr.trim(), en: form.className.en.trim() },
       aliases: form.aliases.slice(),
       applicableTests: form.applicableTests.slice(),
       tests: Object.fromEntries(
         state.testKinds.map(function (testKind) {
-          const MARKER = "<!-- discrepancy-auto -->";
-          return [
-            testKind,
-            {
-              dilutions: form.tests[testKind].dilutions,
-              vehicle: {
-                fr: form.tests[testKind].vehicle.fr,
-                en: form.tests[testKind].vehicle.en,
-              },
-              sourceEntries: form.tests[testKind].sourceEntries.map(function (entry) {
-                return {
-                  sourceId: entry.sourceId,
-                  concentration: entry.concentration,
-                  maxConcentration: entry.maxConcentration,
-                  isPreferred: entry.isPreferred,
-                };
-              }),
-              notes: form.tests[testKind].notes.map(function (note) {
-                return {
-                  kind: note.kind,
-                  value: {
-                    fr: note.value.fr.replace(MARKER, "").trim(),
-                    en: note.value.en.replace(MARKER, "").trim(),
-                  },
-                };
-              }),
-            },
-          ];
+          return [testKind, {
+            dilutions: form.tests[testKind].dilutions,
+            vehicle: { fr: form.tests[testKind].vehicle.fr, en: form.tests[testKind].vehicle.en },
+            sourceEntries: form.tests[testKind].sourceEntries.map(function (entry) {
+              return {
+                sourceId: entry.sourceId,
+                concentration: entry.concentration,
+                maxConcentration: entry.maxConcentration,
+                isPreferred: entry.isPreferred,
+              };
+            }),
+            notes: form.tests[testKind].notes.map(function (note) {
+              return {
+                kind: note.kind,
+                value: {
+                  fr: note.value.fr.replace(MARKER, "").trim(),
+                  en: note.value.en.replace(MARKER, "").trim(),
+                },
+              };
+            }),
+          }];
         })
       ),
+      crossReactivity: (form.crossReactivity || []).map(function (group) {
+        return {
+          groupName: {
+            fr: group.groupName.fr.trim(),
+            en: group.groupName.en.trim(),
+          },
+          entries: group.entries.map(function (entry) {
+            return {
+              relatedDrugId: (entry.relatedDrugId || "").trim(),
+              tier: (entry.tier || "").trim(),
+              structuralRelation: (entry.structuralRelation || "").trim(),
+              rationale: {
+                fr: (entry.rationale.fr || "").trim(),
+                en: (entry.rationale.en || "").trim(),
+              },
+              sourceIds: typeof entry.sourceIds === "string" ? entry.sourceIds.trim() : (Array.isArray(entry.sourceIds) ? entry.sourceIds.join("; ") : ""),
+            };
+          }),
+          suggestedPanel: typeof group.suggestedPanel === "string" ? group.suggestedPanel.trim() : (Array.isArray(group.suggestedPanel) ? group.suggestedPanel.join("; ") : ""),
+          panelRationale: {
+            fr: (group.panelRationale.fr || "").trim(),
+            en: (group.panelRationale.en || "").trim(),
+          },
+        };
+      }),
     };
   }
 
   function sanitizeSourcesForSave(sources) {
-    return sources.filter(function (source) {
-      return !isBlankSource(source);
-    });
+    return sources.filter(function (source) { return !isBlankSource(source); });
   }
 
   function normalizeLoadedDrug(drug) {
-    const normalized = emptyDrug(state.defaultSourceId);
-
-    if (!drug) {
-      return normalized;
-    }
+    var normalized = emptyDrug(state.defaultSourceId);
+    if (!drug) return normalized;
 
     normalized.id = drug.id || "";
     normalized.name.fr = (drug.name && drug.name.fr) || "";
@@ -1444,14 +1401,12 @@
     normalized.aliases = Array.isArray(drug.aliases) && drug.aliases.length ? drug.aliases.slice() : [""];
     normalized.applicableTests =
       Array.isArray(drug.applicableTests) && drug.applicableTests.length
-        ? drug.applicableTests.filter(function (testKind) {
-            return state.testKinds.indexOf(testKind) >= 0;
-          })
+        ? drug.applicableTests.filter(function (tk) { return state.testKinds.indexOf(tk) >= 0; })
         : [];
     normalized.sources = [];
 
     state.testKinds.forEach(function (testKind) {
-      const loadedTest = drug.tests && drug.tests[testKind] ? drug.tests[testKind] : emptyTest(state.defaultSourceId);
+      var loadedTest = drug.tests && drug.tests[testKind] ? drug.tests[testKind] : emptyTest(state.defaultSourceId);
       normalized.tests[testKind] = {
         dilutions: loadedTest.dilutions || "",
         vehicle: {
@@ -1470,28 +1425,50 @@
           : [{ sourceId: state.defaultSourceId || "", concentration: "", maxConcentration: "", isPreferred: true }],
         notes: Array.isArray(loadedTest.notes)
           ? loadedTest.notes.map(function (note) {
-              return {
-                kind: note.kind || "info",
-                value: {
-                  fr: (note.value && note.value.fr) || "",
-                  en: (note.value && note.value.en) || "",
-                },
-              };
+              return { kind: note.kind || "info", value: { fr: (note.value && note.value.fr) || "", en: (note.value && note.value.en) || "" } };
             })
           : [],
       };
     });
 
+    normalized.crossReactivity = Array.isArray(drug.crossReactivity)
+      ? drug.crossReactivity.map(function (group) {
+          return {
+            groupName: {
+              en: (group.groupName && group.groupName.en) || "",
+              fr: (group.groupName && group.groupName.fr) || "",
+            },
+            entries: Array.isArray(group.entries) ? group.entries.map(function (entry) {
+              return {
+                relatedDrugId: entry.relatedDrugId || "",
+                tier: entry.tier || "higher-concern",
+                structuralRelation: entry.structuralRelation || "structurally-related",
+                rationale: {
+                  en: (entry.rationale && entry.rationale.en) || "",
+                  fr: (entry.rationale && entry.rationale.fr) || "",
+                },
+                sourceIds: Array.isArray(entry.sourceIds) ? entry.sourceIds.slice() : [],
+              };
+            }) : [],
+            suggestedPanel: Array.isArray(group.suggestedPanel) ? group.suggestedPanel.slice() : [],
+            panelRationale: {
+              en: (group.panelRationale && group.panelRationale.en) || "",
+              fr: (group.panelRationale && group.panelRationale.fr) || "",
+            },
+          };
+        })
+      : [];
+
     return normalized;
   }
 
-  function emptyDrug(defaultSourceId) {
-    const tests = {};
+  // ── Empty / Clone Factories ──────────────────────────
 
+  function emptyDrug(defaultSourceId) {
+    var tests = {};
     state.testKinds.forEach(function (testKind) {
       tests[testKind] = emptyTest(defaultSourceId);
     });
-
     return {
       id: "",
       name: { en: "", fr: "" },
@@ -1500,6 +1477,7 @@
       applicableTests: [],
       sources: [],
       tests: tests,
+      crossReactivity: [],
     };
   }
 
@@ -1516,23 +1494,33 @@
 
   function emptySource() {
     return {
-      id: "",
-      label: "",
-      organization: "",
-      year: "",
-      version: "",
-      status: "",
-      url: "",
+      id: "", label: "", organization: "", year: "", version: "", status: "", url: "",
       documentName: { en: "", fr: "" },
       excerpt: { en: "", fr: "" },
     };
   }
 
-  function emptyValidation() {
+  function emptyCrGroup() {
     return {
-      fields: {},
-      form: [],
+      groupName: { en: "", fr: "" },
+      entries: [emptyCrEntry()],
+      suggestedPanel: [],
+      panelRationale: { en: "", fr: "" },
     };
+  }
+
+  function emptyCrEntry() {
+    return {
+      relatedDrugId: "",
+      tier: "higher-concern",
+      structuralRelation: "structurally-related",
+      rationale: { en: "", fr: "" },
+      sourceIds: [],
+    };
+  }
+
+  function emptyValidation() {
+    return { fields: {}, form: [] };
   }
 
   function cloneDrug(drug) {
@@ -1548,16 +1536,14 @@
           return [testKind, cloneTest(drug.tests[testKind])];
         })
       ),
+      crossReactivity: (drug.crossReactivity || []).map(cloneCrGroup),
     };
   }
 
   function cloneTest(test) {
     return {
       dilutions: test.dilutions,
-      vehicle: {
-        fr: test.vehicle.fr,
-        en: test.vehicle.en,
-      },
+      vehicle: { fr: test.vehicle.fr, en: test.vehicle.en },
       sourceEntries: test.sourceEntries.map(function (entry) {
         return {
           sourceId: entry.sourceId,
@@ -1567,33 +1553,34 @@
         };
       }),
       notes: test.notes.map(function (note) {
-        return {
-          kind: note.kind,
-          value: {
-            fr: note.value.fr,
-            en: note.value.en,
-          },
-        };
+        return { kind: note.kind, value: { fr: note.value.fr, en: note.value.en } };
       }),
     };
   }
 
   function cloneSource(source) {
     return {
-      id: source.id,
-      label: source.label,
-      organization: source.organization,
-      year: source.year,
-      version: source.version,
-      status: source.status,
-      documentName: {
-        fr: source.documentName.fr,
-        en: source.documentName.en,
-      },
-      excerpt: {
-        fr: source.excerpt.fr,
-        en: source.excerpt.en,
-      },
+      id: source.id, label: source.label, organization: source.organization,
+      year: source.year, version: source.version, status: source.status,
+      documentName: { fr: source.documentName.fr, en: source.documentName.en },
+      excerpt: { fr: source.excerpt.fr, en: source.excerpt.en },
+    };
+  }
+
+  function cloneCrGroup(group) {
+    return {
+      groupName: { en: group.groupName.en, fr: group.groupName.fr },
+      entries: group.entries.map(function (entry) {
+        return {
+          relatedDrugId: entry.relatedDrugId,
+          tier: entry.tier,
+          structuralRelation: entry.structuralRelation,
+          rationale: { en: entry.rationale.en, fr: entry.rationale.fr },
+          sourceIds: Array.isArray(entry.sourceIds) ? entry.sourceIds.slice() : [],
+        };
+      }),
+      suggestedPanel: Array.isArray(group.suggestedPanel) ? group.suggestedPanel.slice() : [],
+      panelRationale: { en: group.panelRationale.en, fr: group.panelRationale.fr },
     };
   }
 
@@ -1602,60 +1589,61 @@
       test.sourceEntries.some(function (e) {
         return (e.concentration && e.concentration.trim()) || (e.maxConcentration && e.maxConcentration.trim());
       }) ||
-        test.dilutions.trim() ||
-        (test.vehicle.fr.trim() && test.vehicle.en.trim()) ||
-        test.notes.some(function (note) {
-          return note.value.fr.trim() && note.value.en.trim();
-        })
+      test.dilutions.trim() ||
+      (test.vehicle.fr.trim() && test.vehicle.en.trim()) ||
+      test.notes.some(function (note) {
+        return note.value.fr.trim() && note.value.en.trim();
+      })
     );
   }
 
   function isBlankSource(source) {
     return !(
-      source.id.trim() ||
-      source.label.trim() ||
-      source.organization.trim() ||
-      source.year.trim() ||
-      source.version.trim() ||
-      source.status.trim() ||
-      source.documentName.fr.trim() ||
-      source.documentName.en.trim() ||
-      source.excerpt.fr.trim() ||
-      source.excerpt.en.trim()
+      source.id.trim() || source.label.trim() || source.organization.trim() ||
+      source.year.trim() || source.version.trim() || source.status.trim() ||
+      source.documentName.fr.trim() || source.documentName.en.trim() ||
+      source.excerpt.fr.trim() || source.excerpt.en.trim()
     );
   }
 
+  // ── DOM Utilities ────────────────────────────────────
+
   function readValue(id) {
-    const input = document.getElementById(id);
+    var input = document.getElementById(id);
     return input ? input.value : "";
   }
 
   function readNestedField(parent, selector) {
-    const input = parent.querySelector(selector);
+    var input = parent.querySelector(selector);
     return input ? input.value : "";
   }
 
   function setStatus(message, kind) {
     elements.statusBanner.textContent = message || "";
     elements.statusBanner.className = "statusBanner";
-
     if (!message) {
       elements.statusBanner.classList.add("isHidden");
       return;
     }
+    if (kind === "success") elements.statusBanner.classList.add("isSuccess");
+    else if (kind === "error") elements.statusBanner.classList.add("isError");
+  }
 
-    if (kind === "success") {
-      elements.statusBanner.classList.add("isSuccess");
-    } else if (kind === "error") {
-      elements.statusBanner.classList.add("isError");
+  function setEditStatus(message, kind) {
+    elements.editStatusBanner.textContent = message || "";
+    elements.editStatusBanner.className = "statusBanner";
+    if (!message) {
+      elements.editStatusBanner.classList.add("isHidden");
+      return;
     }
+    if (kind === "success") elements.editStatusBanner.classList.add("isSuccess");
+    else if (kind === "error") elements.editStatusBanner.classList.add("isError");
   }
 
   function applyUiText(uiText) {
-    if (elements.lookupBody && uiText && uiText.lookupBody) {
-      elements.lookupBody.textContent = uiText.lookupBody;
+    if (elements.listSubtitle && uiText && uiText.lookupBody) {
+      elements.listSubtitle.textContent = uiText.lookupBody;
     }
-
     if (elements.actionNote && uiText && uiText.actionNote) {
       elements.actionNote.textContent = uiText.actionNote;
     }
@@ -1664,7 +1652,7 @@
   function normalize(value) {
     return String(value || "")
       .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[̀-ͯ]/g, "")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, " ")
       .replace(/\s+/g, " ")

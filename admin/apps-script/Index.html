@@ -7,51 +7,57 @@
   </head>
   <body>
     <div class="appShell">
-      <aside class="lookupPanel">
-        <div class="lookupHeader">
-          <p class="eyebrow">Allergolib</p>
-          <h1>Admin curation</h1>
-          <p id="lookupBody" class="lookupBody">
-            Create or update a drug record in the normalized Google Sheet tabs. Saving here updates
-            the sheet, and any GitHub workflow dispatch depends on Apps Script configuration.
-          </p>
-        </div>
-
-        <label class="fieldLabel" for="lookupQuery">Lookup by id or localized name</label>
-        <input id="lookupQuery" class="textField" type="search" placeholder="cefazoline, CEF..." />
-
-        <div class="lookupActions">
-          <button id="newDrugButton" class="secondaryButton" type="button">New drug</button>
-        </div>
-
-        <div id="lookupMeta" class="lookupMeta"></div>
-        <div id="lookupResults" class="lookupResults"></div>
-      </aside>
-
-      <main class="editorPanel">
-        <div class="editorHeader">
+      <!-- LIST VIEW -->
+      <div id="listView" class="viewPanel">
+        <header class="viewHeader">
           <div>
-            <p class="eyebrow">Phase 5</p>
-            <h2 id="modeTitle">Loading…</h2>
+            <p class="eyebrow">Allergolib</p>
+            <h1>Admin curation</h1>
+            <p id="listSubtitle" class="subtitleText">
+              Create or update drug records in the normalized Google Sheet tabs.
+            </p>
           </div>
           <div id="statusBanner" class="statusBanner isHidden"></div>
+        </header>
+
+        <div class="listToolbar">
+          <input
+            id="searchBox"
+            class="textField searchField"
+            type="search"
+            placeholder="Search drugs by name, id, or class..."
+          />
+          <div class="buttonGroup">
+            <button id="createDrugButton" class="primaryButton" type="button">Create New Drug</button>
+            <button id="publishAllButton" class="secondaryButton" type="button">Publish All Changes</button>
+          </div>
         </div>
+
+        <div id="listMeta" class="listMeta"></div>
+        <div id="cardGrid" class="cardGrid"></div>
+      </div>
+
+      <!-- EDIT VIEW -->
+      <div id="editView" class="viewPanel isHidden">
+        <header class="viewHeader">
+          <div class="editorTitleGroup">
+            <button id="backToListButton" class="ghostButton" type="button">&larr; Back to list</button>
+            <h2 id="modeTitle">Loading&hellip;</h2>
+          </div>
+          <div id="editStatusBanner" class="statusBanner isHidden"></div>
+        </header>
 
         <form id="drugForm">
           <div id="formSections"></div>
           <div class="actionBar">
-            <div id="actionNote" class="actionNote">
-              Save writes directly to `drugs`, `aliases`, `test_entries`, `notes`, and any new
-              inline `sources`. Any GitHub workflow dispatch happens only after a successful sheet
-              write.
-            </div>
+            <div id="actionNote" class="actionNote"></div>
             <div class="buttonGroup">
               <button id="saveButton" class="primaryButton" type="submit">Save</button>
-              <button id="publishButton" class="secondaryButton" type="button">Publish</button>
+              <button id="cancelButton" class="secondaryButton" type="button">Cancel</button>
             </div>
           </div>
         </form>
-      </main>
+      </div>
     </div>
     <?!= include("Styles"); ?>
     <?!= include("Client"); ?>

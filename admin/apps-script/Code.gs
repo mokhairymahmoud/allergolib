@@ -5,9 +5,17 @@ const ADMIN_APP = Object.freeze({
     testEntries: "test_entries",
     notes: "notes",
     sources: "sources",
+    crossReactivity: "cross_reactivity",
   },
   testKinds: ["prick", "idr", "patch"],
   noteKinds: ["info", "warning", "cross-reactivity"],
+  crossReactivityTiers: ["higher-concern", "lower-expected", "uncertain"],
+  structuralRelations: ["structurally-related", "structurally-distinct"],
+  crossReactivityHeaders: [
+    "drug_id", "group_name_en", "group_name_fr", "related_drug_id",
+    "tier", "structural_relation", "rationale_en", "rationale_fr",
+    "source_ids", "panel_drug_ids", "panel_rationale_en", "panel_rationale_fr",
+  ],
   dilutionPattern: /^[1-9]\d*:[1-9]\d*$/,
 });
 
@@ -33,6 +41,8 @@ function bootstrapAdminApp() {
     connectedStatus: buildConnectedStatusMessage_(spreadsheet.getName(), githubTrigger),
     noteKinds: ADMIN_APP.noteKinds.slice(),
     testKinds: ADMIN_APP.testKinds.slice(),
+    crossReactivityTiers: ADMIN_APP.crossReactivityTiers.slice(),
+    structuralRelations: ADMIN_APP.structuralRelations.slice(),
     uiText: buildAdminUiText_(githubTrigger),
     lookups: listDrugLookups_(),
     sources,
@@ -134,6 +144,12 @@ function loadDrugForAdmin(drugId) {
 
   record.applicableTests = ADMIN_APP.testKinds.filter((testKind) => applicableKinds[testKind]);
 
+  const crossReactivityTable = readCrossReactivityTable_();
+  const crossReactivityRows = crossReactivityTable.objects.filter(
+    (row) => row.drug_id === normalizedDrugId
+  );
+  record.crossReactivity = buildCrossReactivityGroups_(crossReactivityRows);
+
   return {
     mode: "edit",
     originalId: normalizedDrugId,
@@ -221,11 +237,15 @@ function saveDrugFromAdmin(payload) {
       )
     );
 
+    const crossReactivityTable = ensureCrossReactivityTab_();
+    replaceCrossReactivityRows_(crossReactivityTable, originalId || normalized.id, normalized);
+
     writeTable_(sourcesTable);
     writeTable_(drugsTable);
     writeTable_(aliasesTable);
     writeTable_(testEntriesTable);
     writeTable_(notesTable);
+    writeTable_(crossReactivityTable);
 
     SpreadsheetApp.flush();
 
@@ -283,15 +303,23 @@ function deleteDrugFromAdmin(payload) {
       throw new Error(`Unknown drug id "${drugId}".`);
     }
 
+    const crossReactivityTable = readCrossReactivityTable_();
+
     removeRowsByField_(drugsTable, "id", drugId);
     removeRowsByField_(aliasesTable, "drug_id", drugId);
     removeRowsByField_(testEntriesTable, "drug_id", drugId);
     removeRowsByField_(notesTable, "drug_id", drugId);
+    if (crossReactivityTable.headers.length) {
+      removeRowsByField_(crossReactivityTable, "drug_id", drugId);
+    }
 
     writeTable_(drugsTable);
     writeTable_(aliasesTable);
     writeTable_(testEntriesTable);
     writeTable_(notesTable);
+    if (crossReactivityTable.headers.length) {
+      writeTable_(crossReactivityTable);
+    }
 
     SpreadsheetApp.flush();
 
@@ -626,6 +654,7 @@ function emptyDrugForm_(defaultSourceId) {
     applicableTests: [],
     sources: [],
     tests,
+    crossReactivity: [],
   };
 }
 
@@ -790,6 +819,12 @@ function normalizeDrugPayload_(payload, options) {
   if (!Object.keys(usedSourceIds).length) {
     errors.push("At least one source is required before save.");
   }
+
+  record.crossReactivity = normalizeCrossReactivityPayload_(
+    payload && payload.crossReactivity,
+    errors,
+    { sourcesById: options.sourcesById, existingIds: options.existingIds }
+  );
 
   if (errors.length) {
     throw new Error(errors.join("\n"));
@@ -1082,6 +1117,206 @@ function firstSourceId_(sourcesById) {
 
 function toTrimmedString_(value) {
   return String(value == null ? "" : value).trim();
+}
+
+function readCrossReactivityTable_() {
+  try {
+    return readTable_(ADMIN_APP.tabs.crossReactivity);
+  } catch (error) {
+    return { headers: [], objects: [], rows: [], sheet: null, tabName: ADMIN_APP.tabs.crossReactivity };
+  }
+}
+
+function ensureCrossReactivityTab_() {
+  const spreadsheet = getSpreadsheet_();
+  let sheet = spreadsheet.getSheetByName(ADMIN_APP.tabs.crossReactivity);
+
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(ADMIN_APP.tabs.crossReactivity);
+    sheet
+      .getRange(1, 1, 1, ADMIN_APP.crossReactivityHeaders.length)
+      .setValues([ADMIN_APP.crossReactivityHeaders]);
+    SpreadsheetApp.flush();
+  }
+
+  return readTable_(ADMIN_APP.tabs.crossReactivity);
+}
+
+function buildCrossReactivityGroups_(rows) {
+  var groupMap = {};
+  var groupOrder = [];
+
+  rows.forEach(function (row) {
+    var key = toTrimmedString_(row.group_name_en) + "||" + toTrimmedString_(row.group_name_fr);
+
+    if (!groupMap[key]) {
+      groupMap[key] = {
+        groupName: {
+          en: toTrimmedString_(row.group_name_en),
+          fr: toTrimmedString_(row.group_name_fr),
+        },
+        entries: [],
+        suggestedPanel: [],
+        panelRationale: { en: "", fr: "" },
+      };
+      groupOrder.push(key);
+    }
+
+    var panelDrugIds = toTrimmedString_(row.panel_drug_ids);
+    if (panelDrugIds) {
+      groupMap[key].suggestedPanel = panelDrugIds
+        .split(";")
+        .map(function (id) { return toTrimmedString_(id); })
+        .filter(Boolean);
+    }
+
+    var panelRatEn = toTrimmedString_(row.panel_rationale_en);
+    var panelRatFr = toTrimmedString_(row.panel_rationale_fr);
+    if (panelRatEn) groupMap[key].panelRationale.en = panelRatEn;
+    if (panelRatFr) groupMap[key].panelRationale.fr = panelRatFr;
+
+    var sourceIds = toTrimmedString_(row.source_ids);
+    groupMap[key].entries.push({
+      relatedDrugId: toTrimmedString_(row.related_drug_id),
+      tier: toTrimmedString_(row.tier),
+      structuralRelation: toTrimmedString_(row.structural_relation),
+      rationale: {
+        en: toTrimmedString_(row.rationale_en),
+        fr: toTrimmedString_(row.rationale_fr),
+      },
+      sourceIds: sourceIds
+        ? sourceIds.split(";").map(function (id) { return toTrimmedString_(id); }).filter(Boolean)
+        : [],
+    });
+  });
+
+  return groupOrder.map(function (key) { return groupMap[key]; });
+}
+
+function normalizeCrossReactivityPayload_(groups, errors, options) {
+  if (!Array.isArray(groups) || !groups.length) {
+    return [];
+  }
+
+  var existingIds = new Set(options.existingIds || []);
+
+  return groups.map(function (group, groupIndex) {
+    var normalized = {
+      groupName: {
+        en: toTrimmedString_(group && group.groupName && group.groupName.en),
+        fr: toTrimmedString_(group && group.groupName && group.groupName.fr),
+      },
+      entries: [],
+      suggestedPanel: [],
+      panelRationale: { en: "", fr: "" },
+    };
+
+    if (!normalized.groupName.en || !normalized.groupName.fr) {
+      errors.push("Cross-reactivity group " + (groupIndex + 1) + " requires bilingual group name.");
+    }
+
+    var rawEntries = Array.isArray(group && group.entries) ? group.entries : [];
+    if (!rawEntries.length) {
+      errors.push("Cross-reactivity group " + (groupIndex + 1) + " must have at least one entry.");
+    }
+
+    normalized.entries = rawEntries.map(function (entry, entryIndex) {
+      var norm = {
+        relatedDrugId: toTrimmedString_(entry && entry.relatedDrugId),
+        tier: toTrimmedString_(entry && entry.tier),
+        structuralRelation: toTrimmedString_(entry && entry.structuralRelation),
+        rationale: {
+          en: toTrimmedString_(entry && entry.rationale && entry.rationale.en),
+          fr: toTrimmedString_(entry && entry.rationale && entry.rationale.fr),
+        },
+        sourceIds: [],
+      };
+
+      if (!norm.relatedDrugId) {
+        errors.push("Cross-reactivity group " + (groupIndex + 1) + " entry " + (entryIndex + 1) + " requires a related drug id.");
+      } else if (!existingIds.has(norm.relatedDrugId)) {
+        errors.push("Cross-reactivity group " + (groupIndex + 1) + " entry " + (entryIndex + 1) + " references unknown drug \"" + norm.relatedDrugId + "\".");
+      }
+
+      if (ADMIN_APP.crossReactivityTiers.indexOf(norm.tier) === -1) {
+        errors.push("Cross-reactivity group " + (groupIndex + 1) + " entry " + (entryIndex + 1) + " has invalid tier \"" + norm.tier + "\".");
+      }
+
+      if (ADMIN_APP.structuralRelations.indexOf(norm.structuralRelation) === -1) {
+        errors.push("Cross-reactivity group " + (groupIndex + 1) + " entry " + (entryIndex + 1) + " has invalid structural relation \"" + norm.structuralRelation + "\".");
+      }
+
+      if (!norm.rationale.en || !norm.rationale.fr) {
+        errors.push("Cross-reactivity group " + (groupIndex + 1) + " entry " + (entryIndex + 1) + " requires bilingual rationale.");
+      }
+
+      var rawSourceIds = toTrimmedString_(entry && entry.sourceIds);
+      if (rawSourceIds) {
+        norm.sourceIds = rawSourceIds
+          .split(";")
+          .map(function (id) { return toTrimmedString_(id); })
+          .filter(Boolean);
+      }
+
+      return norm;
+    });
+
+    var rawPanel = toTrimmedString_(group && group.suggestedPanel);
+    if (rawPanel) {
+      normalized.suggestedPanel = rawPanel
+        .split(";")
+        .map(function (id) { return toTrimmedString_(id); })
+        .filter(Boolean);
+    }
+
+    normalized.panelRationale = {
+      en: toTrimmedString_(group && group.panelRationale && group.panelRationale.en),
+      fr: toTrimmedString_(group && group.panelRationale && group.panelRationale.fr),
+    };
+
+    var hasPanelRat = normalized.panelRationale.en || normalized.panelRationale.fr;
+    if (hasPanelRat && (!normalized.panelRationale.en || !normalized.panelRationale.fr)) {
+      errors.push("Cross-reactivity group " + (groupIndex + 1) + " panel rationale must be bilingual when provided.");
+    }
+
+    return normalized;
+  });
+}
+
+function replaceCrossReactivityRows_(table, targetDrugId, record) {
+  var preservedRows = [];
+
+  table.objects.forEach(function (row, index) {
+    if (row.drug_id === targetDrugId) {
+      return;
+    }
+    preservedRows.push(table.rows[index]);
+  });
+
+  var nextRows = [];
+  (record.crossReactivity || []).forEach(function (group) {
+    group.entries.forEach(function (entry, entryIndex) {
+      nextRows.push(
+        objectToRow_(table.headers, {
+          drug_id: record.id,
+          group_name_en: group.groupName.en,
+          group_name_fr: group.groupName.fr,
+          related_drug_id: entry.relatedDrugId,
+          tier: entry.tier,
+          structural_relation: entry.structuralRelation,
+          rationale_en: entry.rationale.en,
+          rationale_fr: entry.rationale.fr,
+          source_ids: Array.isArray(entry.sourceIds) ? entry.sourceIds.join("; ") : (entry.sourceIds || ""),
+          panel_drug_ids: entryIndex === 0 ? (Array.isArray(group.suggestedPanel) ? group.suggestedPanel.join("; ") : (group.suggestedPanel || "")) : "",
+          panel_rationale_en: entryIndex === 0 ? (group.panelRationale && group.panelRationale.en || "") : "",
+          panel_rationale_fr: entryIndex === 0 ? (group.panelRationale && group.panelRationale.fr || "") : "",
+        }, null)
+      );
+    });
+  });
+
+  table.rows = preservedRows.concat(nextRows);
+  table.objects = table.rows.map(function (row) { return rowToObject_(table.headers, row); });
 }
 
 function normalizeText_(value) {
