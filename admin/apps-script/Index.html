@@ -7,7 +7,13 @@
   </head>
   <body>
     <div class="appShell">
-      <!-- LIST VIEW -->
+      <!-- TAB BAR -->
+      <nav id="tabBar" class="tabBar">
+        <button type="button" class="tabButton isActive" data-tab="drugs">Drugs</button>
+        <button type="button" class="tabButton" data-tab="sources">Sources</button>
+      </nav>
+
+      <!-- DRUG LIST VIEW -->
       <div id="listView" class="viewPanel">
         <header class="viewHeader">
           <div>
@@ -37,7 +43,7 @@
         <div id="cardGrid" class="cardGrid"></div>
       </div>
 
-      <!-- EDIT VIEW -->
+      <!-- DRUG EDIT VIEW -->
       <div id="editView" class="viewPanel isHidden">
         <header class="viewHeader">
           <div class="editorTitleGroup">
@@ -54,6 +60,55 @@
             <div class="buttonGroup">
               <button id="saveButton" class="primaryButton" type="submit">Save</button>
               <button id="cancelButton" class="secondaryButton" type="button">Cancel</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- SOURCE LIST VIEW -->
+      <div id="sourceListView" class="viewPanel isHidden">
+        <header class="viewHeader">
+          <div>
+            <p class="eyebrow">Allergolib</p>
+            <h1>Source documents</h1>
+            <p class="subtitleText">Manage reference documents used by drug test entries.</p>
+          </div>
+          <div id="sourceListStatusBanner" class="statusBanner isHidden"></div>
+        </header>
+
+        <div class="listToolbar">
+          <input
+            id="sourceSearchBox"
+            class="textField searchField"
+            type="search"
+            placeholder="Search sources by id, label, or organization..."
+          />
+          <div class="buttonGroup">
+            <button id="createSourceButton" class="primaryButton" type="button">Create New Source</button>
+          </div>
+        </div>
+
+        <div id="sourceListMeta" class="listMeta"></div>
+        <div id="sourceCardGrid" class="cardGrid"></div>
+      </div>
+
+      <!-- SOURCE EDIT VIEW -->
+      <div id="sourceEditView" class="viewPanel isHidden">
+        <header class="viewHeader">
+          <div class="editorTitleGroup">
+            <button id="backToSourceListButton" class="ghostButton" type="button">&larr; Back to sources</button>
+            <h2 id="sourceEditTitle">Loading&hellip;</h2>
+          </div>
+          <div id="sourceEditStatusBanner" class="statusBanner isHidden"></div>
+        </header>
+
+        <form id="sourceForm">
+          <div id="sourceFormSections"></div>
+          <div class="actionBar">
+            <div class="actionNote"></div>
+            <div class="buttonGroup">
+              <button id="sourceSaveButton" class="primaryButton" type="submit">Save Source</button>
+              <button id="sourceCancelButton" class="secondaryButton" type="button">Cancel</button>
             </div>
           </div>
         </form>

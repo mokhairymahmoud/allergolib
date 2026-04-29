@@ -349,6 +349,139 @@ function deleteDrugFromAdmin(payload) {
   }
 }
 
+function saveSourceFromAdmin(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+
+  try {
+    const originalId = toTrimmedString_(payload && payload.originalId);
+    const raw = payload && payload.source;
+    const source = {
+      id: toTrimmedString_(raw && raw.id),
+      label: toTrimmedString_(raw && raw.label),
+      organization: toTrimmedString_(raw && raw.organization),
+      year: toTrimmedString_(raw && raw.year),
+      version: toTrimmedString_(raw && raw.version),
+      status: toTrimmedString_(raw && raw.status),
+      url: toTrimmedString_(raw && raw.url),
+      documentName: {
+        en: toTrimmedString_(raw && raw.documentName && raw.documentName.en),
+        fr: toTrimmedString_(raw && raw.documentName && raw.documentName.fr),
+      },
+      excerpt: {
+        en: toTrimmedString_(raw && raw.excerpt && raw.excerpt.en),
+        fr: toTrimmedString_(raw && raw.excerpt && raw.excerpt.fr),
+      },
+    };
+
+    const errors = [];
+    if (!source.id) errors.push("Source id is required.");
+    if (!source.label) errors.push("Label is required.");
+    if (!source.organization) errors.push("Organization is required.");
+    if (!source.year) errors.push("Year is required.");
+    if (!source.version) errors.push("Version is required.");
+    if (!source.status) errors.push("Status is required.");
+    if (!source.documentName.fr || !source.documentName.en) errors.push("Document name is required in both French and English.");
+    if (!source.excerpt.fr || !source.excerpt.en) errors.push("Excerpt is required in both French and English.");
+
+    const sourcesTable = readTable_(ADMIN_APP.tabs.sources);
+    const existingIds = new Set(sourcesTable.objects.map((row) => row.id));
+
+    if (originalId) {
+      if (!existingIds.has(originalId)) errors.push(`Source "${originalId}" not found.`);
+      if (source.id !== originalId && existingIds.has(source.id)) errors.push(`Source id "${source.id}" already exists.`);
+    } else {
+      if (existingIds.has(source.id)) errors.push(`Source id "${source.id}" already exists.`);
+    }
+
+    if (errors.length) throw new Error(errors.join("\n"));
+
+    const flatRow = {
+      id: source.id,
+      label: source.label,
+      organization: source.organization,
+      year: source.year,
+      version: source.version,
+      status: source.status,
+      url: source.url || "",
+      document_name_en: source.documentName.en,
+      document_name_fr: source.documentName.fr,
+      excerpt_en: source.excerpt.en,
+      excerpt_fr: source.excerpt.fr,
+    };
+
+    upsertRowById_(sourcesTable, originalId || source.id, flatRow);
+
+    if (originalId && source.id !== originalId) {
+      const testEntriesTable = readTable_(ADMIN_APP.tabs.testEntries);
+      let refsUpdated = 0;
+      testEntriesTable.objects.forEach((row, index) => {
+        if (row.source_id === originalId) {
+          row.source_id = source.id;
+          testEntriesTable.rows[index] = objectToRow_(testEntriesTable.headers, row, testEntriesTable.rows[index]);
+          refsUpdated++;
+        }
+      });
+      if (refsUpdated > 0) {
+        writeTable_(testEntriesTable);
+      }
+    }
+
+    writeTable_(sourcesTable);
+    SpreadsheetApp.flush();
+
+    return {
+      message: `Saved source "${source.id}".`,
+      sources: listSources_(),
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function deleteSourceFromAdmin(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+
+  try {
+    const sourceId = toTrimmedString_(payload && payload.sourceId);
+    const confirmation = toTrimmedString_(payload && payload.confirmation);
+
+    if (!sourceId) throw new Error("Source id is required.");
+    if (confirmation !== sourceId) throw new Error(`Type "${sourceId}" exactly to confirm deletion.`);
+
+    const sourcesTable = readTable_(ADMIN_APP.tabs.sources);
+    if (!sourcesTable.objects.some((row) => row.id === sourceId)) {
+      throw new Error(`Source "${sourceId}" not found.`);
+    }
+
+    const testEntriesTable = readTable_(ADMIN_APP.tabs.testEntries);
+    const referencingDrugs = [...new Set(
+      testEntriesTable.objects
+        .filter((row) => row.source_id === sourceId)
+        .map((row) => row.drug_id)
+    )];
+
+    if (referencingDrugs.length) {
+      throw new Error(
+        `Cannot delete source "${sourceId}" — it is referenced by: ${referencingDrugs.join(", ")}. ` +
+        `Remove the source from those drugs first.`
+      );
+    }
+
+    removeRowsByField_(sourcesTable, "id", sourceId);
+    writeTable_(sourcesTable);
+    SpreadsheetApp.flush();
+
+    return {
+      message: `Deleted source "${sourceId}".`,
+      sources: listSources_(),
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function getSpreadsheet_() {
   const configuredId = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID");
 

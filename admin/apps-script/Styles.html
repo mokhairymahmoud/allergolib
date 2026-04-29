@@ -74,6 +74,42 @@ code {
   gap: 8px;
 }
 
+/* ── Tab Bar ───────────────────────────────────────── */
+
+.tabBar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.64);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  width: fit-content;
+}
+
+.tabButton {
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.tabButton:hover {
+  color: var(--text);
+  background: rgba(11, 106, 168, 0.06);
+}
+
+.tabButton.isActive {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(11, 106, 168, 0.2);
+}
+
 /* ── Typography ─────────────────────────────────────── */
 
 .eyebrow {

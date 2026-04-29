@@ -1,6 +1,7 @@
 <script>
 (function () {
   var state = {
+    activeTab: "drugs",
     allData: { aliases: [], testEntries: [], notes: [], crossReactivity: [] },
     collapsed: {},
     defaultSourceId: "",
@@ -13,6 +14,12 @@
     originalId: "",
     searchQuery: "",
     sources: [],
+    sourceDeleteConfirmingId: null,
+    sourceForm: null,
+    sourceMode: "create",
+    sourceOriginalId: "",
+    sourceSearchQuery: "",
+    sourceValidation: emptyValidation(),
     testKinds: ["prick", "idr", "patch"],
     crossReactivityTiers: ["higher-concern", "lower-expected", "uncertain"],
     structuralRelations: ["structurally-related", "structurally-distinct"],
@@ -25,6 +32,7 @@
   document.addEventListener("DOMContentLoaded", init);
 
   function init() {
+    elements.tabBar = document.getElementById("tabBar");
     elements.listView = document.getElementById("listView");
     elements.editView = document.getElementById("editView");
     elements.searchBox = document.getElementById("searchBox");
@@ -43,6 +51,22 @@
     elements.saveButton = document.getElementById("saveButton");
     elements.actionNote = document.getElementById("actionNote");
 
+    elements.sourceListView = document.getElementById("sourceListView");
+    elements.sourceEditView = document.getElementById("sourceEditView");
+    elements.sourceSearchBox = document.getElementById("sourceSearchBox");
+    elements.sourceCardGrid = document.getElementById("sourceCardGrid");
+    elements.sourceListMeta = document.getElementById("sourceListMeta");
+    elements.createSourceButton = document.getElementById("createSourceButton");
+    elements.backToSourceListButton = document.getElementById("backToSourceListButton");
+    elements.sourceCancelButton = document.getElementById("sourceCancelButton");
+    elements.sourceListStatusBanner = document.getElementById("sourceListStatusBanner");
+    elements.sourceEditStatusBanner = document.getElementById("sourceEditStatusBanner");
+    elements.sourceEditTitle = document.getElementById("sourceEditTitle");
+    elements.sourceFormSections = document.getElementById("sourceFormSections");
+    elements.sourceForm = document.getElementById("sourceForm");
+    elements.sourceSaveButton = document.getElementById("sourceSaveButton");
+
+    elements.tabBar.addEventListener("click", handleTabClick);
     elements.searchBox.addEventListener("input", handleSearchInput);
     elements.createDrugButton.addEventListener("click", handleCreateDrug);
     elements.publishAllButton.addEventListener("click", handlePublish);
@@ -52,6 +76,14 @@
     elements.formSections.addEventListener("click", handleFormClick);
     elements.formSections.addEventListener("change", handleFormChange);
     elements.drugForm.addEventListener("submit", handleSave);
+
+    elements.sourceSearchBox.addEventListener("input", handleSourceSearchInput);
+    elements.createSourceButton.addEventListener("click", handleCreateSource);
+    elements.backToSourceListButton.addEventListener("click", handleBackToSourceList);
+    elements.sourceCancelButton.addEventListener("click", handleBackToSourceList);
+    elements.sourceCardGrid.addEventListener("click", handleSourceCardClick);
+    elements.sourceForm.addEventListener("submit", handleSourceSave);
+    elements.sourceFormSections.addEventListener("click", handleSourceFormClick);
 
     setStatus("Loading spreadsheet data…", "info");
 
@@ -93,19 +125,57 @@
 
   // ── View Switching ───────────────────────────────────
 
+  function hideAllPanels() {
+    elements.listView.classList.add("isHidden");
+    elements.editView.classList.add("isHidden");
+    elements.sourceListView.classList.add("isHidden");
+    elements.sourceEditView.classList.add("isHidden");
+  }
+
+  function renderTabBar() {
+    elements.tabBar.querySelectorAll("[data-tab]").forEach(function (btn) {
+      btn.classList.toggle("isActive", btn.getAttribute("data-tab") === state.activeTab);
+    });
+  }
+
+  function handleTabClick(event) {
+    var btn = event.target.closest("[data-tab]");
+    if (!btn) return;
+    var tab = btn.getAttribute("data-tab");
+    if (tab === state.activeTab) return;
+    state.activeTab = tab;
+    renderTabBar();
+    if (tab === "drugs") showListView();
+    else if (tab === "sources") showSourceListView();
+  }
+
   function showListView() {
     state.view = "list";
     state.deleteConfirmingId = null;
+    hideAllPanels();
     elements.listView.classList.remove("isHidden");
-    elements.editView.classList.add("isHidden");
     renderCardGrid();
   }
 
   function showEditView() {
     state.view = "edit";
-    elements.listView.classList.add("isHidden");
+    hideAllPanels();
     elements.editView.classList.remove("isHidden");
     renderForm();
+    window.scrollTo(0, 0);
+  }
+
+  function showSourceListView() {
+    state.sourceDeleteConfirmingId = null;
+    hideAllPanels();
+    elements.sourceListView.classList.remove("isHidden");
+    renderSourceCardGrid();
+  }
+
+  function showSourceEditView() {
+    hideAllPanels();
+    elements.sourceEditView.classList.remove("isHidden");
+    renderSourceForm();
     window.scrollTo(0, 0);
   }
 
@@ -344,6 +414,379 @@
       .publishDatasetFromAdmin();
   }
 
+  // ── Source List Handlers ─────────────────────────────
+
+  function handleSourceSearchInput(event) {
+    state.sourceSearchQuery = event.target.value;
+    renderSourceCardGrid();
+  }
+
+  function handleCreateSource() {
+    state.sourceMode = "create";
+    state.sourceOriginalId = "";
+    state.sourceForm = emptySource();
+    state.sourceValidation = emptyValidation();
+    setSourceEditStatus("Create mode ready.", "info");
+    showSourceEditView();
+  }
+
+  function handleBackToSourceList() {
+    setSourceEditStatus("", "");
+    showSourceListView();
+  }
+
+  function handleSourceCardClick(event) {
+    var target = event.target.closest("[data-action]");
+    if (!target) return;
+
+    var action = target.getAttribute("data-action");
+    var sourceId = target.getAttribute("data-source-id");
+
+    if (action === "edit-source") {
+      var source = state.sources.find(function (s) { return s.id === sourceId; });
+      if (!source) { setSourceListStatus("Source not found.", "error"); return; }
+      state.sourceMode = "edit";
+      state.sourceOriginalId = sourceId;
+      state.sourceForm = cloneSource(source);
+      state.sourceValidation = emptyValidation();
+      setSourceListStatus("", "");
+      setSourceEditStatus("Loaded " + sourceId + ".", "success");
+      showSourceEditView();
+      return;
+    }
+
+    if (action === "start-delete-source") {
+      state.sourceDeleteConfirmingId = sourceId;
+      renderSourceCardGrid();
+      return;
+    }
+
+    if (action === "cancel-delete-source") {
+      state.sourceDeleteConfirmingId = null;
+      renderSourceCardGrid();
+      return;
+    }
+
+    if (action === "confirm-delete-source") {
+      var confirmInput = document.getElementById("source-delete-confirm-" + sourceId);
+      var confirmation = confirmInput ? confirmInput.value.trim() : "";
+      executeSourceDelete(sourceId, confirmation);
+    }
+  }
+
+  function executeSourceDelete(sourceId, confirmation) {
+    if (confirmation !== sourceId) {
+      setSourceListStatus("Delete confirmation does not match the source id.", "error");
+      return;
+    }
+
+    setSourceListStatus("Deleting " + sourceId + "…", "info");
+
+    google.script.run
+      .withSuccessHandler(function (payload) {
+        state.sources = payload.sources || state.sources;
+        state.sourceDeleteConfirmingId = null;
+        setSourceListStatus(payload.message, "success");
+        renderSourceCardGrid();
+      })
+      .withFailureHandler(function (error) {
+        setSourceListStatus(
+          error && error.message ? error.message : "Delete failed.",
+          "error"
+        );
+      })
+      .deleteSourceFromAdmin({ sourceId: sourceId, confirmation: confirmation });
+  }
+
+  function handleSourceSave(event) {
+    event.preventDefault();
+    syncSourceFormFromDom();
+    state.sourceValidation = validateSourceForm(state.sourceForm);
+    renderSourceForm();
+
+    if (hasValidationErrors(state.sourceValidation)) {
+      setSourceEditStatus("Fix the validation issues before saving.", "error");
+      return;
+    }
+
+    elements.sourceSaveButton.disabled = true;
+    setSourceEditStatus("Saving to Google Sheets…", "info");
+
+    google.script.run
+      .withSuccessHandler(function (payload) {
+        state.sources = payload.sources || state.sources;
+        var savedId = state.sourceForm.id.trim();
+        var source = state.sources.find(function (s) { return s.id === savedId; });
+        state.sourceMode = "edit";
+        state.sourceOriginalId = savedId;
+        state.sourceForm = source ? cloneSource(source) : state.sourceForm;
+        state.sourceValidation = emptyValidation();
+        elements.sourceSaveButton.disabled = false;
+        setSourceEditStatus(payload.message, "success");
+        renderSourceForm();
+      })
+      .withFailureHandler(function (error) {
+        elements.sourceSaveButton.disabled = false;
+        setSourceEditStatus(
+          error && error.message ? error.message : "Save failed.",
+          "error"
+        );
+      })
+      .saveSourceFromAdmin({
+        originalId: state.sourceOriginalId,
+        source: state.sourceForm,
+      });
+  }
+
+  function syncSourceFormFromDom() {
+    if (!state.sourceForm || !document.getElementById("source-id")) return;
+    state.sourceForm.id = readValue("source-id");
+    state.sourceForm.label = readValue("source-label");
+    state.sourceForm.organization = readValue("source-organization");
+    state.sourceForm.year = readValue("source-year");
+    state.sourceForm.version = readValue("source-version");
+    state.sourceForm.status = readValue("source-status");
+    state.sourceForm.url = readValue("source-url");
+    state.sourceForm.documentName.fr = readValue("source-document-name-fr");
+    state.sourceForm.documentName.en = readValue("source-document-name-en");
+    state.sourceForm.excerpt.fr = readValue("source-excerpt-fr");
+    state.sourceForm.excerpt.en = readValue("source-excerpt-en");
+  }
+
+  function validateSourceForm(source) {
+    var v = emptyValidation();
+    if (!source.id.trim()) v.fields["source-id"] = "Source id is required.";
+    if (!source.label.trim()) v.fields["source-label"] = "Label is required.";
+    if (!source.organization.trim()) v.fields["source-organization"] = "Organization is required.";
+    if (!source.year.trim()) v.fields["source-year"] = "Year is required.";
+    if (!source.version.trim()) v.fields["source-version"] = "Version is required.";
+    if (!source.status.trim()) v.fields["source-status"] = "Status is required.";
+    if (!source.documentName.fr.trim() || !source.documentName.en.trim()) {
+      v.fields["source-document-name-fr"] = "Document name is required in both French and English.";
+      v.fields["source-document-name-en"] = "Document name is required in both French and English.";
+    }
+    if (!source.excerpt.fr.trim() || !source.excerpt.en.trim()) {
+      v.fields["source-excerpt-fr"] = "Excerpt is required in both French and English.";
+      v.fields["source-excerpt-en"] = "Excerpt is required in both French and English.";
+    }
+    if (source.id.trim() && state.sourceMode === "create") {
+      var exists = state.sources.some(function (s) { return s.id === source.id.trim(); });
+      if (exists) v.fields["source-id"] = "Source id already exists.";
+    }
+    if (source.id.trim() && state.sourceMode === "edit" && source.id.trim() !== state.sourceOriginalId) {
+      var exists = state.sources.some(function (s) { return s.id === source.id.trim(); });
+      if (exists) v.fields["source-id"] = "Source id already exists.";
+    }
+    return v;
+  }
+
+  function handleSourceFormClick(event) {
+    var target = event.target.closest("[data-action]");
+    if (!target) return;
+    if (target.getAttribute("data-action") === "delete-source") {
+      syncSourceFormFromDom();
+      var confirmation = readValue("source-delete-confirmation");
+      if (confirmation !== state.sourceOriginalId) {
+        setSourceEditStatus("Type the source id exactly to confirm.", "error");
+        return;
+      }
+      setSourceEditStatus("Deleting…", "info");
+      google.script.run
+        .withSuccessHandler(function (payload) {
+          state.sources = payload.sources || state.sources;
+          setSourceListStatus(payload.message, "success");
+          showSourceListView();
+        })
+        .withFailureHandler(function (error) {
+          setSourceEditStatus(
+            error && error.message ? error.message : "Delete failed.",
+            "error"
+          );
+        })
+        .deleteSourceFromAdmin({ sourceId: state.sourceOriginalId, confirmation: confirmation });
+    }
+  }
+
+  // ── Source Card Grid Rendering ──────────────────────
+
+  function renderSourceCardGrid() {
+    var normalizedQuery = normalize(state.sourceSearchQuery);
+    var items = filteredSources(normalizedQuery);
+
+    elements.sourceListMeta.textContent =
+      items.length + " source" + (items.length === 1 ? "" : "s") + " in the dataset";
+
+    if (!items.length) {
+      elements.sourceCardGrid.innerHTML =
+        '<div class="emptyState">No sources match your search.</div>';
+      return;
+    }
+
+    elements.sourceCardGrid.innerHTML = items
+      .map(function (item) {
+        var isDeleting = state.sourceDeleteConfirmingId === item.id;
+        return renderSourceListCard(item, isDeleting);
+      })
+      .join("");
+  }
+
+  function renderSourceListCard(item, isDeleting) {
+    var cardClass = "drugCard" + (isDeleting ? " isDeleting" : "");
+
+    var html =
+      '<div class="' + cardClass + '">' +
+        '<div class="drugCardHeader">' +
+          '<div>' +
+            '<h3 class="drugCardName">' + escapeHtml(item.label || item.id) + '</h3>' +
+            '<div class="drugCardMeta">' +
+              escapeHtml(item.organization || "") +
+              (item.year ? " &middot; " + escapeHtml(item.year) : "") +
+              (item.version ? " &middot; " + escapeHtml(item.version) : "") +
+              (item.status ? " &middot; " + escapeHtml(item.status) : "") +
+            '</div>' +
+          '</div>' +
+          '<span class="pill">' + escapeHtml(item.id) + '</span>' +
+        '</div>';
+
+    if (isDeleting) {
+      html +=
+        '<div class="drugCardDeleteConfirm">' +
+          '<label class="fieldLabel" for="source-delete-confirm-' + escapeHtml(item.id) + '" style="margin-top:0">' +
+            'Type "' + escapeHtml(item.id) + '" to confirm deletion' +
+          '</label>' +
+          '<input id="source-delete-confirm-' + escapeHtml(item.id) + '" class="textField" type="text" placeholder="' + escapeHtml(item.id) + '" />' +
+          '<div class="buttonGroup">' +
+            '<button type="button" class="dangerButton smallButton" data-action="confirm-delete-source" data-source-id="' + escapeHtml(item.id) + '">Confirm Delete</button>' +
+            '<button type="button" class="ghostButton smallButton" data-action="cancel-delete-source" data-source-id="' + escapeHtml(item.id) + '">Cancel</button>' +
+          '</div>' +
+        '</div>';
+    } else {
+      html +=
+        '<div class="drugCardActions">' +
+          '<button type="button" class="primaryButton smallButton" data-action="edit-source" data-source-id="' + escapeHtml(item.id) + '">Edit</button>' +
+          '<button type="button" class="dangerButton smallButton" data-action="start-delete-source" data-source-id="' + escapeHtml(item.id) + '">Delete</button>' +
+        '</div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  function filteredSources(normalizedQuery) {
+    if (!normalizedQuery) return state.sources.slice();
+    return state.sources.filter(function (source) {
+      var haystack = normalize(
+        source.id + " " + source.label + " " + source.organization + " " + source.year
+      );
+      return haystack.indexOf(normalizedQuery) >= 0;
+    });
+  }
+
+  // ── Source Edit Form Rendering ──────────────────────
+
+  function renderSourceForm() {
+    if (!state.sourceForm) return;
+
+    elements.sourceEditTitle.textContent =
+      state.sourceMode === "edit"
+        ? "Edit source " + state.sourceOriginalId
+        : "Create a new source";
+
+    var v = state.sourceValidation;
+    elements.sourceFormSections.innerHTML =
+      renderSourceValidationSummary() +
+      '<section class="sectionCard">' +
+      '<div class="sectionHead"><div>' +
+      "<h3>Source details</h3>" +
+      '<p class="sectionIntro">All fields except URL are required. Document name and excerpt must be bilingual.</p>' +
+      "</div>" +
+      '<span class="pill">' + escapeHtml(state.sourceMode === "edit" ? "Edit mode" : "Create mode") + "</span></div>" +
+      '<div class="grid3">' +
+      sourceEditField("Source id", "source-id", state.sourceForm.id, "text") +
+      sourceEditField("Label", "source-label", state.sourceForm.label, "text") +
+      sourceEditField("Organization", "source-organization", state.sourceForm.organization, "text") +
+      sourceEditField("Year", "source-year", state.sourceForm.year, "text") +
+      sourceEditField("Version", "source-version", state.sourceForm.version, "text") +
+      sourceEditField("Status", "source-status", state.sourceForm.status, "text") +
+      "</div>" +
+      sourceEditField("URL", "source-url", state.sourceForm.url || "", "text") +
+      '<div class="grid2">' +
+      sourceEditField("Document name (FR)", "source-document-name-fr", state.sourceForm.documentName.fr, "text") +
+      sourceEditField("Document name (EN)", "source-document-name-en", state.sourceForm.documentName.en, "text") +
+      sourceEditField("Excerpt (FR)", "source-excerpt-fr", state.sourceForm.excerpt.fr, "textarea") +
+      sourceEditField("Excerpt (EN)", "source-excerpt-en", state.sourceForm.excerpt.en, "textarea") +
+      "</div>" +
+      "</section>" +
+      renderSourceDeleteSection();
+  }
+
+  function sourceEditField(label, id, value, kind) {
+    var error = state.sourceValidation.fields[id];
+    var controlClass = error ? " hasError" : "";
+    var errorMarkup = error ? '<div class="fieldError">' + escapeHtml(error) + "</div>" : "";
+
+    if (kind === "textarea") {
+      return (
+        '<div class="fieldBlock"><label class="fieldLabel" for="' + escapeHtml(id) + '">' + escapeHtml(label) + "</label>" +
+        '<textarea id="' + escapeHtml(id) + '" class="textArea' + controlClass + '">' + escapeHtml(value || "") + "</textarea>" +
+        errorMarkup + "</div>"
+      );
+    }
+
+    return (
+      '<div class="fieldBlock"><label class="fieldLabel" for="' + escapeHtml(id) + '">' + escapeHtml(label) + "</label>" +
+      '<input id="' + escapeHtml(id) + '" class="textField' + controlClass + '" type="text" value="' + escapeHtml(value || "") + '" />' +
+      errorMarkup + "</div>"
+    );
+  }
+
+  function renderSourceValidationSummary() {
+    var messages = [];
+    Object.keys(state.sourceValidation.fields).forEach(function (fieldId) {
+      var message = state.sourceValidation.fields[fieldId];
+      if (messages.indexOf(message) === -1) messages.push(message);
+    });
+    if (!messages.length) return "";
+    return (
+      '<section class="sectionCard validationSummary">' +
+      "<h3>Validation summary</h3><ul>" +
+      messages.map(function (m) { return "<li>" + escapeHtml(m) + "</li>"; }).join("") +
+      "</ul></section>"
+    );
+  }
+
+  function renderSourceDeleteSection() {
+    if (state.sourceMode !== "edit" || !state.sourceOriginalId) return "";
+    return (
+      '<section class="sectionCard dangerSection">' +
+      '<div class="sectionHead"><div>' +
+      "<h3>Delete source</h3>" +
+      '<p class="sectionIntro">Permanently removes this source. Will fail if any drug test entries still reference it.</p>' +
+      "</div>" +
+      '<span class="pill dangerPill">Permanent</span></div>' +
+      sourceEditField('Type "' + state.sourceOriginalId + '" to confirm', "source-delete-confirmation", "", "text") +
+      '<div class="actionRow dangerActions">' +
+      '<button type="button" class="dangerButton" data-action="delete-source">Delete source</button>' +
+      "</div></section>"
+    );
+  }
+
+  function setSourceListStatus(message, kind) {
+    elements.sourceListStatusBanner.textContent = message || "";
+    elements.sourceListStatusBanner.className = "statusBanner";
+    if (!message) { elements.sourceListStatusBanner.classList.add("isHidden"); return; }
+    if (kind === "success") elements.sourceListStatusBanner.classList.add("isSuccess");
+    else if (kind === "error") elements.sourceListStatusBanner.classList.add("isError");
+  }
+
+  function setSourceEditStatus(message, kind) {
+    elements.sourceEditStatusBanner.textContent = message || "";
+    elements.sourceEditStatusBanner.className = "statusBanner";
+    if (!message) { elements.sourceEditStatusBanner.classList.add("isHidden"); return; }
+    if (kind === "success") elements.sourceEditStatusBanner.classList.add("isSuccess");
+    else if (kind === "error") elements.sourceEditStatusBanner.classList.add("isError");
+  }
+
   // ── Card Grid Rendering ──────────────────────────────
 
   function renderCardGrid() {
@@ -500,19 +943,6 @@
       return;
     }
 
-    if (action === "add-source") {
-      state.form.sources.push(emptySource());
-      renderForm();
-      return;
-    }
-
-    if (action === "remove-source") {
-      var index = Number(target.getAttribute("data-index"));
-      state.form.sources.splice(index, 1);
-      renderForm();
-      return;
-    }
-
     if (action === "add-cr-group") {
       state.form.crossReactivity.push(emptyCrGroup());
       renderForm();
@@ -646,7 +1076,7 @@
       .saveDrugFromAdmin({
         originalId: state.originalId,
         drug: sanitizeDrugForSave(state.form),
-        sources: sanitizeSourcesForSave(state.form.sources),
+        sources: [],
       });
   }
 
@@ -752,26 +1182,6 @@
       });
     });
 
-    nextForm.sources = Array.from(document.querySelectorAll("[data-source-row]")).map(function (row) {
-      return {
-        id: readNestedField(row, '[data-source-field="id"]'),
-        label: readNestedField(row, '[data-source-field="label"]'),
-        organization: readNestedField(row, '[data-source-field="organization"]'),
-        year: readNestedField(row, '[data-source-field="year"]'),
-        version: readNestedField(row, '[data-source-field="version"]'),
-        status: readNestedField(row, '[data-source-field="status"]'),
-        url: readNestedField(row, '[data-source-field="url"]'),
-        documentName: {
-          fr: readNestedField(row, '[data-source-field="document-name-fr"]'),
-          en: readNestedField(row, '[data-source-field="document-name-en"]'),
-        },
-        excerpt: {
-          fr: readNestedField(row, '[data-source-field="excerpt-fr"]'),
-          en: readNestedField(row, '[data-source-field="excerpt-en"]'),
-        },
-      };
-    });
-
     nextForm.crossReactivity = Array.from(
       document.querySelectorAll("[data-cr-group-row]")
     ).map(function (groupEl) {
@@ -821,7 +1231,6 @@
       renderApplicableTestsSection() +
       renderTestsSection() +
       renderCrossReactivitySection() +
-      renderSourcesSection() +
       renderDeleteSection();
 
     initComboboxes();
@@ -1446,13 +1855,10 @@
     var validation = emptyValidation();
     var existingDrugIds = new Set(state.lookups.map(function (l) { return l.id; }));
     var applicableTests = form.applicableTests.slice();
-    var draftSourceResult = validateDraftSources(form.sources);
     var availableSourceIds = new Set(
       combinedSources().map(function (s) { return s.id; }).filter(Boolean)
     );
     var usedSourceIds = {};
-
-    Object.assign(validation.fields, draftSourceResult.fields);
 
     if (!form.id.trim()) {
       validation.fields["drug-id"] = "Drug id is required.";
@@ -1637,17 +2043,7 @@
   // ── Data Helpers ─────────────────────────────────────
 
   function combinedSources() {
-    var existing = state.sources.slice();
-    var draftSources = state.form
-      ? state.form.sources.filter(function (s) { return s.id && !isBlankSource(s); })
-      : [];
-    var seen = {};
-
-    return existing.concat(draftSources).filter(function (source) {
-      if (!source.id || seen[source.id]) return false;
-      seen[source.id] = true;
-      return true;
-    });
+    return state.sources.slice();
   }
 
   function sanitizeDrugForSave(form) {
