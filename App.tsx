@@ -3146,9 +3146,6 @@ function OrbitMap({
 
   return (
     <View style={{ gap: 16 }}>
-      <Text style={{ fontSize: 15, fontWeight: "700", color: theme.textPrimary, textAlign: "center" }}>
-        {copy(language, "crossReactivity.mapHeading")} {drug.className[language].toLowerCase()}
-      </Text>
       <Pressable style={{ width: sz, height: sz, alignSelf: "center" }} onPress={() => setTooltipGroupIdx(null)}>
         <Svg width={sz} height={sz}>
           {/* Dashed orbit guide rings */}
