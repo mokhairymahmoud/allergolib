@@ -265,7 +265,7 @@ function buildTestEntriesNew(testRows, drugsById, sources) {
   }
 
   for (const { drug_id, test_kind, rows } of Object.values(grouped)) {
-    const preferredRows = rows.filter((r) => r.is_preferred === "true");
+    const preferredRows = rows.filter((r) => String(r.is_preferred).toLowerCase() === "true");
     assert(
       preferredRows.length === 1,
       `test_entries for ${drug_id}/${test_kind} must have exactly one row with is_preferred=true (found ${preferredRows.length}).`
@@ -302,7 +302,7 @@ function buildTestEntriesNew(testRows, drugsById, sources) {
       sourceId: row.source_id,
       ...(row.concentration?.trim() ? { concentration: row.concentration.trim() } : {}),
       ...(row.max_concentration?.trim() ? { maxConcentration: row.max_concentration.trim() } : {}),
-      isPreferred: row.is_preferred === "true",
+      isPreferred: String(row.is_preferred).toLowerCase() === "true",
     }));
 
     drugsById[drug_id].tests[test_kind] = {
