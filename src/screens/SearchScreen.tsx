@@ -33,8 +33,8 @@ export function SearchScreen({
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const [activeClass, setActiveClass] = useState<string | null>(null);
   const [activeSubclass, setActiveSubclass] = useState<string | null>(null);
-  const [recentCollapsed, setRecentCollapsed] = useState(false);
-  const [categoriesCollapsed, setCategoriesCollapsed] = useState(false);
+  const [recentCollapsed, setRecentCollapsed] = useState(true);
+  const [categoriesCollapsed, setCategoriesCollapsed] = useState(true);
   const trimmedQuery = query.trim();
   const hasQuery = trimmedQuery.length > 0;
 
