@@ -85,8 +85,8 @@ export const dictionary = {
     "detail.note.info": "Note",
     "detail.note.warning": "Warning",
     "detail.note.cross-reactivity": "Cross-reactivity",
-    "detail.tabTesting": "Testing",
-    "detail.tabCross": "Cross",
+    "detail.tabTesting": "Tests",
+    "detail.tabCross": "Cross-React",
     "detail.tabDilution": "Dilution",
     "detail.tabSources": "Sources",
     "tests.prick": "Prick",
@@ -130,7 +130,17 @@ export const dictionary = {
     "crossReactivity.orbitTitle": "Cross-Reactivity Map",
     "crossReactivity.higherConcern": "Higher concern",
     "crossReactivity.lowerExpected": "Lower expected",
-    "crossReactivity.uncertainCount": "Uncertain"
+    "crossReactivity.uncertainCount": "Uncertain",
+    "crossReactivity.backToGroups": "All groups",
+    "crossReactivity.drugs": "drugs",
+    "crossReactivity.tapToExplore": "Tap again to explore",
+    "crossReactivity.buildPanel": "Build panel",
+    "crossReactivity.legendHigher": "Higher concern",
+    "crossReactivity.legendLower": "Lower expected cross-reactivity",
+    "crossReactivity.legendUncertain": "Uncertain / limited evidence",
+    "crossReactivity.legendDashed": "Class-level relationship",
+    "crossReactivity.mapHeading": "Potential cross-reactivity with other",
+    "crossReactivity.mapHint": "The closer a group is to the center, the more it is linked to"
   },
   fr: {
     "compliance.badge": "Beta privee",
@@ -217,7 +227,7 @@ export const dictionary = {
     "detail.note.warning": "Avertissement",
     "detail.note.cross-reactivity": "Reactivite croisee",
     "detail.tabTesting": "Tests",
-    "detail.tabCross": "Croisee",
+    "detail.tabCross": "R. croisee",
     "detail.tabDilution": "Dilution",
     "detail.tabSources": "Sources",
     "tests.prick": "Prick",
@@ -261,7 +271,17 @@ export const dictionary = {
     "crossReactivity.orbitTitle": "Carte de reactivite croisee",
     "crossReactivity.higherConcern": "Preoccupation elevee",
     "crossReactivity.lowerExpected": "Moindre attendue",
-    "crossReactivity.uncertainCount": "Incertain"
+    "crossReactivity.uncertainCount": "Incertain",
+    "crossReactivity.backToGroups": "Tous les groupes",
+    "crossReactivity.drugs": "medicaments",
+    "crossReactivity.tapToExplore": "Appuyez pour explorer",
+    "crossReactivity.buildPanel": "Construire le panel",
+    "crossReactivity.legendHigher": "Preoccupation elevee",
+    "crossReactivity.legendLower": "Reactivite croisee moindre attendue",
+    "crossReactivity.legendUncertain": "Incertain / evidence limitee",
+    "crossReactivity.legendDashed": "Relation au niveau de la classe",
+    "crossReactivity.mapHeading": "Reactivite croisee potentielle avec les autres",
+    "crossReactivity.mapHint": "Plus un groupe est proche du centre, plus il est lie a"
   }
 } as const;
 

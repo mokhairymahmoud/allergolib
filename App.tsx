@@ -1709,6 +1709,45 @@ function makeStyles(theme: Theme) {
       fontWeight: "600",
     },
 
+    suggestedPanelCard: {
+      backgroundColor: theme.surface,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: 16,
+      gap: 14,
+    } as const,
+    suggestedPanelTitle: {
+      fontSize: 15,
+      fontWeight: "700",
+      color: theme.textPrimary,
+    } as const,
+    suggestedPanelTierLabel: {
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    } as const,
+    suggestedPanelDrugList: {
+      fontSize: 14,
+      fontWeight: "500",
+      color: theme.textPrimary,
+    } as const,
+    suggestedPanelButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      borderRadius: 10,
+      paddingVertical: 10,
+      backgroundColor: theme.accent,
+    } as const,
+    suggestedPanelButtonText: {
+      color: "#FFF",
+      fontSize: 14,
+      fontWeight: "700",
+    } as const,
+
     // sheet additions
     sheetSection: {
       gap: 6,
@@ -3107,6 +3146,9 @@ function OrbitMap({
 
   return (
     <View style={{ gap: 16 }}>
+      <Text style={{ fontSize: 15, fontWeight: "700", color: theme.textPrimary, textAlign: "center" }}>
+        {copy(language, "crossReactivity.mapHeading")} {drug.className[language].toLowerCase()}
+      </Text>
       <Pressable style={{ width: sz, height: sz, alignSelf: "center" }} onPress={() => setTooltipGroupIdx(null)}>
         <Svg width={sz} height={sz}>
           {/* Dashed orbit guide rings */}
@@ -3199,6 +3241,66 @@ function OrbitMap({
           </View>
         </View>
       </Pressable>
+
+      <Text style={{ fontSize: 12, color: theme.textSecondary, textAlign: "center", fontStyle: "italic" }}>
+        {copy(language, "crossReactivity.mapHint")} {drug.name[language].toLowerCase()}.
+      </Text>
+
+      {/* Legend */}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: 16, rowGap: 6, justifyContent: "center" }}>
+        {([
+          { color: nodeColor("higher-concern"), label: copy(language, "crossReactivity.legendHigher") },
+          { color: nodeColor("lower-expected"), label: copy(language, "crossReactivity.legendLower") },
+          { color: nodeColor("uncertain"), label: copy(language, "crossReactivity.legendUncertain") },
+        ] as const).map(({ color, label }) => (
+          <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: color }} />
+            <Text style={{ color: theme.textSecondary, fontSize: 11 }}>{label}</Text>
+          </View>
+        ))}
+
+      </View>
+
+      {/* Suggested Panel card */}
+      {(() => {
+        const panelDrugIds = new Set<string>();
+        for (const g of groups) {
+          for (const id of g.suggestedPanel) panelDrugIds.add(id);
+        }
+        if (panelDrugIds.size === 0) return null;
+
+        const tierBuckets: { tier: CrossReactivityTier; drugs: string[] }[] = [];
+        const tierDrugs: Record<CrossReactivityTier, string[]> = {
+          "higher-concern": [],
+          "lower-expected": [],
+          "uncertain": [],
+        };
+        for (const g of groups) {
+          for (const entry of g.entries) {
+            if (panelDrugIds.has(entry.drugId) && !tierDrugs[entry.tier].includes(entry.drugId)) {
+              tierDrugs[entry.tier].push(entry.drugId);
+            }
+          }
+        }
+        for (const tier of tierOrder) {
+          if (tierDrugs[tier].length > 0) tierBuckets.push({ tier, drugs: tierDrugs[tier] });
+        }
+        if (tierBuckets.length === 0) return null;
+
+        return (
+          <View style={styles.suggestedPanelCard}>
+            <Text style={styles.suggestedPanelTitle}>{copy(language, "crossReactivity.panelTitle")}</Text>
+            {tierBuckets.map(({ tier, drugs }) => (
+              <View key={tier} style={{ gap: 4 }}>
+                <Text style={[styles.suggestedPanelTierLabel, { color: nodeColor(tier) }]}>{tierLabel(tier)}</Text>
+                <Text style={styles.suggestedPanelDrugList}>
+                  {drugs.map((id) => drugNameById[id]?.[language] ?? id).join(", ")}
+                </Text>
+              </View>
+            ))}
+          </View>
+        );
+      })()}
 
       {/* Group drill-down overlay */}
       <Modal visible={expandedGroupIdx !== null} transparent animationType="fade" onRequestClose={() => setExpandedGroupIdx(null)}>
