@@ -34,18 +34,23 @@ npm run admin:clasp:open       # Open admin panel in browser
 
 ### Entry Point & Navigation
 
-`App.tsx` is a ~2,700-line monolithic component containing all screens, state, and UI logic. Navigation is state-driven (no React Navigation): `homeTab` (`"search"` | `"favorites"` | `"info"`) controls which tab is visible, `selectedDrugId` controls whether the drug detail overlay slides in. The detail screen uses `PanResponder` for swipe-back gesture navigation.
+`App.tsx` (~480 lines) is the root component containing providers, application state, hydration, and the slide animation stack. Navigation is state-driven (no React Navigation): `homeTab` (`"search"` | `"favorites"` | `"info"`) controls which tab is visible, `selectedDrugId` controls whether the drug detail overlay slides in. The detail screen uses `PanResponder` for swipe-back gesture navigation.
 
 All application state lives in the root `App` component. On mount, a `hydrate()` effect loads the dataset, favorites, recents, and dark mode preference in parallel from AsyncStorage, then starts a non-blocking background dataset sync via `startTransition()`. State updates that could block the UI (tab switches, favorites, dataset sync) are also wrapped in `startTransition()`.
 
 ### Key Source Directories
 
 - `src/types.ts` — Domain models: `Drug`, `Test`, `Source`, `Dataset`, `Manifest`
+- `src/theme/` — Theme type, light/dark color tokens (`colors.ts`), ThemeContext + `useTheme()` (`ThemeContext.tsx`)
+- `src/components/` — Shared UI components: `AppLogo`, `ComplianceBanner`, `ComplianceCard`, `DrugRow`, `NeutralEmptyCard`, `NoteList`, `SourceCard`
+- `src/screens/` — Screen-level components: `SearchScreen`, `FavoritesScreen`, `InfoScreen`
+- `src/screens/detail/` — Drug detail screen split by tab: `DetailScreen` (shell + Testing/Sources tabs), `DilutionTab`, `OrbitMap`, `OrbitNode`
 - `src/data/runtimeDataset.ts` — Dataset loading, remote sync, AsyncStorage caching
 - `src/data/loadBundledDataset.ts` — Imports the static bundled JSON
 - `src/data/generated/` — Auto-generated `dataset.json` and `manifest.json` (do not edit manually)
 - `src/lib/drugSearch.ts` — Ranked full-text search (exact → prefix → substring → fuzzy)
 - `src/lib/dilutionCalculator.ts` — Offline dilution ratio calculations
+- `src/lib/formatters.ts` — Number/date formatting and utility functions
 - `src/lib/favorites.ts` — AsyncStorage persistence for favorited drugs
 - `src/lib/recentSearches.ts` — AsyncStorage persistence for recently viewed drugs
 - `src/lib/filterDrugs.ts` — Drug classification and category filtering
