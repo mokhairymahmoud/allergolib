@@ -46,6 +46,16 @@ function bootstrapAdminApp() {
     uiText: buildAdminUiText_(githubTrigger),
     lookups: listDrugLookups_(),
     sources,
+    allData: readAllTableData_(),
+  };
+}
+
+function readAllTableData_() {
+  return {
+    aliases: readTable_(ADMIN_APP.tabs.aliases).objects,
+    testEntries: readTable_(ADMIN_APP.tabs.testEntries).objects,
+    notes: readTable_(ADMIN_APP.tabs.notes).objects,
+    crossReactivity: readCrossReactivityTable_().objects,
   };
 }
 
@@ -75,6 +85,8 @@ function loadDrugForAdmin(drugId) {
   record.name.fr = toTrimmedString_(drugRow.name_fr);
   record.className.en = toTrimmedString_(drugRow.class_name_en);
   record.className.fr = toTrimmedString_(drugRow.class_name_fr);
+  record.subclassName.en = toTrimmedString_(drugRow.subclass_name_en);
+  record.subclassName.fr = toTrimmedString_(drugRow.subclass_name_fr);
 
   record.aliases = aliasesTable.objects
     .filter((row) => row.drug_id === normalizedDrugId)
@@ -103,7 +115,7 @@ function loadDrugForAdmin(drugId) {
       return;
     }
 
-    const preferredRow = rows.find((r) => r.is_preferred === "true") || rows[0];
+    const preferredRow = rows.find((r) => String(r.is_preferred).toLowerCase() === "true") || rows[0];
 
     record.tests[testKind] = {
       dilutions: toTrimmedString_(preferredRow.dilutions),
@@ -115,7 +127,7 @@ function loadDrugForAdmin(drugId) {
         sourceId: toTrimmedString_(row.source_id) || defaultSourceId,
         concentration: toTrimmedString_(row.concentration),
         maxConcentration: toTrimmedString_(row.max_concentration),
-        isPreferred: row.is_preferred === "true",
+        isPreferred: String(row.is_preferred).toLowerCase() === "true",
       })),
       notes: [],
     };
@@ -208,6 +220,8 @@ function saveDrugFromAdmin(payload) {
       id: normalized.id,
       class_name_en: normalized.className.en,
       class_name_fr: normalized.className.fr,
+      subclass_name_en: normalized.subclassName.en,
+      subclass_name_fr: normalized.subclassName.fr,
       name_en: normalized.name.en,
       name_fr: normalized.name.fr,
     });
@@ -251,9 +265,10 @@ function saveDrugFromAdmin(payload) {
 
     return {
       message: `Saved ${normalized.id} to Google Sheets.`,
+      savedId: normalized.id,
       lookups: listDrugLookups_(),
       sources: listSources_(),
-      record: loadDrugForAdmin(normalized.id),
+      allData: readAllTableData_(),
     };
   } finally {
     lock.releaseLock();
@@ -327,11 +342,7 @@ function deleteDrugFromAdmin(payload) {
       message: `Deleted ${drugId} and its linked aliases, tests, and notes.`,
       lookups: listDrugLookups_(),
       sources: listSources_(),
-      record: {
-        mode: "create",
-        originalId: "",
-        drug: emptyDrugForm_(firstSourceId_(Object.fromEntries(listSources_().map((source) => [source.id, source])))),
-      },
+      allData: readAllTableData_(),
     };
   } finally {
     lock.releaseLock();
@@ -626,6 +637,10 @@ function listDrugLookups_() {
         en: toTrimmedString_(row.class_name_en),
         fr: toTrimmedString_(row.class_name_fr),
       },
+      subclassName: {
+        en: toTrimmedString_(row.subclass_name_en),
+        fr: toTrimmedString_(row.subclass_name_fr),
+      },
       name: {
         en: toTrimmedString_(row.name_en),
         fr: toTrimmedString_(row.name_fr),
@@ -650,6 +665,7 @@ function emptyDrugForm_(defaultSourceId) {
     id: "",
     name: { en: "", fr: "" },
     className: { en: "", fr: "" },
+    subclassName: { en: "", fr: "" },
     aliases: [""],
     applicableTests: [],
     sources: [],
@@ -753,6 +769,8 @@ function normalizeDrugPayload_(payload, options) {
   record.name.fr = toTrimmedString_(payload && payload.name && payload.name.fr);
   record.className.en = toTrimmedString_(payload && payload.className && payload.className.en);
   record.className.fr = toTrimmedString_(payload && payload.className && payload.className.fr);
+  record.subclassName.en = toTrimmedString_(payload && payload.subclassName && payload.subclassName.en);
+  record.subclassName.fr = toTrimmedString_(payload && payload.subclassName && payload.subclassName.fr);
   record.aliases = uniqueStrings_((payload && payload.aliases) || []);
   record.applicableTests = uniqueStrings_((payload && payload.applicableTests) || []).filter((testKind) =>
     ADMIN_APP.testKinds.includes(testKind)
@@ -768,6 +786,10 @@ function normalizeDrugPayload_(payload, options) {
 
   if (!record.className.fr || !record.className.en) {
     errors.push("Drug class is required in both French and English.");
+  }
+
+  if (Boolean(record.subclassName.en) !== Boolean(record.subclassName.fr)) {
+    errors.push("Drug subclass must be provided in both French and English when specified.");
   }
 
   if (!record.aliases.length) {

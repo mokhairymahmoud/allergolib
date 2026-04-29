@@ -1,6 +1,7 @@
 <script>
 (function () {
   var state = {
+    allData: { aliases: [], testEntries: [], notes: [], crossReactivity: [] },
     defaultSourceId: "",
     deleteConfirmation: "",
     deleteConfirmingId: null,
@@ -72,6 +73,7 @@
     state.testKinds = payload.testKinds || state.testKinds;
     state.crossReactivityTiers = payload.crossReactivityTiers || state.crossReactivityTiers;
     state.structuralRelations = payload.structuralRelations || state.structuralRelations;
+    state.allData = payload.allData || state.allData;
     state.form = emptyDrug(state.defaultSourceId);
     state.validation = emptyValidation();
     state.deleteConfirmation = "";
@@ -160,21 +162,145 @@
   }
 
   function loadAndEditDrug(drugId) {
-    setStatus("Loading " + drugId + "…", "info");
+    var drug = assembleDrugFromCache(drugId);
+    if (!drug) {
+      setStatus("Drug " + drugId + " not found.", "error");
+      return;
+    }
+    state.mode = "edit";
+    state.originalId = drugId;
+    state.form = normalizeLoadedDrug(drug);
+    state.validation = emptyValidation();
+    state.deleteConfirmation = "";
+    setStatus("", "");
+    setEditStatus("Loaded " + drugId + ".", "success");
+    showEditView();
+  }
 
-    google.script.run
-      .withSuccessHandler(function (payload) {
-        state.mode = payload.mode;
-        state.originalId = payload.originalId;
-        state.form = normalizeLoadedDrug(payload.drug);
-        state.validation = emptyValidation();
-        state.deleteConfirmation = "";
-        setStatus("", "");
-        setEditStatus("Loaded " + payload.originalId + ".", "success");
-        showEditView();
-      })
-      .withFailureHandler(handleServerError)
-      .loadDrugForAdmin(drugId);
+  function assembleDrugFromCache(drugId) {
+    var lookup = state.lookups.find(function (l) { return l.id === drugId; });
+    if (!lookup) return null;
+
+    var defaultSrcId = state.defaultSourceId;
+    var record = {
+      id: lookup.id,
+      name: { en: lookup.name.en || "", fr: lookup.name.fr || "" },
+      className: { en: lookup.className.en || "", fr: lookup.className.fr || "" },
+      subclassName: { en: (lookup.subclassName && lookup.subclassName.en) || "", fr: (lookup.subclassName && lookup.subclassName.fr) || "" },
+      aliases: [],
+      applicableTests: [],
+      tests: {},
+      crossReactivity: [],
+    };
+
+    record.aliases = state.allData.aliases
+      .filter(function (r) { return r.drug_id === drugId; })
+      .map(function (r) { return (r.alias || "").trim(); })
+      .filter(Boolean);
+    if (!record.aliases.length) record.aliases = [""];
+
+    var testKinds = state.testKinds;
+    var applicableKinds = {};
+
+    var testEntriesByKind = {};
+    state.allData.testEntries
+      .filter(function (r) { return r.drug_id === drugId && testKinds.indexOf(r.test_kind) >= 0; })
+      .forEach(function (r) {
+        if (!testEntriesByKind[r.test_kind]) testEntriesByKind[r.test_kind] = [];
+        testEntriesByKind[r.test_kind].push(r);
+      });
+
+    testKinds.forEach(function (testKind) {
+      var rows = testEntriesByKind[testKind] || [];
+      if (!rows.length) {
+        record.tests[testKind] = {
+          dilutions: "", vehicle: { en: "", fr: "" },
+          sourceEntries: [{ sourceId: defaultSrcId, concentration: "", maxConcentration: "", isPreferred: true }],
+          notes: [],
+        };
+        return;
+      }
+
+      var preferredRow = rows.find(function (r) { return String(r.is_preferred).toLowerCase() === "true"; }) || rows[0];
+      record.tests[testKind] = {
+        dilutions: (preferredRow.dilutions || "").trim(),
+        vehicle: {
+          en: (preferredRow.vehicle_en || "").trim(),
+          fr: (preferredRow.vehicle_fr || "").trim(),
+        },
+        sourceEntries: rows.map(function (r) {
+          return {
+            sourceId: (r.source_id || "").trim() || defaultSrcId,
+            concentration: (r.concentration || "").trim(),
+            maxConcentration: (r.max_concentration || "").trim(),
+            isPreferred: String(r.is_preferred).toLowerCase() === "true",
+          };
+        }),
+        notes: [],
+      };
+
+      var hasContent = record.tests[testKind].sourceEntries.some(function (e) {
+        return e.concentration || e.maxConcentration;
+      }) || record.tests[testKind].dilutions || record.tests[testKind].vehicle.en || record.tests[testKind].vehicle.fr;
+      if (hasContent) applicableKinds[testKind] = true;
+    });
+
+    state.allData.notes
+      .filter(function (r) { return r.drug_id === drugId; })
+      .forEach(function (r) {
+        if (testKinds.indexOf(r.test_kind) < 0) return;
+        if (!record.tests[r.test_kind]) return;
+        record.tests[r.test_kind].notes.push({
+          kind: (r.note_kind || "").trim() || "info",
+          value: { en: (r.note_en || "").trim(), fr: (r.note_fr || "").trim() },
+        });
+        applicableKinds[r.test_kind] = true;
+      });
+
+    record.applicableTests = testKinds.filter(function (tk) { return applicableKinds[tk]; });
+
+    var crRows = state.allData.crossReactivity.filter(function (r) { return r.drug_id === drugId; });
+    record.crossReactivity = buildCrGroupsFromRows(crRows);
+
+    return record;
+  }
+
+  function buildCrGroupsFromRows(rows) {
+    var groupMap = {};
+    var groupOrder = [];
+
+    rows.forEach(function (row) {
+      var key = (row.group_name_en || "").trim() + "||" + (row.group_name_fr || "").trim();
+      if (!groupMap[key]) {
+        groupMap[key] = {
+          groupName: { en: (row.group_name_en || "").trim(), fr: (row.group_name_fr || "").trim() },
+          entries: [],
+          suggestedPanel: [],
+          panelRationale: { en: "", fr: "" },
+        };
+        groupOrder.push(key);
+      }
+
+      var panelIds = (row.panel_drug_ids || "").trim();
+      if (panelIds) {
+        groupMap[key].suggestedPanel = panelIds.split(";").map(function (s) { return s.trim(); }).filter(Boolean);
+      }
+      var pRatEn = (row.panel_rationale_en || "").trim();
+      var pRatFr = (row.panel_rationale_fr || "").trim();
+      if (pRatEn) groupMap[key].panelRationale.en = pRatEn;
+      if (pRatFr) groupMap[key].panelRationale.fr = pRatFr;
+
+      var srcIds = (row.source_ids || "").trim();
+      groupMap[key].entries.push({
+        relatedDrugId: (row.related_drug_id || "").trim(),
+        tier: (row.tier || "").trim(),
+        structuralRelation: (row.structural_relation || "").trim(),
+        rationale: { en: (row.rationale_en || "").trim(), fr: (row.rationale_fr || "").trim() },
+        sourceIds: srcIds ? srcIds.split(";").map(function (s) { return s.trim(); }).filter(Boolean) : [],
+      });
+    });
+
+    return groupOrder.map(function (key) { return groupMap[key]; });
   }
 
   function executeCardDelete(drugId, confirmation) {
@@ -189,6 +315,7 @@
       .withSuccessHandler(function (payload) {
         state.lookups = payload.lookups || state.lookups;
         state.sources = payload.sources || state.sources;
+        state.allData = payload.allData || state.allData;
         state.deleteConfirmingId = null;
         setStatus(payload.message, "success");
         renderCardGrid();
@@ -245,6 +372,7 @@
     var primaryName = item.name.fr || item.name.en || item.id;
     var secondaryName = item.name.en || "";
     var className = item.className.fr || item.className.en || "";
+    var subclassName = (item.subclassName && (item.subclassName.fr || item.subclassName.en)) || "";
 
     var html =
       '<div class="' + cardClass + '">' +
@@ -254,6 +382,7 @@
             '<div class="drugCardMeta">' +
               (secondaryName ? escapeHtml(secondaryName) : "") +
               (className ? (secondaryName ? " &middot; " : "") + escapeHtml(className) : "") +
+              (subclassName ? " &middot; " + escapeHtml(subclassName) : "") +
             '</div>' +
           '</div>' +
           '<span class="pill">' + escapeHtml(item.id) + '</span>' +
@@ -479,9 +608,12 @@
       .withSuccessHandler(function (payload) {
         state.lookups = payload.lookups || state.lookups;
         state.sources = payload.sources || state.sources;
-        state.mode = payload.record.mode;
-        state.originalId = payload.record.originalId;
-        state.form = normalizeLoadedDrug(payload.record.drug);
+        state.allData = payload.allData || state.allData;
+        var savedId = payload.savedId || state.form.id.trim();
+        var drug = assembleDrugFromCache(savedId);
+        state.mode = "edit";
+        state.originalId = savedId;
+        state.form = normalizeLoadedDrug(drug);
         state.validation = emptyValidation();
         state.deleteConfirmation = "";
         elements.saveButton.disabled = false;
@@ -523,6 +655,7 @@
       .withSuccessHandler(function (payload) {
         state.lookups = payload.lookups || state.lookups;
         state.sources = payload.sources || state.sources;
+        state.allData = payload.allData || state.allData;
         state.mode = "create";
         state.originalId = "";
         state.form = emptyDrug(state.defaultSourceId);
@@ -554,6 +687,8 @@
     nextForm.name.en = readValue("name-en");
     nextForm.className.fr = readValue("class-fr");
     nextForm.className.en = readValue("class-en");
+    nextForm.subclassName.fr = readValue("subclass-fr");
+    nextForm.subclassName.en = readValue("subclass-en");
     nextForm.aliases = Array.from(document.querySelectorAll("[data-alias-row]")).map(function (row) {
       var input = row.querySelector("input");
       return input ? input.value : "";
@@ -672,6 +807,8 @@
       renderCrossReactivitySection() +
       renderSourcesSection() +
       renderDeleteSection();
+
+    initComboboxes();
   }
 
   function renderValidationSummary() {
@@ -687,7 +824,152 @@
     );
   }
 
+  function collectUniqueValues(field) {
+    var seen = {};
+    var values = [];
+    state.lookups.forEach(function (item) {
+      var parts = field.split(".");
+      var obj = item;
+      for (var i = 0; i < parts.length; i++) {
+        obj = obj && obj[parts[i]];
+      }
+      var val = (obj || "").trim();
+      if (val && !seen[val]) {
+        seen[val] = true;
+        values.push(val);
+      }
+    });
+    values.sort(function (a, b) {
+      return a.localeCompare(b, undefined, { sensitivity: "base" });
+    });
+    return values;
+  }
+
+  function comboField(label, id, value, optionsArray, hint) {
+    var error = state.validation.fields[id];
+    var controlClass = error ? " hasError" : "";
+    var errorMarkup = error ? '<div class="fieldError">' + escapeHtml(error) + "</div>" : "";
+    var hintMarkup = hint ? '<div class="fieldHint">' + escapeHtml(hint) + "</div>" : "";
+
+    return (
+      '<div class="fieldBlock"><label class="fieldLabel" for="' + escapeHtml(id) + '">' + escapeHtml(label) + "</label>" +
+      '<div class="comboWrap" data-combo-id="' + escapeHtml(id) + '">' +
+      '<input id="' + escapeHtml(id) + '" class="textField' + controlClass + '" type="text" value="' + escapeHtml(value || "") + '" autocomplete="off" data-combo-input />' +
+      '<button type="button" class="comboToggle" data-combo-toggle tabindex="-1">&#9662;</button>' +
+      '<div class="comboDropdown" data-combo-dropdown>' +
+      comboDropdownItems(optionsArray, value) +
+      "</div></div>" +
+      hintMarkup + errorMarkup + "</div>"
+    );
+  }
+
+  function comboDropdownItems(options, filter) {
+    var q = normalize(filter || "");
+    var filtered = options.filter(function (opt) {
+      return !q || normalize(opt).indexOf(q) >= 0;
+    });
+    if (!filtered.length) {
+      return '<div class="comboEmpty">No matches</div>';
+    }
+    return filtered.map(function (opt) {
+      return '<div class="comboOption" data-combo-value="' + escapeHtml(opt) + '">' + escapeHtml(opt) + '</div>';
+    }).join("");
+  }
+
+  function initComboboxes() {
+    document.querySelectorAll("[data-combo-id]").forEach(function (wrap) {
+      var input = wrap.querySelector("[data-combo-input]");
+      var toggle = wrap.querySelector("[data-combo-toggle]");
+      var dropdown = wrap.querySelector("[data-combo-dropdown]");
+      if (!input || !dropdown) return;
+
+      var comboId = wrap.getAttribute("data-combo-id");
+      var options = getComboOptions(comboId);
+
+      function open() {
+        dropdown.innerHTML = comboDropdownItems(options, input.value);
+        dropdown.classList.add("isOpen");
+      }
+
+      function close() {
+        dropdown.classList.remove("isOpen");
+      }
+
+      function isOpen() {
+        return dropdown.classList.contains("isOpen");
+      }
+
+      input.addEventListener("focus", function () { open(); });
+      input.addEventListener("input", function () { open(); });
+
+      if (toggle) {
+        toggle.addEventListener("mousedown", function (e) {
+          e.preventDefault();
+          if (isOpen()) { close(); } else { input.focus(); open(); }
+        });
+      }
+
+      dropdown.addEventListener("mousedown", function (e) {
+        var target = e.target.closest("[data-combo-value]");
+        if (!target) return;
+        e.preventDefault();
+        input.value = target.getAttribute("data-combo-value");
+        close();
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+
+      input.addEventListener("blur", function () {
+        setTimeout(close, 150);
+      });
+
+      input.addEventListener("keydown", function (e) {
+        if (!isOpen()) return;
+        var items = dropdown.querySelectorAll(".comboOption");
+        var active = dropdown.querySelector(".comboOption.isActive");
+        var index = -1;
+        items.forEach(function (item, i) { if (item === active) index = i; });
+
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          if (active) active.classList.remove("isActive");
+          index = (index + 1) % items.length;
+          items[index].classList.add("isActive");
+          items[index].scrollIntoView({ block: "nearest" });
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          if (active) active.classList.remove("isActive");
+          index = (index - 1 + items.length) % items.length;
+          items[index].classList.add("isActive");
+          items[index].scrollIntoView({ block: "nearest" });
+        } else if (e.key === "Enter" && active) {
+          e.preventDefault();
+          input.value = active.getAttribute("data-combo-value");
+          close();
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+        } else if (e.key === "Escape") {
+          close();
+        }
+      });
+    });
+  }
+
+  function getComboOptions(comboId) {
+    var map = {
+      "class-fr": "className.fr",
+      "class-en": "className.en",
+      "subclass-fr": "subclassName.fr",
+      "subclass-en": "subclassName.en",
+    };
+    var field = map[comboId];
+    return field ? collectUniqueValues(field) : [];
+  }
+
   function renderCoreSection() {
+    var classesFr = collectUniqueValues("className.fr");
+    var classesEn = collectUniqueValues("className.en");
+    var subclassesFr = collectUniqueValues("subclassName.fr");
+    var subclassesEn = collectUniqueValues("subclassName.en");
+
     return (
       '<section class="sectionCard">' +
       '<div class="sectionHead"><div>' +
@@ -699,8 +981,10 @@
       field("Drug id", "drug-id", state.form.id, "text") +
       field("French name", "name-fr", state.form.name.fr, "text") +
       field("English name", "name-en", state.form.name.en, "text") +
-      field("French class", "class-fr", state.form.className.fr, "text") +
-      field("English class", "class-en", state.form.className.en, "text") +
+      comboField("French class", "class-fr", state.form.className.fr, classesFr, "Select existing or type a new class") +
+      comboField("English class", "class-en", state.form.className.en, classesEn, "Select existing or type a new class") +
+      comboField("French subclass", "subclass-fr", state.form.subclassName.fr, subclassesFr, "Optional. Select existing or type a new subclass") +
+      comboField("English subclass", "subclass-en", state.form.subclassName.en, subclassesEn, "Optional. Select existing or type a new subclass") +
       "</div></section>"
     );
   }
@@ -1102,6 +1386,8 @@
       { value: normalize(item.name.en), score: 160 },
       { value: normalize(item.className.fr), score: 90 },
       { value: normalize(item.className.en), score: 80 },
+      { value: item.subclassName ? normalize(item.subclassName.fr) : "", score: 70 },
+      { value: item.subclassName ? normalize(item.subclassName.en) : "", score: 60 },
     ];
 
     var best = 0;
@@ -1143,6 +1429,11 @@
     if (!form.name.en.trim()) validation.fields["name-en"] = "English name is required.";
     if (!form.className.fr.trim()) validation.fields["class-fr"] = "French class is required.";
     if (!form.className.en.trim()) validation.fields["class-en"] = "English class is required.";
+
+    if (Boolean(form.subclassName.fr.trim()) !== Boolean(form.subclassName.en.trim())) {
+      validation.fields["subclass-fr"] = "Subclass must be provided in both French and English.";
+      validation.fields["subclass-en"] = "Subclass must be provided in both French and English.";
+    }
 
     var aliasValues = form.aliases.map(function (a) { return a.trim(); }).filter(Boolean);
     if (!aliasValues.length) validation.fields["alias-0"] = "At least one alias is required.";
@@ -1330,6 +1621,7 @@
       id: form.id.trim(),
       name: { fr: form.name.fr.trim(), en: form.name.en.trim() },
       className: { fr: form.className.fr.trim(), en: form.className.en.trim() },
+      subclassName: { fr: form.subclassName.fr.trim(), en: form.subclassName.en.trim() },
       aliases: form.aliases.slice(),
       applicableTests: form.applicableTests.slice(),
       tests: Object.fromEntries(
@@ -1398,6 +1690,8 @@
     normalized.name.en = (drug.name && drug.name.en) || "";
     normalized.className.fr = (drug.className && drug.className.fr) || "";
     normalized.className.en = (drug.className && drug.className.en) || "";
+    normalized.subclassName.fr = (drug.subclassName && drug.subclassName.fr) || "";
+    normalized.subclassName.en = (drug.subclassName && drug.subclassName.en) || "";
     normalized.aliases = Array.isArray(drug.aliases) && drug.aliases.length ? drug.aliases.slice() : [""];
     normalized.applicableTests =
       Array.isArray(drug.applicableTests) && drug.applicableTests.length
@@ -1473,6 +1767,7 @@
       id: "",
       name: { en: "", fr: "" },
       className: { en: "", fr: "" },
+      subclassName: { en: "", fr: "" },
       aliases: [""],
       applicableTests: [],
       sources: [],
@@ -1528,6 +1823,7 @@
       id: drug.id,
       name: { fr: drug.name.fr, en: drug.name.en },
       className: { fr: drug.className.fr, en: drug.className.en },
+      subclassName: { fr: drug.subclassName.fr, en: drug.subclassName.en },
       aliases: drug.aliases.slice(),
       applicableTests: drug.applicableTests.slice(),
       sources: drug.sources.map(cloneSource),

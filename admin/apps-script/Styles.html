@@ -249,6 +249,79 @@ h3 { font-size: 18px; }
   font-weight: 600;
 }
 
+/* ── Combobox ──────────────────────────────────────── */
+
+.comboWrap {
+  position: relative;
+}
+
+.comboWrap .textField {
+  padding-right: 36px;
+}
+
+.comboToggle {
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  bottom: 1px;
+  width: 34px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comboToggle:hover {
+  background: rgba(11, 106, 168, 0.06);
+}
+
+.comboDropdown {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(24, 49, 74, 0.14);
+  z-index: 100;
+}
+
+.comboDropdown.isOpen {
+  display: block;
+}
+
+.comboOption {
+  padding: 9px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.comboOption:hover,
+.comboOption.isActive {
+  background: rgba(11, 106, 168, 0.08);
+  color: var(--accent);
+}
+
+.comboEmpty {
+  padding: 12px 14px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
 /* ── Buttons ────────────────────────────────────────── */
 
 .primaryButton,
