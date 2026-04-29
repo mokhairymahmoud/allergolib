@@ -605,7 +605,7 @@ function buildAdminUiText_(githubTrigger) {
     actionNote:
       `Save writes directly to \`drugs\`, \`aliases\`, \`test_entries\`, \`notes\`, and any new inline \`sources\`. ${publishSummary}`,
     lookupBody:
-      "Create or update a drug record in the normalized Google Sheet tabs. Save updates the sheet; Publish triggers the GitHub workflow.",
+      "Create or update a drug record in the normalized Google Sheet tabs. Save updates the sheet; Publish triggers deployment process for mobile App",
   };
 }
 
