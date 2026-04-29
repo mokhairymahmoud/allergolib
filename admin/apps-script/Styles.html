@@ -46,7 +46,6 @@ code {
 /* ── Layout ─────────────────────────────────────────── */
 
 .appShell {
-  max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
   min-height: 100vh;
@@ -122,7 +121,6 @@ h3 { font-size: 18px; }
 .searchField {
   flex: 1;
   min-width: 240px;
-  max-width: 420px;
 }
 
 .listMeta {
@@ -439,9 +437,13 @@ h3 { font-size: 18px; }
 .sectionHead {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   align-items: flex-start;
   margin-bottom: 18px;
+}
+
+.sectionHead:has(+ .collapseBody.isCollapsed) {
+  margin-bottom: 0;
 }
 
 .grid2,
@@ -593,7 +595,6 @@ h3 { font-size: 18px; }
   border-radius: 16px;
   padding: 12px 14px;
   background: rgba(11, 106, 168, 0.08);
-  max-width: 500px;
 }
 
 .statusBanner.isSuccess {
@@ -649,6 +650,45 @@ h3 { font-size: 18px; }
   padding-top: 8px;
 }
 
+/* ── Collapsible Sections ──────────────────────────── */
+
+.collapseToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-muted);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.collapseToggle:hover {
+  background: rgba(11, 106, 168, 0.08);
+  color: var(--accent);
+}
+
+.collapseChevron {
+  transition: transform 200ms ease;
+}
+
+.collapseToggle.isCollapsed .collapseChevron {
+  transform: rotate(0deg);
+}
+
+.collapseBody {
+  transition: none;
+}
+
+.collapseBody.isCollapsed {
+  display: none;
+}
+
 /* ── Empty State ────────────────────────────────────── */
 
 .emptyState {
@@ -696,6 +736,12 @@ h3 { font-size: 18px; }
     align-items: stretch;
   }
 
+  .sectionHead {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
   .testTitleActions {
     justify-content: flex-start;
   }
@@ -716,6 +762,44 @@ h3 { font-size: 18px; }
   .crGroupHeader {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+/* ── Large screens ─────────────────────────────────── */
+
+@media (min-width: 1200px) {
+  .appShell {
+    padding: 28px 40px;
+  }
+
+  .grid2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cardGrid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+@media (min-width: 1800px) {
+  .appShell {
+    padding: 36px 56px;
+  }
+
+  .grid2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid3 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .cardGrid {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   }
 }
 </style>

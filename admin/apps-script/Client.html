@@ -2,6 +2,7 @@
 (function () {
   var state = {
     allData: { aliases: [], testEntries: [], notes: [], crossReactivity: [] },
+    collapsed: {},
     defaultSourceId: "",
     deleteConfirmation: "",
     deleteConfirmingId: null,
@@ -415,6 +416,21 @@
   // ── Edit Form Handlers ───────────────────────────────
 
   function handleFormClick(event) {
+    var collapseToggle = event.target.closest("[data-collapse-toggle]");
+    if (collapseToggle) {
+      var key = collapseToggle.getAttribute("data-collapse-toggle");
+      state.collapsed[key] = !state.collapsed[key];
+      var body = collapseToggle.closest(".sectionCard, .testCard, .crGroupCard");
+      if (body) {
+        var content = body.querySelector("[data-collapse-body]");
+        if (content) {
+          content.classList.toggle("isCollapsed", state.collapsed[key]);
+        }
+        collapseToggle.classList.toggle("isCollapsed", state.collapsed[key]);
+      }
+      return;
+    }
+
     var target = event.target.closest("[data-action]");
     if (!target) return;
 
@@ -964,19 +980,41 @@
     return field ? collectUniqueValues(field) : [];
   }
 
+  function collapsibleSection(key, headHtml, bodyHtml, opts) {
+    var tag = (opts && opts.tag) || "section";
+    var extraClass = (opts && opts.className) || "";
+    var isCollapsed = state.collapsed[key];
+    var chevron = isCollapsed ? "&#9654;" : "&#9660;";
+    var collapseClass = isCollapsed ? " isCollapsed" : "";
+
+    return (
+      "<" + tag + ' class="sectionCard ' + extraClass + '">' +
+      '<div class="sectionHead">' +
+      '<button type="button" class="collapseToggle' + collapseClass + '" data-collapse-toggle="' + escapeHtml(key) + '">' +
+      '<span class="collapseChevron">' + chevron + "</span>" +
+      "</button>" +
+      headHtml +
+      "</div>" +
+      '<div data-collapse-body class="collapseBody' + collapseClass + '">' +
+      bodyHtml +
+      "</div>" +
+      "</" + tag + ">"
+    );
+  }
+
   function renderCoreSection() {
     var classesFr = collectUniqueValues("className.fr");
     var classesEn = collectUniqueValues("className.en");
     var subclassesFr = collectUniqueValues("subclassName.fr");
     var subclassesEn = collectUniqueValues("subclassName.en");
 
-    return (
-      '<section class="sectionCard">' +
-      '<div class="sectionHead"><div>' +
+    return collapsibleSection("core",
+      "<div>" +
       "<h3>Core drug info</h3>" +
       '<p class="sectionIntro">French remains the primary authoring path, but both languages are required before save.</p>' +
       "</div>" +
-      '<span class="pill">' + escapeHtml(state.mode === "edit" ? "Edit mode" : "Create mode") + "</span></div>" +
+      '<span class="pill">' + escapeHtml(state.mode === "edit" ? "Edit mode" : "Create mode") + "</span>",
+
       '<div class="grid2">' +
       field("Drug id", "drug-id", state.form.id, "text") +
       field("French name", "name-fr", state.form.name.fr, "text") +
@@ -985,18 +1023,18 @@
       comboField("English class", "class-en", state.form.className.en, classesEn, "Select existing or type a new class") +
       comboField("French subclass", "subclass-fr", state.form.subclassName.fr, subclassesFr, "Optional. Select existing or type a new subclass") +
       comboField("English subclass", "subclass-en", state.form.subclassName.en, subclassesEn, "Optional. Select existing or type a new subclass") +
-      "</div></section>"
+      "</div>"
     );
   }
 
   function renderAliasesSection() {
-    return (
-      '<section class="sectionCard">' +
-      '<div class="sectionHead"><div>' +
+    return collapsibleSection("aliases",
+      "<div>" +
       "<h3>Aliases</h3>" +
       '<p class="sectionIntro">At least one alias is required. One row per alias writes to <code>aliases</code>.</p>' +
       "</div>" +
-      '<button type="button" class="ghostButton" data-action="add-alias">Add alias</button></div>' +
+      '<button type="button" class="ghostButton" data-action="add-alias">Add alias</button>',
+
       '<div class="aliasList">' +
       state.form.aliases.map(function (alias, index) {
         return (
@@ -1006,18 +1044,18 @@
           "</div>"
         );
       }).join("") +
-      "</div></section>"
+      "</div>"
     );
   }
 
   function renderApplicableTestsSection() {
     var error = state.validation.fields["applicable-tests"];
-    return (
-      '<section class="sectionCard">' +
-      '<div class="sectionHead"><div>' +
+    return collapsibleSection("applicable-tests",
+      "<div>" +
       "<h3>Applicable test types</h3>" +
       '<p class="sectionIntro">Select only the test kinds that exist for this drug. At least one is required.</p>' +
-      "</div></div>" +
+      "</div>",
+
       '<div class="toggleList">' +
       state.testKinds.map(function (testKind) {
         var checked = state.form.applicableTests.indexOf(testKind) >= 0 ? ' checked="checked"' : "";
@@ -1028,33 +1066,31 @@
         );
       }).join("") +
       "</div>" +
-      (error ? '<div class="fieldError">' + escapeHtml(error) + "</div>" : "") +
-      "</section>"
+      (error ? '<div class="fieldError">' + escapeHtml(error) + "</div>" : "")
     );
   }
 
   function renderTestsSection() {
     if (!state.form.applicableTests.length) {
-      return (
-        '<section class="sectionCard">' +
-        '<div class="sectionHead"><div><h3>Test sections</h3>' +
+      return collapsibleSection("tests",
+        "<div><h3>Test sections</h3>" +
         '<p class="sectionIntro">Each selected test must include meaningful clinical content and a valid preferred source.</p>' +
-        "</div></div>" +
-        '<div class="emptyState">Select one or more applicable test types to enter concentrations, dilutions, vehicles, notes, and sources.</div>' +
-        "</section>"
+        "</div>",
+
+        '<div class="emptyState">Select one or more applicable test types to enter concentrations, dilutions, vehicles, notes, and sources.</div>'
       );
     }
 
-    return (
-      '<section class="sectionCard">' +
-      '<div class="sectionHead"><div><h3>Test sections</h3>' +
+    return collapsibleSection("tests",
+      "<div><h3>Test sections</h3>" +
       '<p class="sectionIntro">Only selected test kinds will be written to <code>test_entries</code> and <code>notes</code>.</p>' +
-      "</div></div>" +
+      "</div>",
+
       '<div class="testGrid">' +
       state.form.applicableTests.map(function (testKind) {
         return renderTestCard(testKind, state.form.tests[testKind]);
       }).join("") +
-      "</div></section>"
+      "</div>"
     );
   }
 
@@ -1138,19 +1174,18 @@
   function renderCrossReactivitySection() {
     var groups = state.form.crossReactivity || [];
 
-    return (
-      '<section class="sectionCard">' +
-      '<div class="sectionHead"><div>' +
+    return collapsibleSection("cross-reactivity",
+      "<div>" +
       "<h3>Cross-Reactivity</h3>" +
       '<p class="sectionIntro">Define cross-reactivity groups and entries for this drug. Each group represents a chemical class or category.</p>' +
       "</div>" +
-      '<button type="button" class="ghostButton" data-action="add-cr-group">Add group</button></div>' +
+      '<button type="button" class="ghostButton" data-action="add-cr-group">Add group</button>',
+
       (groups.length
         ? '<div class="crGroupList">' + groups.map(function (group, gi) {
             return renderCrGroup(group, gi);
           }).join("") + "</div>"
-        : '<div class="emptyState">No cross-reactivity groups defined for this drug.</div>') +
-      "</section>"
+        : '<div class="emptyState">No cross-reactivity groups defined for this drug.</div>')
     );
   }
 
@@ -1220,13 +1255,13 @@
   // ── Sources Section ──────────────────────────────────
 
   function renderSourcesSection() {
-    return (
-      '<section class="sectionCard">' +
-      '<div class="sectionHead"><div>' +
+    return collapsibleSection("sources",
+      "<div>" +
       "<h3>Sources</h3>" +
       '<p class="sectionIntro">Reuse existing source ids from the test dropdowns or create a new source inline before save.</p>' +
       "</div>" +
-      '<button type="button" class="ghostButton" data-action="add-source">Add new source</button></div>' +
+      '<button type="button" class="ghostButton" data-action="add-source">Add new source</button>',
+
       '<div class="sourceReferenceMeta">Existing reusable sources: ' + escapeHtml(String(state.sources.length)) + "</div>" +
       (state.form.sources.length
         ? '<div class="sourceList">' +
@@ -1234,8 +1269,7 @@
             return renderSourceCard(source, index);
           }).join("") +
           "</div>"
-        : '<div class="emptyState">No new inline sources yet. Existing sources remain available in the test source dropdowns.</div>') +
-      "</section>"
+        : '<div class="emptyState">No new inline sources yet. Existing sources remain available in the test source dropdowns.</div>')
     );
   }
 
@@ -1266,17 +1300,18 @@
   function renderDeleteSection() {
     if (state.mode !== "edit" || !state.originalId) return "";
 
-    return (
-      '<section class="sectionCard dangerSection">' +
-      '<div class="sectionHead"><div>' +
+    return collapsibleSection("delete",
+      "<div>" +
       "<h3>Delete</h3>" +
       '<p class="sectionIntro">This permanently deletes the drug row and its linked aliases, test entries, notes, and cross-reactivity data. Sources stay in place.</p>' +
       "</div>" +
-      '<span class="pill dangerPill">Permanent</span></div>' +
+      '<span class="pill dangerPill">Permanent</span>',
+
       field('Type "' + state.originalId + '" to confirm', "delete-confirmation", state.deleteConfirmation, "text") +
       '<div class="actionRow dangerActions">' +
       '<button type="button" class="dangerButton" data-action="delete-drug">Delete drug</button>' +
-      "</div></section>"
+      "</div>",
+      { className: "dangerSection" }
     );
   }
 
