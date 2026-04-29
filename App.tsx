@@ -866,6 +866,33 @@ function makeStyles(theme: Theme) {
       lineHeight: 20,
     },
 
+    // ─── Underline Tab Bar ──────────────────────────────────────────────
+    underlineTabBar: {
+      flexDirection: "row",
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+      paddingHorizontal: 16,
+    },
+    underlineTab: {
+      flex: 1,
+      alignItems: "center",
+      paddingVertical: 12,
+      borderBottomWidth: 2,
+      borderBottomColor: "transparent",
+    },
+    underlineTabSelected: {
+      borderBottomColor: theme.accent,
+    },
+    underlineTabText: {
+      color: theme.textSecondary,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    underlineTabTextSelected: {
+      color: theme.accent,
+      fontWeight: "700",
+    },
+
     // ─── Segmented Control ────────────────────────────────────────────────
     segmentedControl: {
       flexDirection: "row",
@@ -1539,6 +1566,211 @@ function makeStyles(theme: Theme) {
       color: theme.accent,
       fontSize: 15,
       fontWeight: "700",
+    },
+
+    // ─── Orbit Map ────────────────────────────────────────────────────────
+    orbitMapContainer: {
+      gap: 16,
+    },
+    orbitSubtitle: {
+      color: theme.textSecondary,
+      fontSize: 12,
+      lineHeight: 17,
+    },
+    orbitStatsRow: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    orbitStatChip: {
+      flex: 1,
+      alignItems: "center",
+      paddingVertical: 12,
+      paddingHorizontal: 4,
+      borderRadius: 10,
+      borderWidth: 1,
+      gap: 4,
+    },
+    orbitStatChipHigher: {
+      backgroundColor: theme.warningBg,
+      borderColor: theme.warningBorder,
+    },
+    orbitStatChipLower: {
+      backgroundColor: theme.subclassBadgeBg,
+      borderColor: theme.subclassBadgeText,
+    },
+    orbitStatChipUncertain: {
+      backgroundColor: theme.surfaceAlt,
+      borderColor: theme.borderMid,
+    },
+    orbitStatCount: {
+      fontSize: 20,
+      fontWeight: "800",
+    },
+    orbitStatCountHigher: { color: theme.warningText },
+    orbitStatCountLower: { color: theme.subclassBadgeText },
+    orbitStatCountUncertain: { color: theme.textSecondary },
+    orbitStatLabel: {
+      fontSize: 9,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.3,
+      textAlign: "center",
+    },
+    orbitStatLabelHigher: { color: theme.warningText },
+    orbitStatLabelLower: { color: theme.subclassBadgeText },
+    orbitStatLabelUncertain: { color: theme.textSecondary },
+
+    // orbit node grid
+    orbitNodeGrid: {
+      gap: 8,
+    },
+    orbitGroupLabel: {
+      color: theme.textSecondary,
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      marginBottom: 2,
+    },
+    orbitNodeRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    orbitNode: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 9,
+      borderWidth: 1,
+    },
+    orbitNodeHigher: {
+      backgroundColor: theme.warningBg,
+      borderColor: theme.warningBorder,
+    },
+    orbitNodeLower: {
+      backgroundColor: theme.subclassBadgeBg,
+      borderColor: theme.subclassBadgeText,
+    },
+    orbitNodeUncertain: {
+      backgroundColor: theme.surfaceAlt,
+      borderColor: theme.borderMid,
+    },
+    orbitNodeText: {
+      fontSize: 13,
+      fontWeight: "700",
+    },
+    orbitNodeTextHigher: { color: theme.warningText },
+    orbitNodeTextLower: { color: theme.subclassBadgeText },
+    orbitNodeTextUncertain: { color: theme.textSecondary },
+
+    // panel chip
+    orbitPanelSection: {
+      gap: 8,
+    },
+    orbitPanelLabel: {
+      color: theme.textSecondary,
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    orbitPanelRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    orbitPanelChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 5,
+      borderRadius: 999,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderWidth: 1,
+      borderColor: theme.accentBorder,
+      backgroundColor: theme.accentBg,
+    },
+    orbitPanelChipAdded: {
+      borderColor: theme.subclassBadgeText,
+      backgroundColor: theme.subclassBadgeBg,
+    },
+    orbitPanelChipText: {
+      color: theme.accent,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    orbitPanelChipTextAdded: {
+      color: theme.subclassBadgeText,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+
+    // sheet additions
+    sheetSection: {
+      gap: 6,
+    },
+    sheetSectionLabel: {
+      color: theme.textSecondary,
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    sheetRationaleBox: {
+      backgroundColor: theme.surfaceAlt,
+      borderRadius: 10,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    sheetActionRow: {
+      flexDirection: "row",
+      gap: 10,
+    },
+    sheetActionButton: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 7,
+      borderRadius: 10,
+      padding: 13,
+      borderWidth: 1,
+      borderColor: theme.accentBorder,
+      backgroundColor: theme.accentBg,
+    },
+    sheetActionButtonAlt: {
+      borderColor: theme.subclassBadgeText,
+      backgroundColor: theme.subclassBadgeBg,
+    },
+    sheetActionText: {
+      color: theme.accent,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    sheetActionTextAlt: {
+      color: theme.subclassBadgeText,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    sheetTitleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 4,
+    },
+    sheetArrow: {
+      color: theme.textDisabled,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    sheetDrugPill: {
+      color: theme.accent,
+      fontSize: 17,
+      fontWeight: "800",
     },
   });
 }
@@ -2394,14 +2626,16 @@ function DilutionCalculator({
   language,
   dilutions,
   concentrationUnit,
+  initialExpanded,
 }: {
   language: Language;
   dilutions: string[];
   concentrationUnit: string;
+  initialExpanded?: boolean;
 }) {
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(initialExpanded ?? false);
   const [stockConcentration, setStockConcentration] = useState("");
   const [finalVolume, setFinalVolume] = useState("10");
   const ratios = preferredDilutionRatios(dilutions);
@@ -2416,21 +2650,12 @@ function DilutionCalculator({
 
   return (
     <View style={styles.panel}>
-      <Pressable onPress={() => setExpanded((v) => !v)} style={styles.calculatorToggle}>
-        <View style={styles.calculatorToggleLeft}>
-          <Ionicons name="calculator-outline" size={18} color={theme.accent} />
-          <Text style={styles.sectionTitle}>{copy(language, "detail.calculatorTitle")}</Text>
-        </View>
-        <Ionicons
-          name={expanded ? "chevron-up" : "chevron-down"}
-          size={18}
-          color={theme.textSecondary}
-        />
-      </Pressable>
+      <View style={styles.calculatorToggleLeft}>
+        <Ionicons name="calculator-outline" size={18} color={theme.accent} />
+        <Text style={styles.sectionTitle}>{copy(language, "detail.calculatorTitle")}</Text>
+      </View>
 
-      {expanded ? (
-        <>
-          <Text style={styles.panelBody}>{copy(language, "detail.calculatorBody")}</Text>
+      <Text style={styles.panelBody}>{copy(language, "detail.calculatorBody")}</Text>
 
           <View style={styles.calculatorRow}>
             <View style={styles.calculatorField}>
@@ -2502,13 +2727,89 @@ function DilutionCalculator({
               ))}
             </View>
           ) : null}
-        </>
-      ) : null}
     </View>
   );
 }
 
-function CrossReactivitySection({
+type DetailTab = "testing" | "cross" | "dilution" | "sources";
+const DETAIL_TABS: DetailTab[] = ["testing", "cross", "dilution", "sources"];
+
+function detailTabLabel(language: Language, tab: DetailTab) {
+  switch (tab) {
+    case "testing": return copy(language, "detail.tabTesting");
+    case "cross": return copy(language, "detail.tabCross");
+    case "dilution": return copy(language, "detail.tabDilution");
+    case "sources": return copy(language, "detail.tabSources");
+  }
+}
+
+function OrbitNode({
+  nx,
+  ny,
+  nodeR,
+  bg,
+  label,
+  onPress,
+}: {
+  nx: number;
+  ny: number;
+  nodeR: number;
+  bg: string;
+  label: string;
+  onPress: () => void;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  function handlePressIn() {
+    Animated.spring(scale, { toValue: 1.18, useNativeDriver: true, friction: 4, tension: 200 }).start();
+  }
+
+  function handlePressOut() {
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, friction: 6, tension: 120 }).start();
+  }
+
+  return (
+    <Animated.View
+      style={{
+        position: "absolute",
+        left: nx - nodeR,
+        top: ny - nodeR,
+        width: nodeR * 2,
+        height: nodeR * 2,
+        zIndex: 5,
+        transform: [{ scale }],
+      }}
+    >
+      <Pressable
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={{
+          width: nodeR * 2,
+          height: nodeR * 2,
+          borderRadius: nodeR,
+          backgroundColor: bg,
+          alignItems: "center",
+          justifyContent: "center",
+          shadowColor: "#000",
+          shadowOpacity: 0.12,
+          shadowRadius: 6,
+          shadowOffset: { width: 0, height: 2 },
+          elevation: 3,
+        }}
+      >
+        <Text
+          style={{ color: "#FFFFFF", fontSize: 8, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}
+          numberOfLines={1}
+        >
+          {label.length > 9 ? label.slice(0, 8) + "." : label}
+        </Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+function OrbitMap({
   drug,
   language,
   allDrugs,
@@ -2535,20 +2836,12 @@ function CrossReactivitySection({
 
   if (!drug.crossReactivity || drug.crossReactivity.length === 0) {
     return (
-      <View style={styles.panel}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Ionicons name="git-network-outline" size={18} color={theme.accent} />
-          <Text style={styles.sectionTitle}>
-            {copy(language, "crossReactivity.sectionTitle")}
-          </Text>
+      <View style={{ gap: 8, paddingVertical: 24, alignItems: "center" }}>
+        <View style={styles.crEmptyIcon}>
+          <Ionicons name="help-circle-outline" size={24} color={theme.textDisabled} />
         </View>
-        <View style={{ gap: 8, paddingVertical: 8 }}>
-          <View style={styles.crEmptyIcon}>
-            <Ionicons name="help-circle-outline" size={24} color={theme.textDisabled} />
-          </View>
-          <Text style={styles.crEmptyTitle}>{copy(language, "crossReactivity.emptyTitle")}</Text>
-          <Text style={styles.crEmptyBody}>{copy(language, "crossReactivity.emptyBody")}</Text>
-        </View>
+        <Text style={styles.crEmptyTitle}>{copy(language, "crossReactivity.emptyTitle")}</Text>
+        <Text style={styles.crEmptyBody}>{copy(language, "crossReactivity.emptyBody")}</Text>
       </View>
     );
   }
@@ -2557,9 +2850,6 @@ function CrossReactivitySection({
   const higherEntries = allEntries.filter((e) => e.tier === "higher-concern");
   const lowerEntries = allEntries.filter((e) => e.tier === "lower-expected");
   const uncertainEntries = allEntries.filter((e) => e.tier === "uncertain");
-
-  const allPanelDrugs = drug.crossReactivity.flatMap((g) => g.suggestedPanel);
-  const uniquePanelDrugs = [...new Set(allPanelDrugs)];
 
   function findGroupForEntry(entry: CrossReactivityEntry): string {
     for (const g of drug.crossReactivity!) {
@@ -2600,27 +2890,11 @@ function CrossReactivitySection({
     }
   }
 
-  function tierSectionLabel(tier: CrossReactivityTier) {
-    switch (tier) {
-      case "higher-concern": return copy(language, "crossReactivity.investigate");
-      case "lower-expected": return copy(language, "crossReactivity.beAware");
-      case "uncertain": return copy(language, "crossReactivity.uncertainEvidence");
-    }
-  }
-
   function tierIconColor(tier: CrossReactivityTier) {
     switch (tier) {
       case "higher-concern": return theme.warningAccent;
       case "lower-expected": return theme.subclassBadgeText;
       case "uncertain": return theme.textDisabled;
-    }
-  }
-
-  function drugRowStyle(tier: CrossReactivityTier) {
-    switch (tier) {
-      case "higher-concern": return styles.crDrugRowHigher;
-      case "lower-expected": return styles.crDrugRowLower;
-      case "uncertain": return styles.crDrugRowUncertain;
     }
   }
 
@@ -2631,138 +2905,247 @@ function CrossReactivitySection({
     }
   }
 
-  function renderDrugRow(entry: CrossReactivityEntry) {
-    const name = drugNameById[entry.drugId];
-    const isNavigable = Boolean(name);
-    const rationale = entry.rationale[language];
-    const truncated = rationale.length > 60 ? rationale.slice(0, 57) + "..." : rationale;
-
-    return (
-      <Pressable
-        key={entry.drugId}
-        style={drugRowStyle(entry.tier)}
-        onPress={() => setSheetEntry({ entry, groupName: findGroupForEntry(entry) })}
-      >
-        <Ionicons name={tierIcon(entry.tier)} size={20} color={tierIconColor(entry.tier)} />
-        <View style={styles.crDrugRowContent}>
-          <Text style={styles.crDrugName}>
-            {name ? name[language] : entry.drugId}
-            {!isNavigable ? (
-              <Text style={styles.crNotInDataset}>{" "}{copy(language, "crossReactivity.drugNotInDataset")}</Text>
-            ) : null}
-          </Text>
-          <Text style={styles.crDrugHint} numberOfLines={1}>{truncated}</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={16} color={theme.textDisabled} />
-      </Pressable>
-    );
+  function nodeColor(tier: CrossReactivityTier) {
+    switch (tier) {
+      case "higher-concern": return theme.warningAccent;
+      case "lower-expected": return theme.subclassBadgeText;
+      case "uncertain": return theme.borderMid;
+    }
   }
 
-  const [expandedTiers, setExpandedTiers] = useState<Record<string, boolean>>({
-    "higher-concern": true,
+  function nodeTextColor(tier: CrossReactivityTier) {
+    switch (tier) {
+      case "higher-concern": return theme.warningText;
+      case "lower-expected": return theme.subclassBadgeText;
+      case "uncertain": return theme.textSecondary;
+    }
+  }
+
+  function arcColor(tier: CrossReactivityTier) {
+    switch (tier) {
+      case "higher-concern": return theme.warningBorder;
+      case "lower-expected": return theme.subclassBadgeText;
+      case "uncertain": return theme.borderMid;
+    }
+  }
+
+  // Collect active tiers — inner to outer: higher → lower → uncertain
+  const activeTiers: { tier: CrossReactivityTier; entries: CrossReactivityEntry[] }[] = [];
+  if (higherEntries.length) activeTiers.push({ tier: "higher-concern", entries: higherEntries });
+  if (lowerEntries.length) activeTiers.push({ tier: "lower-expected", entries: lowerEntries });
+  if (uncertainEntries.length) activeTiers.push({ tier: "uncertain", entries: uncertainEntries });
+
+  // Layout
+  const screenW = Dimensions.get("window").width - 32;
+  const centerR = 28;
+  const nodeR = 22;
+  const labelH = 14;
+  const ringGap = nodeR * 2 + labelH + 16;
+
+  // Each tier gets its own orbit radius
+  const ringRadii = activeTiers.map((_, i) => centerR + ringGap * (i + 1));
+  const outermost = ringRadii.length > 0 ? ringRadii[ringRadii.length - 1] : centerR;
+  const size = Math.min(Math.max((outermost + nodeR + labelH + 10) * 2, 220), screenW);
+  const cx = size / 2;
+  const cy = size / 2;
+
+  // Build arc dots: approximate an arc behind each tier's nodes using small dots
+  function buildArcDots(radius: number, entries: CrossReactivityEntry[], color: string, tierIdx: number) {
+    const count = entries.length;
+    if (count === 0) return null;
+
+    // Angle spread for this tier's nodes
+    const startOffset = -Math.PI / 2;
+    const angleShift = tierIdx % 2 === 1 ? Math.PI / 8 : 0;
+    const nodeAngles = entries.map((_, idx) => {
+      if (count === 1) return startOffset + angleShift;
+      const spread = Math.min(Math.PI * 1.4, (Math.PI * 0.45) * count);
+      return startOffset + angleShift - spread / 2 + (spread * idx) / (count - 1);
+    });
+
+    // Arc extends from first node angle to last, with padding
+    const first = nodeAngles[0];
+    const last = nodeAngles[nodeAngles.length - 1];
+    const arcPad = 0.25;
+    const arcStart = first - arcPad;
+    const arcEnd = last + arcPad;
+    const arcSweep = arcEnd - arcStart;
+
+    // Place small dots along the arc
+    const dotCount = Math.max(Math.round(arcSweep / 0.06), 8);
+    const dots = [];
+    for (let d = 0; d <= dotCount; d++) {
+      const a = arcStart + (arcSweep * d) / dotCount;
+      const dx = cx + radius * Math.cos(a);
+      const dy = cy + radius * Math.sin(a);
+      dots.push(
+        <View
+          key={`arc-${tierIdx}-${d}`}
+          style={{
+            position: "absolute",
+            left: dx - 1.5,
+            top: dy - 1.5,
+            width: 3,
+            height: 3,
+            borderRadius: 1.5,
+            backgroundColor: color,
+            opacity: 0.3,
+            zIndex: 0,
+          }}
+        />
+      );
+    }
+    return { dots, nodeAngles };
+  }
+
+  // Precompute per-tier layout
+  const tierLayouts = activeTiers.map(({ tier, entries }, i) => {
+    const radius = ringRadii[i];
+    const result = buildArcDots(radius, entries, arcColor(tier), i);
+    return { tier, entries, radius, dots: result?.dots ?? [], nodeAngles: result?.nodeAngles ?? [] };
   });
 
-  function toggleTier(tier: CrossReactivityTier) {
-    setExpandedTiers((prev) => ({ ...prev, [tier]: !prev[tier] }));
-  }
-
-  function renderTierSection(tier: CrossReactivityTier, entries: CrossReactivityEntry[]) {
-    if (entries.length === 0) return null;
-    const expanded = Boolean(expandedTiers[tier]);
-    return (
-      <View style={styles.crTierSection}>
-        <Pressable style={styles.crTierHeader} onPress={() => toggleTier(tier)}>
-          <Ionicons name={tierIcon(tier)} size={16} color={tierIconColor(tier)} />
-          <Text style={[styles.crTierLabel, { flex: 1 }]}>{tierSectionLabel(tier)}</Text>
-          <Text style={styles.crTierCount}>{entries.length}</Text>
-          <Ionicons
-            name={expanded ? "chevron-up" : "chevron-down"}
-            size={16}
-            color={theme.textSecondary}
-          />
-        </Pressable>
-        {expanded ? entries.map(renderDrugRow) : null}
-      </View>
-    );
-  }
-
-  const [sectionExpanded, setSectionExpanded] = useState(false);
-
   return (
-    <View style={styles.panel}>
-      {/* Section header — tappable to expand/collapse */}
-      <Pressable
-        style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-        onPress={() => setSectionExpanded((v) => !v)}
-      >
-        <Ionicons name="git-network-outline" size={18} color={theme.accent} />
-        <Text style={[styles.sectionTitle, { flex: 1 }]}>
-          {copy(language, "crossReactivity.sectionTitle")}
-        </Text>
-        <Text style={styles.crTierCount}>{allEntries.length}</Text>
-        <Ionicons
-          name={sectionExpanded ? "chevron-up" : "chevron-down"}
-          size={18}
-          color={theme.textSecondary}
-        />
-      </Pressable>
+    <View style={{ gap: 16 }}>
+      {/* Orbit diagram */}
+      <View style={{ width: size, height: size, alignSelf: "center" }}>
+        {/* Arc dots behind each tier */}
+        {tierLayouts.map(({ dots }) => dots)}
 
-      {/* Summary card — always visible */}
-      <View style={styles.crSummaryCard}>
-        <View style={styles.crSummaryRow}>
-          <View style={styles.crSummaryCountCircle}>
-            <Text style={styles.crSummaryCountText}>{allEntries.length}</Text>
-          </View>
-          <Text style={styles.crSummaryText}>
-            {allEntries.length} {copy(language, "crossReactivity.summaryDrugs")}
-            {" · "}{drug.crossReactivity.length} {copy(language, "crossReactivity.summaryGroups")}
-            {higherEntries.length > 0
-              ? ` · ${higherEntries.length} ${copy(language, "crossReactivity.summaryHigher")}`
-              : ""}
+        {/* Center node */}
+        <View
+          style={{
+            position: "absolute",
+            left: cx - centerR,
+            top: cy - centerR,
+            width: centerR * 2,
+            height: centerR * 2,
+            borderRadius: centerR,
+            backgroundColor: theme.accent,
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10,
+            shadowColor: "#000",
+            shadowOpacity: 0.2,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 3 },
+            elevation: 6,
+          }}
+        >
+          <Text
+            style={{ color: "#FFFFFF", fontSize: 9, fontWeight: "800", textAlign: "center", paddingHorizontal: 3 }}
+            numberOfLines={2}
+          >
+            {drug.name[language]}
           </Text>
         </View>
+
+        {/* Dashed lines from center to each node */}
+        {tierLayouts.map(({ entries, radius, nodeAngles }) =>
+          entries.map((entry, idx) => {
+            const angle = nodeAngles[idx];
+            const dx = radius * Math.cos(angle);
+            const dy = radius * Math.sin(angle);
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const rotation = (angle * 180) / Math.PI;
+            const midX = cx + dx / 2 - dist / 2;
+            const midY = cy + dy / 2;
+            return (
+              <View
+                key={`line-${entry.drugId}`}
+                style={{
+                  position: "absolute",
+                  left: midX,
+                  top: midY,
+                  width: dist,
+                  height: 1,
+                  borderTopWidth: 1,
+                  borderTopColor: theme.borderMid,
+                  borderStyle: "dashed",
+                  transform: [{ rotate: `${rotation}deg` }],
+                  zIndex: 1,
+                  opacity: 0.2,
+                }}
+              />
+            );
+          })
+        )}
+
+        {/* Satellite nodes + labels */}
+        {tierLayouts.map(({ tier, entries, radius, nodeAngles }) =>
+          entries.map((entry, idx) => {
+            const angle = nodeAngles[idx];
+            const nx = cx + radius * Math.cos(angle);
+            const ny = cy + radius * Math.sin(angle);
+            const name = drugNameById[entry.drugId];
+            const fullLabel = name ? name[language] : entry.drugId;
+            const isBelow = Math.sin(angle) >= -0.25;
+            const labelTop = isBelow ? ny + nodeR + 2 : ny - nodeR - labelH - 1;
+
+            return (
+              <React.Fragment key={entry.drugId}>
+                <OrbitNode
+                  nx={nx}
+                  ny={ny}
+                  nodeR={nodeR}
+                  bg={nodeColor(tier)}
+                  label={fullLabel}
+                  onPress={() => setSheetEntry({ entry, groupName: findGroupForEntry(entry) })}
+                />
+                <View
+                  style={{
+                    position: "absolute",
+                    left: nx - 44,
+                    top: labelTop,
+                    width: 88,
+                    alignItems: "center",
+                    zIndex: 4,
+                  }}
+                  pointerEvents="none"
+                >
+                  <Text
+                    style={{ color: nodeTextColor(entry.tier), fontSize: 10, fontWeight: "700", textAlign: "center" }}
+                    numberOfLines={1}
+                  >
+                    {fullLabel}
+                  </Text>
+                </View>
+              </React.Fragment>
+            );
+          })
+        )}
       </View>
 
-      {sectionExpanded ? (
-        <>
-          {/* Suggested testing panel banner */}
-          {uniquePanelDrugs.length > 0 ? (
-            <View style={styles.crPanelBanner}>
-              <Text style={styles.crPanelBannerLabel}>
-                {copy(language, "crossReactivity.panelTitle")}
-              </Text>
-              <View style={styles.crPanelChipList}>
-                {uniquePanelDrugs.map((panelDrugId) => {
-                  const pName = drugNameById[panelDrugId];
-                  const pNavigable = Boolean(pName);
-                  return (
-                    <Pressable
-                      key={panelDrugId}
-                      style={styles.crPanelChip}
-                      onPress={pNavigable ? () => onOpenDrug(panelDrugId) : undefined}
-                      disabled={!pNavigable}
-                    >
-                      <Text style={pNavigable ? styles.crPanelChipText : styles.crPanelChipTextInert}>
-                        {pName ? pName[language] : panelDrugId}
-                      </Text>
-                      {pNavigable ? (
-                        <Ionicons name="chevron-forward" size={12} color={theme.accent} />
-                      ) : null}
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          ) : null}
+      {/* Legend */}
+      <View style={styles.orbitStatsRow}>
+        {activeTiers.map(({ tier, entries }) => (
+          <View
+            key={tier}
+            style={[
+              styles.orbitStatChip,
+              tier === "higher-concern" ? styles.orbitStatChipHigher
+                : tier === "lower-expected" ? styles.orbitStatChipLower
+                : styles.orbitStatChipUncertain,
+            ]}
+          >
+            <Ionicons name={tierIcon(tier)} size={14} color={tierIconColor(tier)} />
+            <Text style={[
+              styles.orbitStatCount, { fontSize: 16 },
+              tier === "higher-concern" ? styles.orbitStatCountHigher
+                : tier === "lower-expected" ? styles.orbitStatCountLower
+                : styles.orbitStatCountUncertain,
+            ]}>{entries.length}</Text>
+            <Text style={[
+              styles.orbitStatLabel,
+              tier === "higher-concern" ? styles.orbitStatLabelHigher
+                : tier === "lower-expected" ? styles.orbitStatLabelLower
+                : styles.orbitStatLabelUncertain,
+            ]}>{tierLabel(tier)}</Text>
+          </View>
+        ))}
+      </View>
 
-          {/* Tier-grouped drug lists */}
-          {renderTierSection("higher-concern", higherEntries)}
-          {renderTierSection("lower-expected", lowerEntries)}
-          {renderTierSection("uncertain", uncertainEntries)}
-        </>
-      ) : null}
-
-      {/* Bottom sheet */}
+      {/* Bottom sheet — node detail */}
       <Modal
         visible={sheetEntry !== null}
         transparent
@@ -2776,44 +3159,46 @@ function CrossReactivitySection({
               const { entry, groupName } = sheetEntry;
               const name = drugNameById[entry.drugId];
               const isNavigable = Boolean(name);
+              const displayName = name ? name[language] : entry.drugId;
               const sourceCitations = entry.sourceIds
                 .map((sid) => sources[sid]?.label)
                 .filter(Boolean);
 
               return (
                 <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-                  {/* Header */}
-                  <View style={styles.sheetHeader}>
-                    <Text style={styles.sheetDrugName}>
-                      {name ? name[language] : entry.drugId}
-                    </Text>
-                    <View style={styles.sheetBadgeRow}>
-                      <View style={tierBadgeStyle(entry.tier)}>
-                        <Ionicons name={tierIcon(entry.tier)} size={12} color={tierIconColor(entry.tier)} />
-                        <Text style={tierBadgeTextStyle(entry.tier)}>{tierLabel(entry.tier)}</Text>
-                      </View>
-                      <View style={styles.crStructBadge}>
-                        <Text style={styles.crStructBadgeText}>{structuralLabel(entry.structuralRelation)}</Text>
-                      </View>
+                  {/* Title row: Drug A ↔ Drug B */}
+                  <View style={styles.sheetTitleRow}>
+                    <Text style={styles.sheetDrugPill}>{drug.name[language]}</Text>
+                    <Text style={styles.sheetArrow}>↔</Text>
+                    <Text style={[styles.sheetDrugPill, { flex: 1 }]} numberOfLines={1}>{displayName}</Text>
+                  </View>
+
+                  {/* Tier + structural badges */}
+                  <View style={[styles.sheetBadgeRow, { marginBottom: 16 }]}>
+                    <View style={tierBadgeStyle(entry.tier)}>
+                      <Ionicons name={tierIcon(entry.tier)} size={12} color={tierIconColor(entry.tier)} />
+                      <Text style={tierBadgeTextStyle(entry.tier)}>{tierLabel(entry.tier)}</Text>
+                    </View>
+                    <View style={styles.crStructBadge}>
+                      <Text style={styles.crStructBadgeText}>{structuralLabel(entry.structuralRelation)}</Text>
                     </View>
                   </View>
 
-                  {/* Mechanism diagram */}
-                  <Text style={styles.sheetMechanismLabel}>{copy(language, "crossReactivity.mechanism")}</Text>
-                  <View style={styles.sheetMechanismDiagram}>
-                    <Text style={styles.sheetMechanismDrugText}>{drug.name[language]}</Text>
-                    <Text style={styles.sheetMechanismArrow}>→</Text>
-                    <Text style={styles.sheetMechanismLink} numberOfLines={1}>{groupName}</Text>
-                    <Text style={styles.sheetMechanismArrow}>→</Text>
-                    <Text style={styles.sheetMechanismDrugText}>
-                      {name ? name[language] : entry.drugId}
-                    </Text>
+                  {/* Why linked */}
+                  <View style={styles.sheetSection}>
+                    <Text style={styles.sheetSectionLabel}>{copy(language, "crossReactivity.whyLinked")}</Text>
+                    <View style={styles.sheetRationaleBox}>
+                      <Text style={styles.sheetMechanismLink}>{groupName}</Text>
+                    </View>
                   </View>
 
                   <View style={styles.sheetDivider} />
 
-                  {/* Rationale */}
-                  <Text style={styles.sheetRationale}>{entry.rationale[language]}</Text>
+                  {/* Clinical note / rationale */}
+                  <View style={styles.sheetSection}>
+                    <Text style={styles.sheetSectionLabel}>{copy(language, "crossReactivity.clinicalNote")}</Text>
+                    <Text style={styles.sheetRationale}>{entry.rationale[language]}</Text>
+                  </View>
 
                   {/* Sources */}
                   {sourceCitations.length > 0 ? (
@@ -2825,20 +3210,20 @@ function CrossReactivitySection({
                     </>
                   ) : null}
 
-                  {/* Open drug button */}
+                  {/* Open drug action */}
                   {isNavigable ? (
                     <>
                       <View style={styles.sheetDivider} />
                       <Pressable
-                        style={styles.sheetOpenButton}
+                        style={styles.sheetActionButton}
                         onPress={() => {
                           setSheetEntry(null);
                           onOpenDrug(entry.drugId);
                         }}
                       >
-                        <Ionicons name="open-outline" size={18} color={theme.accent} />
-                        <Text style={styles.sheetOpenButtonText}>
-                          {copy(language, "crossReactivity.openDrug")} — {name![language]}
+                        <Ionicons name="open-outline" size={16} color={theme.accent} />
+                        <Text style={styles.sheetActionText}>
+                          {copy(language, "crossReactivity.openDrug")} — {displayName}
                         </Text>
                       </Pressable>
                     </>
@@ -2874,23 +3259,18 @@ function DetailScreen({
 }) {
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
-  const [activeTab, setActiveTab] = useState<TestKind>(availableTests(drug)[0] ?? "prick");
-  const [showSource, setShowSource] = useState(false);
+  const [detailTab, setDetailTab] = useState<DetailTab>("testing");
+  const [testKind, setTestKind] = useState<TestKind>(availableTests(drug)[0] ?? "prick");
   const availableTestKinds = availableTests(drug);
 
   useEffect(() => {
     const nextAvailableTests = availableTests(drug);
-
-    if (!nextAvailableTests.includes(activeTab)) {
-      setActiveTab(nextAvailableTests[0] ?? "prick");
+    if (!nextAvailableTests.includes(testKind)) {
+      setTestKind(nextAvailableTests[0] ?? "prick");
     }
-  }, [activeTab, drug]);
+  }, [testKind, drug]);
 
-  useEffect(() => {
-    setShowSource(false);
-  }, [drug.id, activeTab]);
-
-  const test = drug.tests[activeTab];
+  const test = drug.tests[testKind];
   const canShowProvenance = hasTestProvenance(test, sources);
   const preferredEntry = test.sourceEntries.find((e) => e.isPreferred);
   const nonPreferredEntries = test.sourceEntries.filter((e) => !e.isPreferred);
@@ -2901,26 +3281,26 @@ function DetailScreen({
   );
   const shouldShowStandardConcentration =
     Boolean(preferredEntry?.concentration) &&
-    (activeTab !== "idr" || preferredEntry?.concentration !== preferredEntry?.maxConcentration);
+    (testKind !== "idr" || preferredEntry?.concentration !== preferredEntry?.maxConcentration);
   const sourcesDisagree = nonPreferredEntries.some(
     (e) => e.concentration && e.concentration !== preferredEntry?.concentration
   );
+  const [headerExpanded, setHeaderExpanded] = useState(true);
+
   const metricItems: DetailMetricItem[] = [];
 
   if (shouldShowStandardConcentration) {
     metricItems.push({
-      label: concentrationLabel(language, activeTab),
+      label: concentrationLabel(language, testKind),
       value: preferredEntry?.concentration ?? "",
     });
   }
-
   if (preferredEntry?.maxConcentration) {
     metricItems.push({
       label: copy(language, "detail.idr.maxConcentration"),
       value: preferredEntry.maxConcentration,
     });
   }
-
   if (test.dilutions.length) {
     metricItems.push({
       label: copy(language, "detail.idr.dilutions"),
@@ -2928,7 +3308,6 @@ function DetailScreen({
       compact: true,
     });
   }
-
   if (test.vehicle) {
     metricItems.push({
       label: copy(language, "detail.patch.vehicle"),
@@ -2954,10 +3333,32 @@ function DetailScreen({
         </Pressable>
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.screenContent}>
-        {/* Drug header card */}
-        <View style={styles.detailHeader}>
-          <View style={styles.detailHeaderMetaRow}>
+      {/* Drug header card — collapsible */}
+      <Pressable
+        onPress={() => setHeaderExpanded((v) => !v)}
+        style={{ paddingHorizontal: 16, paddingTop: headerExpanded ? 8 : 0, paddingBottom: headerExpanded ? 4 : 0 }}
+      >
+        {headerExpanded ? (
+          <View style={styles.detailHeader}>
+            <View style={styles.detailHeaderMetaRow}>
+              <View style={styles.detailClassBadge}>
+                <Text style={styles.detailClassBadgeText}>{drug.className[language]}</Text>
+              </View>
+              {drug.subclassName ? (
+                <View style={styles.detailSubclassBadge}>
+                  <Text style={styles.detailSubclassBadgeText}>{drug.subclassName[language]}</Text>
+                </View>
+              ) : null}
+              <View style={{ flex: 1 }} />
+              <Ionicons name="chevron-up" size={16} color={theme.textDisabled} />
+            </View>
+            <Text style={styles.detailTitle}>{drug.name[language]}</Text>
+            {drug.aliases.length > 0 ? (
+              <Text style={styles.detailSubtitle}>{drug.aliases.join(", ")}</Text>
+            ) : null}
+          </View>
+        ) : (
+          <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 6, gap: 8 }}>
             <View style={styles.detailClassBadge}>
               <Text style={styles.detailClassBadgeText}>{drug.className[language]}</Text>
             </View>
@@ -2966,196 +3367,193 @@ function DetailScreen({
                 <Text style={styles.detailSubclassBadgeText}>{drug.subclassName[language]}</Text>
               </View>
             ) : null}
-            <View style={styles.detailIdBadge}>
-              <Text style={styles.detailIdBadgeText}>{drug.id}</Text>
-            </View>
+            <View style={{ flex: 1 }} />
+            <Ionicons name="chevron-down" size={16} color={theme.textDisabled} />
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Text style={[styles.detailTitle, { flex: 0 }]}>{drug.name[language]}</Text>
-            {drug.crossReactivity && drug.crossReactivity.length > 0 ? (
-              <View style={styles.crHeaderBadge}>
-                <Ionicons name="git-network-outline" size={10} color={theme.warningText} />
-                <Text style={styles.crHeaderBadgeText}>
-                  {drug.crossReactivity.reduce((s, g) => s + g.entries.length, 0)} {copy(language, "crossReactivity.headerBadge")}
+        )}
+      </Pressable>
+
+      {/* Top-level underline tab bar */}
+      <View style={styles.underlineTabBar}>
+        {DETAIL_TABS.map((tab) => {
+          const selected = tab === detailTab;
+          return (
+            <Pressable
+              key={tab}
+              onPress={() => setDetailTab(tab)}
+              style={[styles.underlineTab, selected && styles.underlineTabSelected]}
+            >
+              <Text style={[styles.underlineTabText, selected && styles.underlineTabTextSelected]}>
+                {detailTabLabel(language, tab)}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.screenContent}>
+        {/* ─── Tab: Testing ─────────────────────────────────────────── */}
+        {detailTab === "testing" ? (
+          <>
+            {/* Sub-tabs for test types */}
+            {availableTestKinds.length > 1 ? (
+              <View style={[styles.segmentedControl, { marginBottom: 4 }]}>
+                {TAB_ORDER.map((kind) => {
+                  const selected = kind === testKind;
+                  const disabled = !isTestAvailable(drug, kind);
+                  return (
+                    <Pressable
+                      key={kind}
+                      disabled={disabled}
+                      onPress={() => setTestKind(kind)}
+                      style={[
+                        styles.segmentButton,
+                        selected && styles.segmentButtonSelected,
+                        disabled && styles.segmentButtonDisabled,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.segmentButtonText,
+                          selected && styles.segmentButtonTextSelected,
+                          disabled && styles.segmentButtonTextDisabled,
+                        ]}
+                      >
+                        {testTitle(language, kind)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ) : null}
+
+            {!canShowProvenance ? (
+              <View style={styles.warningPanel}>
+                <View style={styles.warningPanelHeader}>
+                  <Ionicons name="warning-outline" size={18} color={theme.warningText} />
+                  <Text style={styles.warningTitle}>
+                    {copy(language, "detail.provenanceUnavailableTitle")}
+                  </Text>
+                </View>
+                <Text style={styles.warningText}>
+                  {copy(language, "detail.provenanceUnavailableBody")}
                 </Text>
               </View>
             ) : null}
-          </View>
-          {drug.aliases.length > 0 ? (
-            <Text style={styles.detailSubtitle}>{drug.aliases.join(", ")}</Text>
-          ) : null}
-        </View>
 
-        {/* Segmented control for test types */}
-        {availableTestKinds.length > 1 ? (
-          <View style={styles.segmentedControl}>
-            {TAB_ORDER.map((kind) => {
-              const selected = kind === activeTab;
-              const disabled = !isTestAvailable(drug, kind);
-
-              return (
-                <Pressable
-                  key={kind}
-                  disabled={disabled}
-                  onPress={() => setActiveTab(kind)}
-                  style={[
-                    styles.segmentButton,
-                    selected && styles.segmentButtonSelected,
-                    disabled && styles.segmentButtonDisabled,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.segmentButtonText,
-                      selected && styles.segmentButtonTextSelected,
-                      disabled && styles.segmentButtonTextDisabled,
-                    ]}
-                  >
-                    {testTitle(language, kind)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        ) : null}
-
-        {!canShowProvenance ? (
-          <View style={styles.warningPanel}>
-            <View style={styles.warningPanelHeader}>
-              <Ionicons name="warning-outline" size={18} color={theme.warningText} />
-              <Text style={styles.warningTitle}>
-                {copy(language, "detail.provenanceUnavailableTitle")}
-              </Text>
-            </View>
-            <Text style={styles.warningText}>
-              {copy(language, "detail.provenanceUnavailableBody")}
-            </Text>
-          </View>
-        ) : null}
-
-        {canShowProvenance ? (
-          <View style={styles.panel}>
-            <View style={styles.panelHeaderRow}>
-              <Text style={styles.sectionTitle}>{testTitle(language, activeTab)}</Text>
-              <Text style={styles.panelHeaderLabel}>{copy(language, "detail.validatedData")}</Text>
-            </View>
-
-            {metricItems.length ? (
-              <View style={styles.metricGrid}>
-                {metricItems.map((item) => (
-                  <View
-                    key={`${activeTab}-${item.label}`}
-                    style={[styles.metricCard, item.compact && styles.metricCardCompact]}
-                  >
-                    <Text style={styles.metricLabel}>{item.label}</Text>
-                    <Text style={item.compact ? styles.metricValueSmall : styles.metricValue}>
-                      {item.value}
-                    </Text>
+            {canShowProvenance ? (
+              <View style={styles.panel}>
+                <View style={styles.panelHeaderRow}>
+                  <Text style={styles.sectionTitle}>{testTitle(language, testKind)}</Text>
+                  <Text style={styles.panelHeaderLabel}>{copy(language, "detail.validatedData")}</Text>
+                </View>
+                {metricItems.length ? (
+                  <View style={styles.metricGrid}>
+                    {metricItems.map((item) => (
+                      <View
+                        key={`${testKind}-${item.label}`}
+                        style={[styles.metricCard, item.compact && styles.metricCardCompact]}
+                      >
+                        <Text style={styles.metricLabel}>{item.label}</Text>
+                        <Text style={item.compact ? styles.metricValueSmall : styles.metricValue}>
+                          {item.value}
+                        </Text>
+                      </View>
+                    ))}
                   </View>
-                ))}
+                ) : (
+                  <Text style={styles.emptyState}>{copy(language, "detail.noTestData")}</Text>
+                )}
               </View>
-            ) : (
-              <Text style={styles.emptyState}>{copy(language, "detail.noTestData")}</Text>
-            )}
-          </View>
+            ) : null}
+
+            {canShowProvenance && warnings.length ? (
+              <View style={styles.warningPanel}>
+                <View style={styles.warningPanelHeader}>
+                  <Ionicons name="warning-outline" size={18} color={theme.warningText} />
+                  <Text style={styles.warningTitle}>{copy(language, "detail.warnings")}</Text>
+                </View>
+                <NoteList language={language} notes={warnings} tone="warning" />
+              </View>
+            ) : null}
+
+            {canShowProvenance && supporting.length ? (
+              <View style={styles.panel}>
+                <Text style={styles.sectionTitle}>{copy(language, "detail.notes")}</Text>
+                <NoteList language={language} notes={supporting} />
+              </View>
+            ) : null}
+
+            {canShowProvenance && sourcesDisagree ? (
+              <View style={styles.warningPanel}>
+                <View style={styles.warningPanelHeader}>
+                  <Ionicons name="git-compare-outline" size={18} color={theme.warningText} />
+                  <Text style={styles.warningTitle}>
+                    {copy(language, "detail.sourceDiscrepancyTitle")}
+                  </Text>
+                </View>
+                <Text style={styles.warningText}>
+                  {copy(language, "detail.sourceDiscrepancyBody")}
+                </Text>
+                <View style={styles.sourceBreakdownTable}>
+                  <Text style={styles.sourceBreakdownHeading}>
+                    {copy(language, "detail.sourceBreakdownTitle")}
+                  </Text>
+                  {test.sourceEntries.map((entry) => {
+                    const src = sources[entry.sourceId];
+                    const conc = entry.concentration ?? entry.maxConcentration ?? "—";
+                    return (
+                      <View key={entry.sourceId} style={styles.sourceBreakdownRow}>
+                        <Text
+                          style={[
+                            styles.sourceBreakdownLabel,
+                            entry.isPreferred && styles.sourceBreakdownLabelPreferred,
+                          ]}
+                        >
+                          {src?.label ?? entry.sourceId}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.sourceBreakdownValue,
+                            entry.isPreferred && styles.sourceBreakdownValuePreferred,
+                          ]}
+                        >
+                          {conc}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            ) : null}
+          </>
         ) : null}
 
-        {canShowProvenance && warnings.length ? (
-          <View style={styles.warningPanel}>
-            <View style={styles.warningPanelHeader}>
-              <Ionicons name="warning-outline" size={18} color={theme.warningText} />
-              <Text style={styles.warningTitle}>{copy(language, "detail.warnings")}</Text>
-            </View>
-            <NoteList language={language} notes={warnings} tone="warning" />
-          </View>
+        {/* ─── Tab: Cross-Reactivity ───────────────────────────────── */}
+        {detailTab === "cross" ? (
+          <OrbitMap
+            drug={drug}
+            language={language}
+            allDrugs={allDrugs}
+            sources={sources}
+            onOpenDrug={onOpenDrug}
+          />
         ) : null}
 
-        {canShowProvenance && supporting.length ? (
-          <View style={styles.panel}>
-            <Text style={styles.sectionTitle}>{copy(language, "detail.notes")}</Text>
-            <NoteList language={language} notes={supporting} />
-          </View>
-        ) : null}
-
-        {canShowProvenance ? (
+        {/* ─── Tab: Dilution ───────────────────────────────────────── */}
+        {detailTab === "dilution" ? (
           <DilutionCalculator
             language={language}
             dilutions={test.dilutions}
             concentrationUnit={concentrationUnit}
+            initialExpanded
           />
         ) : null}
 
-        <CrossReactivitySection
-          drug={drug}
-          language={language}
-          allDrugs={allDrugs}
-          sources={sources}
-          onOpenDrug={onOpenDrug}
-        />
-
-        {canShowProvenance && sourcesDisagree ? (
-          <View style={styles.warningPanel}>
-            <View style={styles.warningPanelHeader}>
-              <Ionicons name="git-compare-outline" size={18} color={theme.warningText} />
-              <Text style={styles.warningTitle}>
-                {copy(language, "detail.sourceDiscrepancyTitle")}
-              </Text>
-            </View>
-            <Text style={styles.warningText}>
-              {copy(language, "detail.sourceDiscrepancyBody")}
-            </Text>
-            <View style={styles.sourceBreakdownTable}>
-              <Text style={styles.sourceBreakdownHeading}>
-                {copy(language, "detail.sourceBreakdownTitle")}
-              </Text>
-              {test.sourceEntries.map((entry) => {
-                const src = sources[entry.sourceId];
-                const conc = entry.concentration ?? entry.maxConcentration ?? "—";
-                return (
-                  <View key={entry.sourceId} style={styles.sourceBreakdownRow}>
-                    <Text
-                      style={[
-                        styles.sourceBreakdownLabel,
-                        entry.isPreferred && styles.sourceBreakdownLabelPreferred,
-                      ]}
-                    >
-                      {src?.label ?? entry.sourceId}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.sourceBreakdownValue,
-                        entry.isPreferred && styles.sourceBreakdownValuePreferred,
-                      ]}
-                    >
-                      {conc}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-        ) : null}
-
-        {canShowProvenance && preferredSource ? (
-          <View style={styles.panel}>
-            <View style={styles.sourceSummaryCard}>
-              <Text style={styles.sourceEyebrow}>{copy(language, "detail.preferredSource")}</Text>
-              <Text style={styles.sourceTitle}>{preferredSource.label}</Text>
-              <Text style={styles.sourceMeta}>
-                {preferredSource.organization} {preferredSource.year} • {preferredSource.version}
-              </Text>
-              <Text style={styles.sourceLabel}>{preferredSource.documentName[language]}</Text>
-            </View>
-            <Pressable onPress={() => setShowSource((current) => !current)} style={styles.sourceToggle}>
-              <Text style={styles.sectionTitle}>{copy(language, "detail.source")}</Text>
-              <Ionicons
-                name={showSource ? "chevron-up" : "chevron-down"}
-                size={18}
-                color={theme.textSecondary}
-              />
-            </Pressable>
-
-            {showSource ? (
+        {/* ─── Tab: Sources ────────────────────────────────────────── */}
+        {detailTab === "sources" ? (
+          <>
+            {canShowProvenance ? (
               <View style={styles.sourceStack}>
                 {test.sourceEntries.map((entry) => {
                   const src = sources[entry.sourceId];
@@ -3170,8 +3568,20 @@ function DetailScreen({
                   );
                 })}
               </View>
-            ) : null}
-          </View>
+            ) : (
+              <View style={styles.warningPanel}>
+                <View style={styles.warningPanelHeader}>
+                  <Ionicons name="warning-outline" size={18} color={theme.warningText} />
+                  <Text style={styles.warningTitle}>
+                    {copy(language, "detail.provenanceUnavailableTitle")}
+                  </Text>
+                </View>
+                <Text style={styles.warningText}>
+                  {copy(language, "detail.provenanceUnavailableBody")}
+                </Text>
+              </View>
+            )}
+          </>
         ) : null}
 
         <ComplianceBanner language={language} />

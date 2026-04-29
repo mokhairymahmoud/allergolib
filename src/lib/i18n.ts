@@ -85,6 +85,10 @@ export const dictionary = {
     "detail.note.info": "Note",
     "detail.note.warning": "Warning",
     "detail.note.cross-reactivity": "Cross-reactivity",
+    "detail.tabTesting": "Testing",
+    "detail.tabCross": "Cross",
+    "detail.tabDilution": "Dilution",
+    "detail.tabSources": "Sources",
     "tests.prick": "Prick",
     "tests.idr": "IDR",
     "tests.patch": "Patch",
@@ -118,7 +122,15 @@ export const dictionary = {
     "crossReactivity.openDrug": "Open drug",
     "crossReactivity.emptyTitle": "No documented cross-reactivity data",
     "crossReactivity.emptyBody": "This does not imply absence of cross-reactivity. Use clinical judgment.",
-    "crossReactivity.headerBadge": "cross-reactive"
+    "crossReactivity.headerBadge": "cross-reactive",
+    "crossReactivity.whyLinked": "Why linked?",
+    "crossReactivity.clinicalNote": "Clinical note",
+    "crossReactivity.addToPanel": "Add to panel",
+    "crossReactivity.addedToPanel": "Added",
+    "crossReactivity.orbitTitle": "Cross-Reactivity Map",
+    "crossReactivity.higherConcern": "Higher concern",
+    "crossReactivity.lowerExpected": "Lower expected",
+    "crossReactivity.uncertainCount": "Uncertain"
   },
   fr: {
     "compliance.badge": "Beta privee",
@@ -204,6 +216,10 @@ export const dictionary = {
     "detail.note.info": "Note",
     "detail.note.warning": "Avertissement",
     "detail.note.cross-reactivity": "Reactivite croisee",
+    "detail.tabTesting": "Tests",
+    "detail.tabCross": "Croisee",
+    "detail.tabDilution": "Dilution",
+    "detail.tabSources": "Sources",
     "tests.prick": "Prick",
     "tests.idr": "IDR",
     "tests.patch": "Patch",
@@ -237,7 +253,15 @@ export const dictionary = {
     "crossReactivity.openDrug": "Ouvrir la fiche",
     "crossReactivity.emptyTitle": "Aucune donnee de reactivite croisee",
     "crossReactivity.emptyBody": "Cela n'implique pas l'absence de reactivite croisee. Exercez votre jugement clinique.",
-    "crossReactivity.headerBadge": "reactivite croisee"
+    "crossReactivity.headerBadge": "reactivite croisee",
+    "crossReactivity.whyLinked": "Pourquoi lie ?",
+    "crossReactivity.clinicalNote": "Note clinique",
+    "crossReactivity.addToPanel": "Ajouter au panel",
+    "crossReactivity.addedToPanel": "Ajoute",
+    "crossReactivity.orbitTitle": "Carte de reactivite croisee",
+    "crossReactivity.higherConcern": "Preoccupation elevee",
+    "crossReactivity.lowerExpected": "Moindre attendue",
+    "crossReactivity.uncertainCount": "Incertain"
   }
 } as const;
 
