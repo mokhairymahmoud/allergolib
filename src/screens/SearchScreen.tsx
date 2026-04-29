@@ -79,9 +79,15 @@ export function SearchScreen({
     setActiveSubclass(null);
   }
 
+  const filteredResults = hasQuery && activeClass
+    ? searchResults.filter((r) =>
+        r.drug.className[language] === activeClass &&
+        (!activeSubclass || r.drug.subclassName?.[language] === activeSubclass)
+      )
+    : searchResults;
   const displayDrugs = hasQuery ? null : browseDrugs;
-  const displayResults = hasQuery ? searchResults : null;
-  const resultCount = hasQuery ? searchResults.length : browseDrugs.length;
+  const displayResults = hasQuery ? filteredResults : null;
+  const resultCount = hasQuery ? filteredResults.length : browseDrugs.length;
 
   return (
     <View style={styles.flex1}>
@@ -136,7 +142,7 @@ export function SearchScreen({
             value={query}
           />
           {query.length > 0 ? (
-            <Pressable onPress={() => onChangeQuery("")} hitSlop={8} style={styles.clearButton}>
+            <Pressable onPress={() => { onChangeQuery(""); setActiveClass(null); setActiveSubclass(null); }} hitSlop={8} style={styles.clearButton}>
               <Ionicons name="close-circle" size={18} color={theme.textDisabled} />
             </Pressable>
           ) : null}
