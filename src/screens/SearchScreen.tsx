@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { DrugRow } from "../components/DrugRow";
 import type { DrugSearchResult } from "../lib/drugSearch";
@@ -35,7 +35,6 @@ export function SearchScreen({
   const [activeSubclass, setActiveSubclass] = useState<string | null>(null);
   const [recentCollapsed, setRecentCollapsed] = useState(false);
   const [categoriesCollapsed, setCategoriesCollapsed] = useState(false);
-  const favoriteDrugSet = new Set(favoriteDrugIds);
   const trimmedQuery = query.trim();
   const hasQuery = trimmedQuery.length > 0;
 
@@ -85,9 +84,26 @@ export function SearchScreen({
         (!activeSubclass || r.drug.subclassName?.[language] === activeSubclass)
       )
     : searchResults;
-  const displayDrugs = hasQuery ? null : browseDrugs;
-  const displayResults = hasQuery ? filteredResults : null;
-  const resultCount = hasQuery ? filteredResults.length : browseDrugs.length;
+
+  const listData: DrugSearchResult[] = hasQuery
+    ? filteredResults
+    : browseDrugs.map((drug) => ({ drug, score: Number.MAX_SAFE_INTEGER }));
+  const resultCount = listData.length;
+
+  const renderItem = useCallback(
+    ({ item }: { item: DrugSearchResult }) => (
+      <DrugRow
+        isSaved={favoriteDrugIds.includes(item.drug.id)}
+        language={language}
+        onPress={() => onOpenDrug(item.drug.id)}
+        onToggleFavorite={() => onToggleFavorite(item.drug.id)}
+        result={item}
+      />
+    ),
+    [favoriteDrugIds, language, onOpenDrug, onToggleFavorite],
+  );
+
+  const keyExtractor = useCallback((item: DrugSearchResult) => item.drug.id, []);
 
   return (
     <View style={styles.flex1}>
@@ -260,54 +276,31 @@ export function SearchScreen({
         </View>
       </View>
 
-      {/* Scrollable results */}
-      <ScrollView
+      {/* Virtualized results */}
+      <FlatList
+        data={listData}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
         style={styles.scrollView}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-      >
-        <Text style={styles.resultCount}>
-          {resultCount} {copy(language, "search.results")}
-        </Text>
-
-        {hasQuery && displayResults !== null ? (
-          displayResults.length ? (
-            <View style={styles.resultsList}>
-              {displayResults.map((result) => (
-                <DrugRow
-                  key={result.drug.id}
-                  isSaved={favoriteDrugSet.has(result.drug.id)}
-                  language={language}
-                  onPress={() => onOpenDrug(result.drug.id)}
-                  onToggleFavorite={() => onToggleFavorite(result.drug.id)}
-                  result={result}
-                />
-              ))}
-            </View>
-          ) : (
+        ListHeaderComponent={
+          <Text style={styles.resultCount}>
+            {resultCount} {copy(language, "search.results")}
+          </Text>
+        }
+        ListEmptyComponent={
+          hasQuery ? (
             <View style={styles.emptyCard}>
               <Ionicons name="search-outline" size={32} color={theme.textDisabled} style={styles.emptyIcon} />
               <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
               <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
             </View>
-          )
-        ) : displayDrugs !== null ? (
-          <View style={styles.resultsList}>
-            {displayDrugs.map((drug) => (
-              <DrugRow
-                key={drug.id}
-                isSaved={favoriteDrugSet.has(drug.id)}
-                language={language}
-                onPress={() => onOpenDrug(drug.id)}
-                onToggleFavorite={() => onToggleFavorite(drug.id)}
-                result={{ drug, score: Number.MAX_SAFE_INTEGER }}
-              />
-            ))}
-          </View>
-        ) : null}
-
-      </ScrollView>
+          ) : null
+        }
+        ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
+      />
     </View>
   );
 }
@@ -463,20 +456,18 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
     },
     subclassChipCountTextActive: { color: theme.subclassBadgeText },
     scrollView: { flex: 1, backgroundColor: theme.bg },
-    content: {
-      flexGrow: 1,
+    listContent: {
       paddingHorizontal: 16,
       paddingTop: 12,
       paddingBottom: 32,
-      gap: 16,
     },
     resultCount: {
       color: theme.textSecondary,
       fontSize: 13,
       fontWeight: "500",
-      marginBottom: -4,
+      marginBottom: 6,
     },
-    resultsList: { gap: 10 },
+    itemSeparator: { height: 10 },
     emptyCard: {
       backgroundColor: theme.surface,
       borderRadius: 12,
