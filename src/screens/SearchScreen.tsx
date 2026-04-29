@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
-import { ComplianceBanner } from "../components/ComplianceBanner";
 import { DrugRow } from "../components/DrugRow";
 import type { DrugSearchResult } from "../lib/drugSearch";
 import { copy } from "../lib/i18n";
@@ -34,8 +33,8 @@ export function SearchScreen({
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const [activeClass, setActiveClass] = useState<string | null>(null);
   const [activeSubclass, setActiveSubclass] = useState<string | null>(null);
-  const [recentCollapsed, setRecentCollapsed] = useState(true);
-  const [categoriesCollapsed, setCategoriesCollapsed] = useState(true);
+  const [recentCollapsed, setRecentCollapsed] = useState(false);
+  const [categoriesCollapsed, setCategoriesCollapsed] = useState(false);
   const favoriteDrugSet = new Set(favoriteDrugIds);
   const trimmedQuery = query.trim();
   const hasQuery = trimmedQuery.length > 0;
@@ -130,7 +129,7 @@ export function SearchScreen({
           <TextInput
             autoCapitalize="none"
             autoCorrect={false}
-            onChangeText={(v) => { onChangeQuery(v); setActiveClass(null); }}
+            onChangeText={onChangeQuery}
             placeholder={copy(language, "search.placeholder")}
             placeholderTextColor={theme.textDisabled}
             style={styles.input}
@@ -260,6 +259,7 @@ export function SearchScreen({
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         <Text style={styles.resultCount}>
           {resultCount} {copy(language, "search.results")}
@@ -301,7 +301,6 @@ export function SearchScreen({
           </View>
         ) : null}
 
-        <ComplianceBanner language={language} />
       </ScrollView>
     </View>
   );

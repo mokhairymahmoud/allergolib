@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { ComplianceBanner } from "../../components/ComplianceBanner";
 import { NoteList } from "../../components/NoteList";
 import { SourceCard } from "../../components/SourceCard";
 import { extractConcentrationUnit } from "../../lib/dilutionCalculator";
@@ -145,7 +144,7 @@ export function DetailScreen({
   const sourcesDisagree = nonPreferredEntries.some(
     (e) => e.concentration && e.concentration !== preferredEntry?.concentration
   );
-  const [headerExpanded, setHeaderExpanded] = useState(false);
+  const [headerExpanded, setHeaderExpanded] = useState(true);
 
   const metricItems: DetailMetricItem[] = [];
 
@@ -442,7 +441,6 @@ export function DetailScreen({
           </>
         ) : null}
 
-        <ComplianceBanner language={language} />
       </ScrollView>
     </View>
   );

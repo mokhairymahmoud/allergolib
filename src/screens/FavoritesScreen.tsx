@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { ComplianceBanner } from "../components/ComplianceBanner";
 import { DrugRow } from "../components/DrugRow";
 import { copy } from "../lib/i18n";
 import { useTheme } from "../theme/ThemeContext";
@@ -104,7 +103,6 @@ export function FavoritesScreen({
         </View>
       )}
 
-      <ComplianceBanner language={language} />
     </ScrollView>
   );
 }

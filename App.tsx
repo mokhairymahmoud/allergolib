@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import React, { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
   PanResponder,
@@ -240,7 +241,7 @@ export default function App() {
   const swipeBack = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) =>
-        g.dx > 10 && Math.abs(g.dy) < 60 && g.moveX < 60,
+        g.dx > 10 && Math.abs(g.dy) < 60 && g.moveX < 100,
       onPanResponderMove: (_, g) => {
         if (g.dx > 0) slideX.setValue(g.dx);
       },
@@ -297,42 +298,50 @@ export default function App() {
                 </Pressable>
                 <Pressable onPress={() => setLanguage(language === "fr" ? "en" : "fr")} style={styles.pill}>
                   <Ionicons name="globe-outline" size={14} color={theme.textSecondary} />
-                  <Text style={styles.pillText}>{language.toUpperCase()}</Text>
+                  <Text style={styles.pillText}>{language === "fr" ? "EN" : "FR"}</Text>
                 </Pressable>
               </View>
 
               <View style={styles.mainContent}>
-                {homeTab === "search" ? (
-                  <SearchScreen
-                    allDrugs={activeDataset.dataset.drugs}
-                    favoriteDrugIds={favoriteDrugIds}
-                    language={language}
-                    onChangeQuery={setQuery}
-                    onOpenDrug={openDrug}
-                    onToggleFavorite={toggleFavorite}
-                    query={query}
-                    recentDrugs={recentDrugs}
-                    searchResults={searchResults}
-                  />
-                ) : null}
+                {!favoritesHydrated || !recentHydrated ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={theme.accent} />
+                  </View>
+                ) : (
+                  <>
+                    {homeTab === "search" ? (
+                      <SearchScreen
+                        allDrugs={activeDataset.dataset.drugs}
+                        favoriteDrugIds={favoriteDrugIds}
+                        language={language}
+                        onChangeQuery={setQuery}
+                        onOpenDrug={openDrug}
+                        onToggleFavorite={toggleFavorite}
+                        query={query}
+                        recentDrugs={recentDrugs}
+                        searchResults={searchResults}
+                      />
+                    ) : null}
 
-                {homeTab === "favorites" ? (
-                  <FavoritesScreen
-                    favoriteDrugIds={favoriteDrugIds}
-                    favoriteDrugs={favoriteDrugs}
-                    language={language}
-                    onOpenDrug={openDrug}
-                    onToggleFavorite={toggleFavorite}
-                  />
-                ) : null}
+                    {homeTab === "favorites" ? (
+                      <FavoritesScreen
+                        favoriteDrugIds={favoriteDrugIds}
+                        favoriteDrugs={favoriteDrugs}
+                        language={language}
+                        onOpenDrug={openDrug}
+                        onToggleFavorite={toggleFavorite}
+                      />
+                    ) : null}
 
-                {homeTab === "info" ? (
-                  <InfoScreen
-                    manifest={activeDataset.manifest}
-                    origin={activeDataset.origin}
-                    language={language}
-                  />
-                ) : null}
+                    {homeTab === "info" ? (
+                      <InfoScreen
+                        manifest={activeDataset.manifest}
+                        origin={activeDataset.origin}
+                        language={language}
+                      />
+                    ) : null}
+                  </>
+                )}
               </View>
 
               {/* Bottom tab bar */}
@@ -418,6 +427,11 @@ function makeStyles(theme: typeof lightTheme) {
     },
     mainContent: {
       flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
     },
     topBar: {
       flexDirection: "row",

@@ -44,7 +44,6 @@ export function OrbitMap({
   } | null>(null);
 
   const [expandedGroupIdx, setExpandedGroupIdx] = useState<number | null>(null);
-  const [tooltipGroupIdx, setTooltipGroupIdx] = useState<number | null>(null);
   const sheetSlide = useRef(new Animated.Value(400)).current;
 
   const prevSheetEntry = useRef(sheetEntry);
@@ -211,7 +210,7 @@ export function OrbitMap({
 
   return (
     <View style={{ gap: 16 }}>
-      <Pressable style={{ width: sz, height: sz, alignSelf: "center" }} onPress={() => setTooltipGroupIdx(null)}>
+      <View style={{ width: sz, height: sz, alignSelf: "center" }}>
         <Svg width={sz} height={sz}>
           {[...new Set(arcs.map((a) => a.orbitR))].map((r) => {
             const gr = r + arcThickness / 2;
@@ -233,10 +232,7 @@ export function OrbitMap({
               d={arcPath(startAngle, sweepAngle, orbitR, orbitR + arcThickness)}
               fill={nodeColor(tier)}
               opacity={0.9}
-              onPress={() => {
-                if (tooltipGroupIdx === gIdx) { setTooltipGroupIdx(null); setExpandedGroupIdx(gIdx); }
-                else { setTooltipGroupIdx(gIdx); }
-              }}
+              onPress={() => setExpandedGroupIdx(gIdx)}
             />
           ))}
           <Defs>
@@ -261,35 +257,13 @@ export function OrbitMap({
             })}
           </Defs>
           {arcs.map(({ group, idx: gIdx }) => (
-            <SvgText key={`txt-${gIdx}`} fill="#FFF" fontSize={10} fontWeight="700" dy={4} textAnchor="middle" onPress={() => {
-              if (tooltipGroupIdx === gIdx) { setTooltipGroupIdx(null); setExpandedGroupIdx(gIdx); }
-              else { setTooltipGroupIdx(gIdx); }
-            }}>
+            <SvgText key={`txt-${gIdx}`} fill="#FFF" fontSize={10} fontWeight="700" dy={4} textAnchor="middle" onPress={() => setExpandedGroupIdx(gIdx)}>
               <TextPath href={`#textarc-${gIdx}`} startOffset="50%">
                 {group.groupName[language]}
               </TextPath>
             </SvgText>
           ))}
         </Svg>
-
-        {/* Tooltip */}
-        {tooltipGroupIdx !== null ? (() => {
-          const arc = arcs.find((a) => a.idx === tooltipGroupIdx);
-          if (!arc) return null;
-          const tipR = arc.orbitR + arcThickness + 12;
-          const tx = c + tipR * Math.cos(arc.midAngle);
-          const ty = c + tipR * Math.sin(arc.midAngle);
-          const tipW = 200;
-          return (
-            <View style={{ position: "absolute", left: tx - tipW / 2, top: ty - 18, width: tipW, zIndex: 50, alignItems: "center" }} pointerEvents="none">
-              <View style={{ backgroundColor: theme.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8, borderWidth: 1, borderColor: theme.border }}>
-                <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: "700", textAlign: "center" }}>{arc.group.groupName[language]}</Text>
-                <Text style={{ color: nodeColor(arc.tier), fontSize: 12, fontWeight: "800", textAlign: "center", marginTop: 2 }}>{arc.group.entries.length} {copy(language, "crossReactivity.drugs")}</Text>
-                <Text style={{ color: theme.textSecondary, fontSize: 10, textAlign: "center", marginTop: 2 }}>{copy(language, "crossReactivity.tapToExplore")}</Text>
-              </View>
-            </View>
-          );
-        })() : null}
 
         {/* Center node */}
         <View style={{ position: "absolute", left: c - centerR, top: c - centerR, width: centerR * 2, height: centerR * 2, zIndex: 10 }}>
@@ -299,7 +273,7 @@ export function OrbitMap({
             <Text style={{ color: "#FFF", fontSize: centerFontSize(drug.name[language], centerR), fontWeight: "800", textAlign: "center", paddingHorizontal: 4, lineHeight: centerFontSize(drug.name[language], centerR) + 3 }} numberOfLines={drug.name[language].trim().split(/\s+/).length >= 2 ? 2 : 1}>{drug.name[language]}</Text>
           </View>
         </View>
-      </Pressable>
+      </View>
 
       <Text style={{ fontSize: 12, color: theme.textSecondary, textAlign: "center", fontStyle: "italic" }}>
         {copy(language, "crossReactivity.mapHint")} {drug.name[language].toLowerCase()}.
