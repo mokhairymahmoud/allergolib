@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import Svg, { Circle, Line } from "react-native-svg";
+import Svg, { Circle, Defs, Line, Path, Text as SvgText, TextPath } from "react-native-svg";
 
 import { copy } from "../../lib/i18n";
 import { useTheme } from "../../theme/ThemeContext";
@@ -129,60 +129,124 @@ export function OrbitMap({
     }
   }
 
-  // ─── Hub-and-spoke geometry ─────────────────────────────────────────────
+  // ─── Concentric arcs geometry ────────────────────────────────────────────
   const screenW = Dimensions.get("window").width - 32;
-  const centerR = 38;
-  const groupR = 32;
-  const ringRadii: Record<CrossReactivityTier, number> = {
-    "higher-concern": centerR + 50,
-    "lower-expected": centerR + 95,
-    "uncertain": centerR + 140,
+  const centerR = 40;
+  const ringGap = 6;
+  const firstRingOffset = 10;
+  const minArcThickness = 22;
+  const maxArcThickness = 52;
+
+  const maxEntryCount = Math.max(...groups.map((g) => g.entries.length), 1);
+
+  function arcThicknessForCount(count: number) {
+    const t = count / maxEntryCount;
+    return minArcThickness + t * (maxArcThickness - minArcThickness);
+  }
+
+  type ArcData = {
+    group: CrossReactivityGroup; idx: number; tier: CrossReactivityTier;
+    innerR: number; outerR: number; startAngle: number; sweepAngle: number; midAngle: number;
+  };
+  const arcs: ArcData[] = [];
+
+  const tierBaseOffsets: Record<CrossReactivityTier, number> = {
+    "higher-concern": -Math.PI / 2,
+    "lower-expected": -Math.PI / 2 + (2 * Math.PI) / 3,
+    "uncertain": -Math.PI / 2 - (2 * Math.PI) / 3,
   };
 
-  type NodeData = { group: CrossReactivityGroup; idx: number; tier: CrossReactivityTier; x: number; y: number };
+  let currentR = centerR + firstRingOffset;
+  for (const tier of tierOrder) {
+    const tierGroups = groups.map((g, i) => ({ group: g, idx: i })).filter(({ group }) => highestTier(group.entries) === tier);
+    if (tierGroups.length === 0) continue;
 
-  const sortedGroups = groups.map((g, i) => ({ group: g, idx: i, tier: highestTier(g.entries) }))
-    .sort((a, b) => tierOrder.indexOf(a.tier) - tierOrder.indexOf(b.tier));
+    const thicknesses = tierGroups.map(({ group }) => arcThicknessForCount(group.entries.length));
+    const tierThickness = Math.max(...thicknesses);
 
-  const angleStep = (2 * Math.PI) / Math.max(sortedGroups.length, 1);
-  const startAngle = -Math.PI / 2;
-  const nodes: NodeData[] = sortedGroups.map((sg, i) => {
-    const angle = startAngle + angleStep * i;
-    const r = ringRadii[sg.tier];
-    return { group: sg.group, idx: sg.idx, tier: sg.tier, x: r * Math.cos(angle), y: r * Math.sin(angle) };
-  });
+    const n = tierGroups.length;
+    const gapAngle = 0.15;
+    const sweepPerGroup = (2 * Math.PI - gapAngle * n) / n;
+    const clampedSweep = Math.min(sweepPerGroup, Math.PI * 0.85);
+    const totalUsed = clampedSweep * n + gapAngle * n;
+    let angle = tierBaseOffsets[tier] - totalUsed / 2 + gapAngle / 2;
 
-  const usedTiers = [...new Set(nodes.map((n) => n.tier))];
-  const maxRing = Math.max(...usedTiers.map((t) => ringRadii[t]));
-  const sz = (maxRing + groupR + 40) * 2;
+    for (let i = 0; i < tierGroups.length; i++) {
+      const { group, idx } = tierGroups[i];
+      const thickness = thicknesses[i];
+      const innerR = currentR + (tierThickness - thickness) / 2;
+      const outerR = innerR + thickness;
+      arcs.push({ group, idx, tier, innerR, outerR, startAngle: angle, sweepAngle: clampedSweep, midAngle: angle + clampedSweep / 2 });
+      angle += clampedSweep + gapAngle;
+    }
+    currentR += tierThickness + ringGap;
+  }
+
+  const maxOuterR = Math.max(...arcs.map((a) => a.outerR), centerR + 30);
+  const sz = Math.min((maxOuterR + 55) * 2, screenW + 16);
   const ctr = sz / 2;
+
+  function arcPath(sa: number, sweep: number, innerR: number, outerR: number): string {
+    const ea = sa + sweep;
+    const large = sweep > Math.PI ? 1 : 0;
+    const ox1 = ctr + outerR * Math.cos(sa), oy1 = ctr + outerR * Math.sin(sa);
+    const ox2 = ctr + outerR * Math.cos(ea), oy2 = ctr + outerR * Math.sin(ea);
+    const ix2 = ctr + innerR * Math.cos(ea), iy2 = ctr + innerR * Math.sin(ea);
+    const ix1 = ctr + innerR * Math.cos(sa), iy1 = ctr + innerR * Math.sin(sa);
+    return `M ${ox1} ${oy1} A ${outerR} ${outerR} 0 ${large} 1 ${ox2} ${oy2} L ${ix2} ${iy2} A ${innerR} ${innerR} 0 ${large} 0 ${ix1} ${iy1} Z`;
+  }
 
   return (
     <View style={{ gap: 16 }}>
-      {/* ─── Hub-and-spoke diagram ─── */}
-      <View style={{ width: sz, height: sz, alignSelf: "center", maxWidth: screenW + 16 }}>
-        {/* SVG: ring guides + connecting lines */}
-        <Svg width={sz} height={sz} style={StyleSheet.absoluteFill}>
-          {usedTiers.map((tier) => (
-            <Circle
-              key={`ring-${tier}`}
-              cx={ctr} cy={ctr} r={ringRadii[tier]}
-              fill="none"
-              stroke={theme.borderMid}
-              strokeWidth={1}
-              strokeDasharray="4,6"
-              opacity={0.3}
+      {/* ─── Concentric arcs diagram ─── */}
+      <View style={{ width: sz, height: sz, alignSelf: "center" }}>
+        <Svg width={sz} height={sz}>
+          {/* Guide rings */}
+          {[...new Set(arcs.map((a) => (a.innerR + a.outerR) / 2))].map((r, i) => (
+            <Circle key={`guide-${i}`} cx={ctr} cy={ctr} r={r} fill="none" stroke={theme.borderMid} strokeWidth={1} strokeDasharray="4,6" opacity={0.2} />
+          ))}
+          {/* Arcs */}
+          {arcs.map(({ tier, innerR, outerR, startAngle, sweepAngle, idx }) => (
+            <Path
+              key={`arc-${idx}`}
+              d={arcPath(startAngle, sweepAngle, innerR, outerR)}
+              fill={nodeColor(tier)}
+              opacity={expandedGroupIdx === idx ? 1 : 0.8}
+              onPress={() => setExpandedGroupIdx(expandedGroupIdx === idx ? null : idx)}
             />
           ))}
-          {nodes.map(({ x, y, tier, idx }) => (
-            <Line
-              key={`line-${idx}`}
-              x1={ctr} y1={ctr}
-              x2={ctr + x} y2={ctr + y}
-              stroke={nodeColor(tier)}
-              strokeWidth={1.5}
-              opacity={0.35}
-            />
+          {/* Text paths */}
+          <Defs>
+            {arcs.map(({ startAngle, sweepAngle, innerR, outerR, idx, midAngle }) => {
+              const textR = (innerR + outerR) / 2;
+              const sa = startAngle;
+              const ea = startAngle + sweepAngle;
+              const normMid = ((midAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+              const isBottom = normMid > Math.PI * 0.15 && normMid < Math.PI * 0.85;
+              if (isBottom) {
+                const sx = ctr + textR * Math.cos(ea), sy = ctr + textR * Math.sin(ea);
+                const ex = ctr + textR * Math.cos(sa), ey = ctr + textR * Math.sin(sa);
+                return <Path key={`tp-${idx}`} id={`tp-${idx}`} d={`M ${sx} ${sy} A ${textR} ${textR} 0 0 0 ${ex} ${ey}`} fill="none" />;
+              }
+              const sx = ctr + textR * Math.cos(sa), sy = ctr + textR * Math.sin(sa);
+              const ex = ctr + textR * Math.cos(ea), ey = ctr + textR * Math.sin(ea);
+              return <Path key={`tp-${idx}`} id={`tp-${idx}`} d={`M ${sx} ${sy} A ${textR} ${textR} 0 0 1 ${ex} ${ey}`} fill="none" />;
+            })}
+          </Defs>
+          {arcs.map(({ group, idx }) => (
+            <SvgText
+              key={`txt-${idx}`}
+              fill="#FFF"
+              fontSize={10}
+              fontWeight="700"
+              dy={4}
+              textAnchor="middle"
+              onPress={() => setExpandedGroupIdx(expandedGroupIdx === idx ? null : idx)}
+            >
+              <TextPath href={`#tp-${idx}`} startOffset="50%">
+                {group.groupName[language]} ({group.entries.length})
+              </TextPath>
+            </SvgText>
           ))}
         </Svg>
 
@@ -206,63 +270,6 @@ export function OrbitMap({
             </Text>
           </View>
         </View>
-
-        {/* Group nodes */}
-        {nodes.map(({ group, idx, tier, x, y }) => {
-          const nx = ctr + x;
-          const ny = ctr + y;
-          const entryCount = group.entries.length;
-          const isSelected = expandedGroupIdx === idx;
-          return (
-            <Pressable
-              key={`node-${idx}`}
-              onPress={() => setExpandedGroupIdx(isSelected ? null : idx)}
-              style={{
-                position: "absolute",
-                left: nx - groupR,
-                top: ny - groupR,
-                width: groupR * 2,
-                height: groupR * 2,
-                zIndex: 5,
-              }}
-            >
-              <View style={{
-                width: groupR * 2, height: groupR * 2, borderRadius: groupR,
-                backgroundColor: nodeBgColor(tier),
-                borderWidth: isSelected ? 3 : 2,
-                borderColor: isSelected ? nodeColor(tier) : nodeBorderColor(tier),
-                alignItems: "center", justifyContent: "center",
-                shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 3,
-              }}>
-                <Text style={{
-                  color: nodeColor(tier),
-                  fontSize: entryCount >= 10 ? 16 : 18,
-                  fontWeight: "800",
-                }}>
-                  {entryCount}
-                </Text>
-              </View>
-              {/* Label below/above */}
-              <View style={{
-                position: "absolute",
-                top: y >= 0 ? groupR * 2 + 2 : -30,
-                left: -20,
-                width: groupR * 2 + 40,
-                alignItems: "center",
-              }} pointerEvents="none">
-                <Text style={{
-                  color: theme.textPrimary,
-                  fontSize: 11,
-                  fontWeight: "700",
-                  textAlign: "center",
-                  lineHeight: 14,
-                }} numberOfLines={2}>
-                  {group.groupName[language]}
-                </Text>
-              </View>
-            </Pressable>
-          );
-        })}
       </View>
 
       {/* Hint */}
