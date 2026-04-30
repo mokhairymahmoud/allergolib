@@ -158,3 +158,12 @@ export function centerFontSize(name: string, radius: number): number {
   const fitted = Math.floor(usableWidth / (longest * 0.58));
   return Math.min(Math.max(fitted, 9), 16);
 }
+
+export function centerMaxLines(name: string, radius: number): number {
+  const words = name.trim().split(/\s+/);
+  if (words.length <= 1) return 1;
+  const fontSize = centerFontSize(name, radius);
+  const lineH = fontSize + 3;
+  const usableHeight = radius * 2 * 0.75;
+  return Math.min(words.length, Math.max(2, Math.floor(usableHeight / lineH)));
+}
