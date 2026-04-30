@@ -8,6 +8,19 @@ import { copy } from "../lib/i18n";
 import { useTheme } from "../theme/ThemeContext";
 import type { DrugRecord, Language } from "../types";
 
+type CategoryIconName = React.ComponentProps<typeof Ionicons>["name"];
+
+function categoryIcon(cls: string): CategoryIconName {
+  const lower = cls.toLowerCase();
+  if (lower.includes("beta-lactam") || lower.includes("bêta-lactam")) return "medical-outline";
+  if (lower.includes("morphini") || lower.includes("antalgi") || lower.includes("opioid")) return "fitness-outline";
+  if (lower.includes("anesth")) return "water-outline";
+  if (lower.includes("curare") || lower.includes("neuromusc")) return "pulse-outline";
+  if (lower.includes("hypnoti")) return "moon-outline";
+  if (lower.includes("colorant") || lower.includes("dye")) return "color-palette-outline";
+  return "flask-outline";
+}
+
 export function SearchScreen({
   language,
   query,
@@ -33,22 +46,28 @@ export function SearchScreen({
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const [activeClass, setActiveClass] = useState<string | null>(null);
   const [activeSubclass, setActiveSubclass] = useState<string | null>(null);
-  const [recentCollapsed, setRecentCollapsed] = useState(true);
-  const [categoriesCollapsed, setCategoriesCollapsed] = useState(true);
+  const [browseAll, setBrowseAll] = useState(false);
   const trimmedQuery = query.trim();
   const hasQuery = trimmedQuery.length > 0;
 
-  const drugClasses = [...new Set(allDrugs.map((d) => d.className[language]))]
-    .sort()
-    .sort((a, b) => {
-      const miscEn = "Miscellaneous";
-      const miscFr = "Divers";
-      const aIsMisc = a === miscEn || a === miscFr;
-      const bIsMisc = b === miscEn || b === miscFr;
-      if (aIsMisc && !bIsMisc) return 1;
-      if (!aIsMisc && bIsMisc) return -1;
-      return 0;
-    });
+  const drugClassEntries = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const d of allDrugs) {
+      const cls = d.className[language];
+      map.set(cls, (map.get(cls) ?? 0) + 1);
+    }
+    return [...map.entries()]
+      .sort(([a], [b]) => a.localeCompare(b, language))
+      .sort(([a], [b]) => {
+        const miscEn = "Miscellaneous";
+        const miscFr = "Divers";
+        const aIsMisc = a === miscEn || a === miscFr;
+        const bIsMisc = b === miscEn || b === miscFr;
+        if (aIsMisc && !bIsMisc) return 1;
+        if (!aIsMisc && bIsMisc) return -1;
+        return 0;
+      });
+  }, [allDrugs, language]);
 
   const activeClassDrugs = activeClass
     ? allDrugs.filter((d) => d.className[language] === activeClass)
@@ -74,8 +93,14 @@ export function SearchScreen({
   ).slice().sort((a, b) => a.name[language].localeCompare(b.name[language], language));
 
   function handleClassPress(cls: string) {
-    setActiveClass(cls);
-    setActiveSubclass(null);
+    setBrowseAll(false);
+    if (cls === activeClass) {
+      setActiveClass(null);
+      setActiveSubclass(null);
+    } else {
+      setActiveClass(cls);
+      setActiveSubclass(null);
+    }
   }
 
   const filteredResults = hasQuery && activeClass
@@ -105,47 +130,12 @@ export function SearchScreen({
 
   const keyExtractor = useCallback((item: DrugSearchResult) => item.drug.id, []);
 
+  const showBrowseView = !hasQuery && !activeClass && !browseAll;
+
   return (
     <View style={styles.flex1}>
-      {/* Sticky header */}
-      <View style={styles.stickyHeader}>
-        {/* Recent searches */}
-        {!hasQuery && recentDrugs.length > 0 ? (
-          <View style={styles.section}>
-            <Pressable
-              onPress={() => setRecentCollapsed((v) => !v)}
-              style={styles.sectionLabelRow}
-              hitSlop={8}
-            >
-              <Text style={styles.sectionLabel}>{copy(language, "search.recentTitle")}</Text>
-              <Ionicons
-                name={recentCollapsed ? "chevron-forward" : "chevron-down"}
-                size={14}
-                color={theme.textSecondary}
-              />
-            </Pressable>
-            {!recentCollapsed ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.chipList}
-                style={styles.chipScroll}
-              >
-                {recentDrugs.map((drug) => (
-                  <Pressable
-                    key={`recent-${drug.id}`}
-                    onPress={() => onOpenDrug(drug.id)}
-                    style={styles.recentChip}
-                  >
-                    <Text style={styles.recentChipText} numberOfLines={1}>{drug.name[language]}</Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            ) : null}
-          </View>
-        ) : null}
-
-        {/* Search input */}
+      {/* Search input — always at top */}
+      <View style={styles.searchHeader}>
         <View style={styles.inputWrap}>
           <Ionicons name="search" size={18} color={theme.textSecondary} style={styles.searchIcon} />
           <TextInput
@@ -158,149 +148,182 @@ export function SearchScreen({
             value={query}
           />
           {query.length > 0 ? (
-            <Pressable onPress={() => { onChangeQuery(""); setActiveClass(null); setActiveSubclass(null); }} hitSlop={8} style={styles.clearButton}>
+            <Pressable onPress={() => { onChangeQuery(""); setActiveClass(null); setActiveSubclass(null); setBrowseAll(false); }} hitSlop={8} style={styles.clearButton}>
               <Ionicons name="close-circle" size={18} color={theme.textDisabled} />
             </Pressable>
           ) : null}
         </View>
 
-        {/* Category chips */}
-        <View style={styles.section}>
-          <Pressable
-            onPress={() => setCategoriesCollapsed((v) => !v)}
-            style={styles.sectionLabelRow}
-            hitSlop={8}
+        {/* Category filter chips — shown when searching or browsing a category */}
+        {(hasQuery || activeClass || browseAll) ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterChipList}
+            style={styles.filterChipScroll}
+            keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.sectionLabel}>{copy(language, "search.categories")}</Text>
-            <Ionicons
-              name={categoriesCollapsed ? "chevron-forward" : "chevron-down"}
-              size={14}
-              color={theme.textSecondary}
-            />
-          </Pressable>
-          {!categoriesCollapsed ? (
-            <>
+            <Pressable
+              onPress={() => { setActiveClass(null); setActiveSubclass(null); }}
+              style={[styles.filterChip, activeClass === null && (hasQuery || browseAll) && styles.filterChipActive]}
+            >
+              <Text style={[styles.filterChipText, activeClass === null && (hasQuery || browseAll) && styles.filterChipTextActive]}>
+                {copy(language, "search.categoryAll")}
+              </Text>
+            </Pressable>
+            {drugClassEntries.map(([cls]) => {
+              const active = cls === activeClass;
+              return (
+                <Pressable
+                  key={cls}
+                  onPress={() => handleClassPress(cls)}
+                  style={[styles.filterChip, active && styles.filterChipActive]}
+                >
+                  <Text style={[styles.filterChipText, active && styles.filterChipTextActive]} numberOfLines={1}>
+                    {cls}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        ) : null}
+
+        {/* Subclass chips */}
+        {activeClass && subclasses.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterChipList}
+            style={styles.filterChipScroll}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Pressable
+              onPress={() => setActiveSubclass(null)}
+              style={[styles.subFilterChip, activeSubclass === null && styles.subFilterChipActive]}
+            >
+              <Text style={[styles.subFilterChipText, activeSubclass === null && styles.subFilterChipTextActive]}>
+                {copy(language, "search.categoryAll")}
+              </Text>
+            </Pressable>
+            {subclasses.map((sub) => {
+              const active = sub === activeSubclass;
+              return (
+                <Pressable
+                  key={sub}
+                  onPress={() => setActiveSubclass(sub)}
+                  style={[styles.subFilterChip, active && styles.subFilterChipActive]}
+                >
+                  <Text style={[styles.subFilterChipText, active && styles.subFilterChipTextActive]} numberOfLines={1}>
+                    {sub}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        ) : null}
+      </View>
+
+      {showBrowseView ? (
+        /* ─── Browse view: recents + category grid ─── */
+        <ScrollView
+          style={styles.browseScroll}
+          contentContainerStyle={styles.browseContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
+          {/* Recent searches */}
+          {recentDrugs.length > 0 ? (
+            <View style={styles.recentSection}>
+              <Text style={styles.sectionLabel}>{copy(language, "search.recentTitle")}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.chipList}
-                style={styles.chipScroll}
-                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={styles.recentList}
               >
-                <Pressable
-                  onPress={() => { setActiveClass(null); setActiveSubclass(null); }}
-                  style={[styles.categoryChip, activeClass === null && styles.categoryChipActive]}
-                >
-                  <Text style={[styles.categoryChipText, activeClass === null && styles.categoryChipTextActive]}>
-                    {copy(language, "search.categoryAll")}
-                  </Text>
-                  <View style={[styles.chipCount, activeClass === null && styles.chipCountActive]}>
-                    <Text style={[styles.chipCountText, activeClass === null && styles.chipCountTextActive]}>
-                      {allDrugs.length}
-                    </Text>
-                  </View>
-                </Pressable>
-
-                {drugClasses.map((cls) => {
-                  const active = cls === activeClass;
-                  const count = allDrugs.filter((d) => d.className[language] === cls).length;
-                  return (
-                    <Pressable
-                      key={cls}
-                      onPress={() => handleClassPress(cls)}
-                      style={[styles.categoryChip, active && styles.categoryChipActive]}
-                    >
-                      <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>
-                        {cls}
-                      </Text>
-                      <View style={[styles.chipCount, active && styles.chipCountActive]}>
-                        <Text style={[styles.chipCountText, active && styles.chipCountTextActive]}>
-                          {count}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-
-              {subclasses.length > 0 ? (
-                <View style={styles.section}>
-                  <Text style={styles.sectionLabel}>{copy(language, "search.subcategories")}</Text>
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.chipList}
-                    style={styles.chipScroll}
-                    keyboardShouldPersistTaps="handled"
+                {recentDrugs.map((drug) => (
+                  <Pressable
+                    key={`recent-${drug.id}`}
+                    onPress={() => onOpenDrug(drug.id)}
+                    style={styles.recentChip}
                   >
-                    <Pressable
-                      onPress={() => setActiveSubclass(null)}
-                      style={[styles.subclassChip, activeSubclass === null && styles.subclassChipActive]}
-                    >
-                      <Text style={[styles.subclassChipText, activeSubclass === null && styles.subclassChipTextActive]}>
-                        {copy(language, "search.categoryAll")}
-                      </Text>
-                      <View style={[styles.subclassChipCount, activeSubclass === null && styles.subclassChipCountActive]}>
-                        <Text style={[styles.subclassChipCountText, activeSubclass === null && styles.subclassChipCountTextActive]}>
-                          {activeClassDrugs.length}
-                        </Text>
-                      </View>
-                    </Pressable>
-                    {subclasses.map((sub) => {
-                      const active = sub === activeSubclass;
-                      const count = activeClassDrugs.filter(
-                        (d) => d.subclassName?.[language] === sub
-                      ).length;
-                      return (
-                        <Pressable
-                          key={sub}
-                          onPress={() => setActiveSubclass(sub)}
-                          style={[styles.subclassChip, active && styles.subclassChipActive]}
-                        >
-                          <Text style={[styles.subclassChipText, active && styles.subclassChipTextActive]}>
-                            {sub}
-                          </Text>
-                          <View style={[styles.subclassChipCount, active && styles.subclassChipCountActive]}>
-                            <Text style={[styles.subclassChipCountText, active && styles.subclassChipCountTextActive]}>
-                              {count}
-                            </Text>
-                          </View>
-                        </Pressable>
-                      );
-                    })}
-                  </ScrollView>
-                </View>
-              ) : null}
-            </>
-          ) : null}
-        </View>
-      </View>
-
-      {/* Virtualized results */}
-      <FlatList
-        data={listData}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        style={styles.scrollView}
-        contentContainerStyle={styles.listContent}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        ListHeaderComponent={
-          <Text style={styles.resultCount}>
-            {resultCount} {copy(language, hasQuery ? "search.results" : "search.resultsAll")}
-          </Text>
-        }
-        ListEmptyComponent={
-          hasQuery ? (
-            <View style={styles.emptyCard}>
-              <Ionicons name="search-outline" size={32} color={theme.textDisabled} style={styles.emptyIcon} />
-              <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
-              <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
+                    <Ionicons name="time-outline" size={13} color={theme.textSecondary} />
+                    <Text style={styles.recentChipText} numberOfLines={1}>{drug.name[language]}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
             </View>
-          ) : null
-        }
-        ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
-      />
+          ) : null}
+
+          {/* Category grid */}
+          <View style={styles.categorySection}>
+            <Text style={styles.sectionLabel}>{copy(language, "search.categories")}</Text>
+            <View style={styles.categoryGrid}>
+              {drugClassEntries.map(([cls, count]) => (
+                <Pressable
+                  key={cls}
+                  onPress={() => handleClassPress(cls)}
+                  style={styles.categoryCard}
+                >
+                  <View style={styles.categoryCardIcon}>
+                    <Ionicons name={categoryIcon(cls)} size={20} color={theme.accent} />
+                  </View>
+                  <Text style={styles.categoryCardName} numberOfLines={2}>{cls}</Text>
+                  <Text style={styles.categoryCardCount}>
+                    {count} {count === 1
+                      ? (language === "fr" ? "médicament" : "drug")
+                      : (language === "fr" ? "médicaments" : "drugs")}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          {/* All drugs count as a tap target */}
+          <Pressable
+            onPress={() => setBrowseAll(true)}
+            style={styles.browseAllCard}
+          >
+            <Ionicons name="list-outline" size={18} color={theme.accent} />
+            <Text style={styles.browseAllText}>
+              {copy(language, "search.categoryAll")} — {allDrugs.length} {language === "fr" ? "médicaments" : "drugs"}
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color={theme.textDisabled} />
+          </Pressable>
+        </ScrollView>
+      ) : (
+        /* ─── Results list: search or filtered browse ─── */
+        <FlatList
+          data={listData}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          style={styles.scrollView}
+          contentContainerStyle={styles.listContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          ListHeaderComponent={
+            <View style={styles.resultHeader}>
+              <Text style={styles.resultCount}>
+                {resultCount} {copy(language, hasQuery ? "search.results" : "search.resultsAll")}
+              </Text>
+              {(activeClass || browseAll) && !hasQuery ? (
+                <Pressable onPress={() => { setActiveClass(null); setActiveSubclass(null); setBrowseAll(false); }} hitSlop={8}>
+                  <Text style={styles.clearFilter}>{language === "fr" ? "Effacer" : "Clear"}</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          }
+          ListEmptyComponent={
+            hasQuery ? (
+              <View style={styles.emptyCard}>
+                <Ionicons name="search-outline" size={32} color={theme.textDisabled} style={styles.emptyIcon} />
+                <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
+                <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
+              </View>
+            ) : null
+          }
+          ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
+        />
+      )}
     </View>
   );
 }
@@ -308,48 +331,16 @@ export function SearchScreen({
 function makeStyles(theme: ReturnType<typeof useTheme>) {
   return StyleSheet.create({
     flex1: { flex: 1 },
-    stickyHeader: {
+
+    /* ─── Search header ─── */
+    searchHeader: {
       backgroundColor: theme.bg,
       paddingHorizontal: 16,
       paddingTop: 12,
-      paddingBottom: 8,
-      gap: 12,
+      paddingBottom: 10,
+      gap: 10,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
-    },
-    section: { gap: 10 },
-    sectionLabelRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-    },
-    sectionLabel: {
-      color: theme.textPrimary,
-      fontSize: 13,
-      fontWeight: "700",
-      textTransform: "uppercase",
-      letterSpacing: 0.8,
-    },
-    chipScroll: { marginHorizontal: -16 },
-    chipList: { gap: 8, paddingHorizontal: 16 },
-    recentChip: {
-      backgroundColor: theme.surface,
-      borderRadius: 999,
-      borderWidth: 1,
-      borderColor: theme.borderMid,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      maxWidth: 200,
-      shadowColor: "#000",
-      shadowOpacity: 0.04,
-      shadowRadius: 4,
-      shadowOffset: { width: 0, height: 1 },
-      elevation: 1,
-    },
-    recentChipText: {
-      color: theme.textPrimary,
-      fontSize: 13,
-      fontWeight: "600",
     },
     inputWrap: {
       flexDirection: "row",
@@ -359,7 +350,7 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
       borderWidth: 1,
       borderColor: theme.borderMid,
       paddingHorizontal: 12,
-      height: 52,
+      height: 48,
       gap: 8,
       shadowColor: "#000",
       shadowOpacity: 0.04,
@@ -375,97 +366,161 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
       paddingVertical: 0,
     },
     clearButton: { flexShrink: 0 },
-    categoryChip: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
+
+    /* ─── Filter chips (horizontal, compact) ─── */
+    filterChipScroll: { marginHorizontal: -16 },
+    filterChipList: { gap: 6, paddingHorizontal: 16 },
+    filterChip: {
       borderRadius: 999,
       borderWidth: 1.5,
       borderColor: theme.borderMid,
       backgroundColor: theme.surface,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
     },
-    categoryChipActive: {
+    filterChipActive: {
       borderColor: theme.accent,
       backgroundColor: theme.accentBg,
     },
-    categoryChipText: {
+    filterChipText: {
       color: theme.textSecondary,
       fontSize: 13,
       fontWeight: "600",
     },
-    categoryChipTextActive: {
+    filterChipTextActive: {
       color: theme.accent,
       fontWeight: "700",
     },
-    chipCount: {
-      backgroundColor: theme.border,
-      borderRadius: 999,
-      minWidth: 20,
-      height: 20,
-      paddingHorizontal: 5,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    chipCountActive: { backgroundColor: theme.accentCountBg },
-    chipCountText: {
-      color: theme.textSecondary,
-      fontSize: 11,
-      fontWeight: "700",
-    },
-    chipCountTextActive: { color: theme.accentBadgeText },
-    subclassChip: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
+    subFilterChip: {
       borderRadius: 999,
       borderWidth: 1.5,
       borderColor: theme.borderMid,
       backgroundColor: theme.subclassChipBg,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
     },
-    subclassChipActive: {
+    subFilterChipActive: {
       borderColor: theme.subclassChipActiveBorder,
       backgroundColor: theme.subclassChipActiveBg,
     },
-    subclassChipText: {
+    subFilterChipText: {
       color: theme.textSecondary,
       fontSize: 13,
       fontWeight: "600",
     },
-    subclassChipTextActive: {
+    subFilterChipTextActive: {
       color: theme.subclassChipActiveText,
       fontWeight: "700",
     },
-    subclassChipCount: {
-      backgroundColor: theme.border,
+
+    /* ─── Browse view ─── */
+    browseScroll: { flex: 1, backgroundColor: theme.bg },
+    browseContent: {
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 32,
+      gap: 20,
+    },
+    sectionLabel: {
+      color: theme.textSecondary,
+      fontSize: 12,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+    },
+    recentSection: { gap: 10 },
+    recentList: { gap: 8 },
+    recentChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      backgroundColor: theme.surface,
       borderRadius: 999,
-      minWidth: 20,
-      height: 20,
-      paddingHorizontal: 5,
+      borderWidth: 1,
+      borderColor: theme.borderMid,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      maxWidth: 200,
+    },
+    recentChipText: {
+      color: theme.textPrimary,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    categorySection: { gap: 10 },
+    categoryGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+    },
+    categoryCard: {
+      width: "48%",
+      flexGrow: 1,
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      padding: 14,
+      gap: 8,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    categoryCardIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: theme.accentBg,
       alignItems: "center",
       justifyContent: "center",
     },
-    subclassChipCountActive: { backgroundColor: theme.subclassBadgeBg },
-    subclassChipCountText: {
-      color: theme.textSecondary,
-      fontSize: 11,
+    categoryCardName: {
+      color: theme.textPrimary,
+      fontSize: 14,
       fontWeight: "700",
+      lineHeight: 18,
     },
-    subclassChipCountTextActive: { color: theme.subclassBadgeText },
+    categoryCardCount: {
+      color: theme.textSecondary,
+      fontSize: 12,
+      fontWeight: "500",
+    },
+    browseAllCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    browseAllText: {
+      flex: 1,
+      color: theme.textPrimary,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+
+    /* ─── Results list ─── */
     scrollView: { flex: 1, backgroundColor: theme.bg },
     listContent: {
       paddingHorizontal: 16,
       paddingTop: 12,
       paddingBottom: 32,
     },
+    resultHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 6,
+    },
     resultCount: {
       color: theme.textSecondary,
       fontSize: 13,
       fontWeight: "500",
-      marginBottom: 6,
+    },
+    clearFilter: {
+      color: theme.accent,
+      fontSize: 13,
+      fontWeight: "600",
     },
     itemSeparator: { height: 10 },
     emptyCard: {
