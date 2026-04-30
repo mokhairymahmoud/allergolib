@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useMemo, useRef, useState } from "react";
-import { Animated, Dimensions, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Defs, Path, Text as SvgText, TextPath } from "react-native-svg";
 
 import { copy } from "../../lib/i18n";
@@ -15,7 +15,7 @@ import type {
   StructuralRelation,
 } from "../../types";
 
-import { OrbitNode, centerFontSize, centerMaxLines } from "./OrbitNode";
+import { centerFontSize, centerMaxLines } from "./OrbitNode";
 
 function highestTier(entries: CrossReactivityEntry[]): CrossReactivityTier {
   if (entries.some((e) => e.tier === "higher-concern")) return "higher-concern";
@@ -38,20 +38,7 @@ export function OrbitMap({
 }) {
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
-  const [sheetEntry, setSheetEntry] = useState<{
-    entry: CrossReactivityEntry;
-    groupName: string;
-  } | null>(null);
-
   const [expandedGroupIdx, setExpandedGroupIdx] = useState<number | null>(null);
-  const sheetSlide = useRef(new Animated.Value(400)).current;
-
-  const prevSheetEntry = useRef(sheetEntry);
-  if (sheetEntry && !prevSheetEntry.current) {
-    sheetSlide.setValue(400);
-    Animated.spring(sheetSlide, { toValue: 0, useNativeDriver: true, friction: 10, tension: 65 }).start();
-  }
-  prevSheetEntry.current = sheetEntry;
 
   const drugNameById: Record<string, { en: string; fr: string }> = {};
   for (const d of allDrugs) {
@@ -61,36 +48,23 @@ export function OrbitMap({
   if (!drug.crossReactivity || drug.crossReactivity.length === 0) {
     return (
       <View style={{ gap: 8, paddingVertical: 24, alignItems: "center" }}>
-        <View style={styles.crEmptyIcon}>
+        <View style={styles.emptyIcon}>
           <Ionicons name="help-circle-outline" size={24} color={theme.textDisabled} />
         </View>
-        <Text style={styles.crEmptyTitle}>{copy(language, "crossReactivity.emptyTitle")}</Text>
-        <Text style={styles.crEmptyBody}>{copy(language, "crossReactivity.emptyBody")}</Text>
+        <Text style={styles.emptyTitle}>{copy(language, "crossReactivity.emptyTitle")}</Text>
+        <Text style={styles.emptyBody}>{copy(language, "crossReactivity.emptyBody")}</Text>
       </View>
     );
   }
 
   const groups = drug.crossReactivity;
+  const tierOrder: CrossReactivityTier[] = ["higher-concern", "lower-expected", "uncertain"];
 
   function tierIcon(tier: CrossReactivityTier): React.ComponentProps<typeof Ionicons>["name"] {
     switch (tier) {
       case "higher-concern": return "alert-circle";
       case "lower-expected": return "checkmark-circle";
       case "uncertain": return "help-circle";
-    }
-  }
-  function tierBadgeStyle(tier: CrossReactivityTier) {
-    switch (tier) {
-      case "higher-concern": return styles.crBadgeHigher;
-      case "lower-expected": return styles.crBadgeLower;
-      case "uncertain": return styles.crBadgeUncertain;
-    }
-  }
-  function tierBadgeTextStyle(tier: CrossReactivityTier) {
-    switch (tier) {
-      case "higher-concern": return styles.crBadgeHigherText;
-      case "lower-expected": return styles.crBadgeLowerText;
-      case "uncertain": return styles.crBadgeUncertainText;
     }
   }
   function tierLabel(tier: CrossReactivityTier) {
@@ -114,18 +88,18 @@ export function OrbitMap({
       case "uncertain": return theme.borderMid;
     }
   }
-  function nodeBgColor(tier: CrossReactivityTier) {
+  function tierBadgeStyle(tier: CrossReactivityTier) {
     switch (tier) {
-      case "higher-concern": return theme.warningBg;
-      case "lower-expected": return theme.subclassBadgeBg;
-      case "uncertain": return theme.surfaceAlt;
+      case "higher-concern": return styles.badgeHigher;
+      case "lower-expected": return styles.badgeLower;
+      case "uncertain": return styles.badgeUncertain;
     }
   }
-  function nodeBorderColor(tier: CrossReactivityTier) {
+  function tierBadgeTextStyle(tier: CrossReactivityTier) {
     switch (tier) {
-      case "higher-concern": return theme.warningBorder;
-      case "lower-expected": return theme.subclassBadgeText;
-      case "uncertain": return theme.borderMid;
+      case "higher-concern": return styles.badgeHigherText;
+      case "lower-expected": return styles.badgeLowerText;
+      case "uncertain": return styles.badgeUncertainText;
     }
   }
   function structuralLabel(rel: StructuralRelation) {
@@ -135,29 +109,21 @@ export function OrbitMap({
     }
   }
 
+  // ─── Compact orbit geometry ───────────────────────────────────────────────
   const screenW = Dimensions.get("window").width - 32;
-
-  function evenAngles(count: number, startAngle = -Math.PI / 2) {
-    return Array.from({ length: count }, (_, i) =>
-      startAngle + (2 * Math.PI * i) / Math.max(count, 1)
-    );
-  }
-
   const availableR = (screenW - 40) / 2;
-  const centerR = Math.max(42, Math.min(52, availableR * 0.22));
-  const arcThickness = Math.max(36, Math.min(48, availableR * 0.2));
-  const ringGap = 8;
-  const firstRingOffset = 10;
+  const centerR = Math.max(36, Math.min(44, availableR * 0.2));
+  const arcThickness = Math.max(28, Math.min(36, availableR * 0.16));
+  const ringGap = 6;
+  const firstRingOffset = 8;
   const tierRadii: Record<CrossReactivityTier, number> = {
     "higher-concern": centerR + firstRingOffset,
     "lower-expected": centerR + firstRingOffset + arcThickness + ringGap,
     "uncertain": centerR + firstRingOffset + (arcThickness + ringGap) * 2,
   };
 
-  const tierOrder: CrossReactivityTier[] = ["higher-concern", "lower-expected", "uncertain"];
   type ArcData = { group: CrossReactivityGroup; idx: number; tier: CrossReactivityTier; orbitR: number; startAngle: number; sweepAngle: number; midAngle: number };
   const arcs: ArcData[] = [];
-
   const tierBaseOffsets: Record<CrossReactivityTier, number> = {
     "higher-concern": -Math.PI / 2,
     "lower-expected": -Math.PI / 2 + (2 * Math.PI) / 3,
@@ -165,28 +131,23 @@ export function OrbitMap({
   };
 
   for (const tier of tierOrder) {
-    const tierGroups = groups
-      .map((g, i) => ({ group: g, idx: i }))
-      .filter(({ group }) => highestTier(group.entries) === tier);
+    const tierGroups = groups.map((g, i) => ({ group: g, idx: i })).filter(({ group }) => highestTier(group.entries) === tier);
     if (tierGroups.length === 0) continue;
-
     const orbitR = tierRadii[tier];
     const n = tierGroups.length;
     const gapAngle = 0.15;
     const sweepPerGroup = (2 * Math.PI - gapAngle * n) / n;
     const clampedSweep = Math.min(sweepPerGroup, Math.PI * 0.8);
-
     const totalUsed = clampedSweep * n + gapAngle * n;
     let angle = tierBaseOffsets[tier] - totalUsed / 2 + gapAngle / 2;
-
     for (const { group, idx } of tierGroups) {
       arcs.push({ group, idx, tier, orbitR, startAngle: angle, sweepAngle: clampedSweep, midAngle: angle + clampedSweep / 2 });
       angle += clampedSweep + gapAngle;
     }
   }
 
-  const maxR = Math.max(...arcs.map((a) => a.orbitR + arcThickness), centerR + 40);
-  const sz = Math.min((maxR + 70) * 2, screenW + 32);
+  const maxR = Math.max(...arcs.map((a) => a.orbitR + arcThickness), centerR + 30);
+  const sz = Math.min((maxR + 50) * 2, screenW + 16);
   const c = sz / 2;
 
   function arcPath(sa: number, sweep: number, innerR: number, outerR: number): string {
@@ -209,8 +170,16 @@ export function OrbitMap({
     ].join(" ");
   }
 
+  // Sort groups: higher-concern first, then lower-expected, then uncertain
+  const sortedGroupIndices = [...groups.keys()].sort((a, b) => {
+    const tierA = highestTier(groups[a].entries);
+    const tierB = highestTier(groups[b].entries);
+    return tierOrder.indexOf(tierA) - tierOrder.indexOf(tierB);
+  });
+
   return (
     <View style={{ gap: 16 }}>
+      {/* ─── Compact orbit summary ─── */}
       <View style={{ width: sz, height: sz, alignSelf: "center" }}>
         <Svg width={sz} height={sz}>
           {[...new Set(arcs.map((a) => a.orbitR))].map((r) => {
@@ -232,8 +201,8 @@ export function OrbitMap({
               key={`arc-${gIdx}`}
               d={arcPath(startAngle, sweepAngle, orbitR, orbitR + arcThickness)}
               fill={nodeColor(tier)}
-              opacity={0.9}
-              onPress={() => setExpandedGroupIdx(gIdx)}
+              opacity={expandedGroupIdx === gIdx ? 1 : 0.75}
+              onPress={() => setExpandedGroupIdx(expandedGroupIdx === gIdx ? null : gIdx)}
             />
           ))}
           <Defs>
@@ -258,7 +227,15 @@ export function OrbitMap({
             })}
           </Defs>
           {arcs.map(({ group, idx: gIdx }) => (
-            <SvgText key={`txt-${gIdx}`} fill="#FFF" fontSize={10} fontWeight="700" dy={4} textAnchor="middle" onPress={() => setExpandedGroupIdx(gIdx)}>
+            <SvgText
+              key={`txt-${gIdx}`}
+              fill="#FFF"
+              fontSize={9}
+              fontWeight="700"
+              dy={3}
+              textAnchor="middle"
+              onPress={() => setExpandedGroupIdx(expandedGroupIdx === gIdx ? null : gIdx)}
+            >
               <TextPath href={`#textarc-${gIdx}`} startOffset="50%">
                 {group.groupName[language]}
               </TextPath>
@@ -269,16 +246,12 @@ export function OrbitMap({
         {/* Center node */}
         <View style={{ position: "absolute", left: c - centerR, top: c - centerR, width: centerR * 2, height: centerR * 2, zIndex: 10 }}>
           <View
-            style={{ width: centerR * 2, height: centerR * 2, borderRadius: centerR, backgroundColor: theme.accent, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 3 }, elevation: 8, borderWidth: 3, borderColor: theme.surface }}
+            style={{ width: centerR * 2, height: centerR * 2, borderRadius: centerR, backgroundColor: theme.accent, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 8, borderWidth: 2.5, borderColor: theme.surface }}
           >
-            <Text style={{ color: "#FFF", fontSize: centerFontSize(drug.name[language], centerR), fontWeight: "800", textAlign: "center", paddingHorizontal: 4, lineHeight: centerFontSize(drug.name[language], centerR) + 3 }} numberOfLines={centerMaxLines(drug.name[language], centerR)}>{drug.name[language]}</Text>
+            <Text style={{ color: "#FFF", fontSize: centerFontSize(drug.name[language], centerR), fontWeight: "800", textAlign: "center", paddingHorizontal: 3, lineHeight: centerFontSize(drug.name[language], centerR) + 3 }} numberOfLines={centerMaxLines(drug.name[language], centerR)}>{drug.name[language]}</Text>
           </View>
         </View>
       </View>
-
-      <Text style={{ fontSize: 12, color: theme.textSecondary, textAlign: "center", fontStyle: "italic" }}>
-        {copy(language, "crossReactivity.mapHint")} {drug.name[language].toLowerCase()}.
-      </Text>
 
       {/* Legend */}
       <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: 16, rowGap: 6, justifyContent: "center" }}>
@@ -288,13 +261,89 @@ export function OrbitMap({
           { color: nodeColor("uncertain"), label: copy(language, "crossReactivity.legendUncertain") },
         ] as const).map(({ color, label: l }) => (
           <View key={l} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: color }} />
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
             <Text style={{ color: theme.textSecondary, fontSize: 11 }}>{l}</Text>
           </View>
         ))}
       </View>
 
-      {/* Suggested Panel card */}
+      {/* ─── Group cards ─── */}
+      {sortedGroupIndices.map((gIdx) => {
+        const group = groups[gIdx];
+        const tier = highestTier(group.entries);
+        const isExpanded = expandedGroupIdx === gIdx;
+        const entryCount = group.entries.length;
+
+        return (
+          <View key={gIdx} style={[styles.groupCard, { borderLeftColor: nodeColor(tier) }]}>
+            <Pressable
+              onPress={() => setExpandedGroupIdx(isExpanded ? null : gIdx)}
+              style={styles.groupHeader}
+            >
+              <View style={styles.groupHeaderLeft}>
+                <Ionicons name={tierIcon(tier)} size={16} color={tierIconColor(tier)} />
+                <Text style={styles.groupName}>{group.groupName[language]}</Text>
+              </View>
+              <View style={styles.groupHeaderRight}>
+                <View style={tierBadgeStyle(tier)}>
+                  <Text style={tierBadgeTextStyle(tier)}>{tierLabel(tier)}</Text>
+                </View>
+                <Text style={styles.groupCount}>{entryCount}</Text>
+                <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={16} color={theme.textDisabled} />
+              </View>
+            </Pressable>
+
+            {isExpanded ? (
+              <View style={styles.groupEntries}>
+                {group.entries.map((entry) => {
+                  const name = drugNameById[entry.drugId];
+                  const displayName = name ? name[language] : entry.drugId;
+                  const isNavigable = Boolean(name);
+                  const sourceCitations = entry.sourceIds.map((sid) => sources[sid]?.label).filter(Boolean);
+
+                  return (
+                    <View key={entry.drugId} style={styles.entryCard}>
+                      <View style={styles.entryHeader}>
+                        <View style={[styles.entryDot, { backgroundColor: nodeColor(entry.tier) }]} />
+                        <Text style={styles.entryName}>{displayName}</Text>
+                        {isNavigable ? (
+                          <Pressable onPress={() => onOpenDrug(entry.drugId)} hitSlop={8} style={styles.entryOpenBtn}>
+                            <Ionicons name="open-outline" size={14} color={theme.accent} />
+                          </Pressable>
+                        ) : null}
+                      </View>
+
+                      <View style={styles.entryBadges}>
+                        <View style={tierBadgeStyle(entry.tier)}>
+                          <Ionicons name={tierIcon(entry.tier)} size={10} color={tierIconColor(entry.tier)} />
+                          <Text style={tierBadgeTextStyle(entry.tier)}>{tierLabel(entry.tier)}</Text>
+                        </View>
+                        <View style={styles.structBadge}>
+                          <Text style={styles.structBadgeText}>{structuralLabel(entry.structuralRelation)}</Text>
+                        </View>
+                      </View>
+
+                      {entry.rationale[language] ? (
+                        <Text style={styles.entryRationale}>{entry.rationale[language]}</Text>
+                      ) : null}
+
+                      {sourceCitations.length > 0 ? (
+                        <Text style={styles.entrySource}>{copy(language, "crossReactivity.source")}: {sourceCitations.join(", ")}</Text>
+                      ) : null}
+                    </View>
+                  );
+                })}
+              </View>
+            ) : (
+              <Text style={styles.groupPreview} numberOfLines={1}>
+                {group.entries.map((e) => drugNameById[e.drugId]?.[language] ?? e.drugId).join(", ")}
+              </Text>
+            )}
+          </View>
+        );
+      })}
+
+      {/* ─── Suggested Panel ─── */}
       {(() => {
         const panelDrugIds = new Set<string>();
         for (const g of groups) {
@@ -315,18 +364,18 @@ export function OrbitMap({
             }
           }
         }
-        for (const tier of tierOrder) {
-          if (tierDrugs[tier].length > 0) tierBuckets.push({ tier, drugs: tierDrugs[tier] });
+        for (const t of tierOrder) {
+          if (tierDrugs[t].length > 0) tierBuckets.push({ tier: t, drugs: tierDrugs[t] });
         }
         if (tierBuckets.length === 0) return null;
 
         return (
-          <View style={styles.suggestedPanelCard}>
-            <Text style={styles.suggestedPanelTitle}>{copy(language, "crossReactivity.panelTitle")}</Text>
+          <View style={styles.panelCard}>
+            <Text style={styles.panelTitle}>{copy(language, "crossReactivity.panelTitle")}</Text>
             {tierBuckets.map(({ tier, drugs }) => (
               <View key={tier} style={{ gap: 4 }}>
-                <Text style={[styles.suggestedPanelTierLabel, { color: nodeColor(tier) }]}>{tierLabel(tier)}</Text>
-                <Text style={styles.suggestedPanelDrugList}>
+                <Text style={[styles.panelTierLabel, { color: nodeColor(tier) }]}>{tierLabel(tier)}</Text>
+                <Text style={styles.panelDrugList}>
                   {drugs.map((id) => drugNameById[id]?.[language] ?? id).join(", ")}
                 </Text>
               </View>
@@ -334,180 +383,143 @@ export function OrbitMap({
           </View>
         );
       })()}
-
-      {/* Group drill-down overlay */}
-      <Modal visible={expandedGroupIdx !== null} transparent animationType="fade" onRequestClose={() => setExpandedGroupIdx(null)}>
-        <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.82)", justifyContent: "center", alignItems: "center" }} onPress={() => setExpandedGroupIdx(null)}>
-          <Pressable onPress={() => {}} style={{ alignItems: "center" }}>
-            <Pressable onPress={() => setExpandedGroupIdx(null)} style={{ position: "absolute", top: -44, right: -8, zIndex: 20, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" }} hitSlop={8}>
-              <Ionicons name="close" size={20} color="#FFF" />
-            </Pressable>
-            {expandedGroupIdx !== null ? (() => {
-              const eGroup = groups[expandedGroupIdx];
-              if (!eGroup) return null;
-              const entries = eGroup.entries;
-              const eTier = highestTier(entries);
-              const eGR = 48;
-              const eNR = 28;
-              const eLabelW = 120;
-              const eOrbitR = eGR + eNR + 44;
-              const ePad = 32;
-              const eSz = (eOrbitR + eNR + ePad) * 2;
-              const eC = eSz / 2;
-              const eAngles = evenAngles(entries.length);
-              const eFontSize = centerFontSize(eGroup.groupName[language], eGR);
-              return (
-                <View style={{ width: eSz, height: eSz, overflow: "visible" }}>
-                  <View style={{ position: "absolute", left: eC - eOrbitR, top: eC - eOrbitR, width: eOrbitR * 2, height: eOrbitR * 2, borderRadius: eOrbitR, borderWidth: 1.5, borderColor: nodeBorderColor(eTier), borderStyle: "dashed", opacity: 0.25 }} />
-                  <View style={{ position: "absolute", left: eC - eGR, top: eC - eGR, width: eGR * 2, height: eGR * 2, borderRadius: eGR, backgroundColor: nodeBgColor(eTier), borderWidth: 2.5, borderColor: nodeBorderColor(eTier), alignItems: "center", justifyContent: "center", zIndex: 10, shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8 }}>
-                    <Text style={{ color: nodeColor(eTier), fontSize: eFontSize, fontWeight: "800", textAlign: "center", paddingHorizontal: 6, lineHeight: eFontSize + 3 }} numberOfLines={centerMaxLines(eGroup.groupName[language], eGR)}>{eGroup.groupName[language]}</Text>
-                  </View>
-                  {entries.map((entry, idx) => {
-                    const angle = eAngles[idx];
-                    const nx = eC + eOrbitR * Math.cos(angle);
-                    const ny = eC + eOrbitR * Math.sin(angle);
-                    const name = drugNameById[entry.drugId];
-                    const label = name ? name[language] : entry.drugId;
-                    const isBelow = Math.sin(angle) >= -0.25;
-                    const labelTop = isBelow ? ny + eNR + 3 : ny - eNR - 28;
-                    const labelLeft = nx - eLabelW / 2;
-                    return (
-                      <React.Fragment key={entry.drugId}>
-                        <OrbitNode nx={nx} ny={ny} nodeR={eNR} bg={nodeColor(entry.tier)} label={label} onPress={() => setSheetEntry({ entry, groupName: eGroup.groupName[language] })} />
-                        <View style={{ position: "absolute", left: labelLeft, top: labelTop, width: eLabelW, alignItems: "center", zIndex: 4 }} pointerEvents="none">
-                          <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700", textAlign: "center", lineHeight: 15 }} numberOfLines={2}>{label}</Text>
-                        </View>
-                      </React.Fragment>
-                    );
-                  })}
-                </View>
-              );
-            })() : null}
-          </Pressable>
-        </Pressable>
-
-        {/* Bottom sheet */}
-        {sheetEntry ? (
-          <Pressable style={[styles.sheetOverlay, { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }]} onPress={() => setSheetEntry(null)}>
-            <Animated.View style={[styles.sheetContainer, { transform: [{ translateY: sheetSlide }] }]}>
-              <Pressable onPress={() => {}} style={{ width: "100%" }}>
-              <View style={styles.sheetHandle} />
-              {(() => {
-                const { entry, groupName } = sheetEntry;
-                const name = drugNameById[entry.drugId];
-                const isNavigable = Boolean(name);
-                const displayName = name ? name[language] : entry.drugId;
-                const sourceCitations = entry.sourceIds.map((sid) => sources[sid]?.label).filter(Boolean);
-                return (
-                  <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-                    <View style={styles.sheetTitleRow}><Text style={styles.sheetDrugPill}>{drug.name[language]}</Text><Text style={styles.sheetArrow}>↔</Text><Text style={[styles.sheetDrugPill, { flex: 1 }]} numberOfLines={1}>{displayName}</Text></View>
-                    <View style={[styles.sheetBadgeRow, { marginBottom: 16 }]}><View style={tierBadgeStyle(entry.tier)}><Ionicons name={tierIcon(entry.tier)} size={12} color={tierIconColor(entry.tier)} /><Text style={tierBadgeTextStyle(entry.tier)}>{tierLabel(entry.tier)}</Text></View><View style={styles.crStructBadge}><Text style={styles.crStructBadgeText}>{structuralLabel(entry.structuralRelation)}</Text></View></View>
-                    <View style={styles.sheetSection}><Text style={styles.sheetSectionLabel}>{copy(language, "crossReactivity.whyLinked")}</Text><View style={styles.sheetRationaleBox}><Text style={styles.sheetMechanismLink}>{groupName}</Text></View></View>
-                    <View style={styles.sheetDivider} />
-                    <View style={styles.sheetSection}><Text style={styles.sheetSectionLabel}>{copy(language, "crossReactivity.clinicalNote")}</Text><Text style={styles.sheetRationale}>{entry.rationale[language]}</Text></View>
-                    {sourceCitations.length > 0 ? (<><View style={styles.sheetDivider} /><Text style={styles.sheetSourceCitation}>{copy(language, "crossReactivity.source")}: {sourceCitations.join(", ")}</Text></>) : null}
-                    {isNavigable ? (<><View style={styles.sheetDivider} /><Pressable style={styles.sheetActionButton} onPress={() => { setSheetEntry(null); setExpandedGroupIdx(null); onOpenDrug(entry.drugId); }}><Ionicons name="open-outline" size={16} color={theme.accent} /><Text style={styles.sheetActionText}>{copy(language, "crossReactivity.openDrug")} — {displayName}</Text></Pressable></>) : null}
-                  </ScrollView>
-                );
-              })()}
-              </Pressable>
-            </Animated.View>
-          </Pressable>
-        ) : null}
-      </Modal>
     </View>
   );
 }
 
 function makeStyles(theme: ReturnType<typeof useTheme>) {
   return StyleSheet.create({
-    crEmptyIcon: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+    emptyIcon: {
+      width: 48, height: 48, borderRadius: 24,
       backgroundColor: theme.surfaceAlt,
-      alignItems: "center",
-      justifyContent: "center",
-      alignSelf: "center",
+      alignItems: "center", justifyContent: "center", alignSelf: "center",
+      borderWidth: 1, borderColor: theme.border,
+    },
+    emptyTitle: { color: theme.textPrimary, fontSize: 15, fontWeight: "700", textAlign: "center" },
+    emptyBody: { color: theme.textSecondary, fontSize: 13, lineHeight: 18, textAlign: "center" },
+
+    /* Tier badges */
+    badgeHigher: {
+      flexDirection: "row", alignItems: "center", gap: 4,
+      backgroundColor: theme.warningBg, borderRadius: 999,
+      paddingHorizontal: 7, paddingVertical: 2,
+      borderWidth: 1, borderColor: theme.warningBorder,
+    },
+    badgeHigherText: { color: theme.warningText, fontSize: 10, fontWeight: "800", textTransform: "uppercase" },
+    badgeLower: {
+      flexDirection: "row", alignItems: "center", gap: 4,
+      backgroundColor: theme.subclassBadgeBg, borderRadius: 999,
+      paddingHorizontal: 7, paddingVertical: 2,
+    },
+    badgeLowerText: { color: theme.subclassBadgeText, fontSize: 10, fontWeight: "800", textTransform: "uppercase" },
+    badgeUncertain: {
+      flexDirection: "row", alignItems: "center", gap: 4,
+      backgroundColor: theme.surfaceAlt, borderRadius: 999,
+      paddingHorizontal: 7, paddingVertical: 2,
+      borderWidth: 1, borderColor: theme.border,
+    },
+    badgeUncertainText: { color: theme.textSecondary, fontSize: 10, fontWeight: "800", textTransform: "uppercase" },
+    structBadge: {
+      backgroundColor: theme.surfaceAlt, borderRadius: 999,
+      paddingHorizontal: 7, paddingVertical: 2,
+      borderWidth: 1, borderColor: theme.border,
+    },
+    structBadgeText: { color: theme.textSecondary, fontSize: 10, fontWeight: "700", textTransform: "uppercase" },
+
+    /* Group cards */
+    groupCard: {
+      backgroundColor: theme.surface,
+      borderRadius: 12,
       borderWidth: 1,
       borderColor: theme.border,
+      borderLeftWidth: 4,
+      overflow: "hidden",
     },
-    crEmptyTitle: {
+    groupHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: 12,
+      gap: 8,
+    },
+    groupHeaderLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      flex: 1,
+    },
+    groupName: {
+      color: theme.textPrimary,
+      fontSize: 14,
+      fontWeight: "700",
+      flex: 1,
+    },
+    groupHeaderRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      flexShrink: 0,
+    },
+    groupCount: {
+      color: theme.textDisabled,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    groupPreview: {
+      color: theme.textSecondary,
+      fontSize: 13,
+      paddingHorizontal: 12,
+      paddingBottom: 10,
+    },
+    groupEntries: {
+      gap: 1,
+      backgroundColor: theme.border,
+    },
+    entryCard: {
+      backgroundColor: theme.surface,
+      padding: 12,
+      gap: 8,
+    },
+    entryHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    entryDot: {
+      width: 8, height: 8, borderRadius: 4, flexShrink: 0,
+    },
+    entryName: {
       color: theme.textPrimary,
       fontSize: 15,
       fontWeight: "700",
-      textAlign: "center",
+      flex: 1,
     },
-    crEmptyBody: {
+    entryOpenBtn: {
+      width: 28, height: 28, borderRadius: 14,
+      backgroundColor: theme.accentBg,
+      alignItems: "center", justifyContent: "center",
+      flexShrink: 0,
+    },
+    entryBadges: {
+      flexDirection: "row",
+      gap: 6,
+      flexWrap: "wrap",
+      paddingLeft: 16,
+    },
+    entryRationale: {
       color: theme.textSecondary,
       fontSize: 13,
-      lineHeight: 18,
-      textAlign: "center",
+      lineHeight: 19,
+      paddingLeft: 16,
     },
-    crBadgeHigher: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-      backgroundColor: theme.warningBg,
-      borderRadius: 999,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderWidth: 1,
-      borderColor: theme.warningBorder,
+    entrySource: {
+      color: theme.textDisabled,
+      fontSize: 11,
+      paddingLeft: 16,
     },
-    crBadgeHigherText: {
-      color: theme.warningText,
-      fontSize: 10,
-      fontWeight: "800",
-      textTransform: "uppercase",
-    },
-    crBadgeLower: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-      backgroundColor: theme.subclassBadgeBg,
-      borderRadius: 999,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-    },
-    crBadgeLowerText: {
-      color: theme.subclassBadgeText,
-      fontSize: 10,
-      fontWeight: "800",
-      textTransform: "uppercase",
-    },
-    crBadgeUncertain: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-      backgroundColor: theme.surfaceAlt,
-      borderRadius: 999,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    crBadgeUncertainText: {
-      color: theme.textSecondary,
-      fontSize: 10,
-      fontWeight: "800",
-      textTransform: "uppercase",
-    },
-    crStructBadge: {
-      backgroundColor: theme.surfaceAlt,
-      borderRadius: 999,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    crStructBadgeText: {
-      color: theme.textSecondary,
-      fontSize: 10,
-      fontWeight: "700",
-      textTransform: "uppercase",
-    },
-    suggestedPanelCard: {
+
+    /* Suggested panel */
+    panelCard: {
       backgroundColor: theme.surface,
       borderRadius: 14,
       borderWidth: 1,
@@ -515,119 +527,8 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
       padding: 16,
       gap: 14,
     },
-    suggestedPanelTitle: {
-      fontSize: 15,
-      fontWeight: "700",
-      color: theme.textPrimary,
-    },
-    suggestedPanelTierLabel: {
-      fontSize: 11,
-      fontWeight: "700",
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-    },
-    suggestedPanelDrugList: {
-      fontSize: 14,
-      fontWeight: "500",
-      color: theme.textPrimary,
-    },
-    sheetOverlay: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.4)",
-      justifyContent: "flex-end",
-    },
-    sheetContainer: {
-      backgroundColor: theme.surface,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      paddingTop: 12,
-      paddingHorizontal: 20,
-      paddingBottom: 34,
-      maxHeight: "80%",
-    },
-    sheetHandle: {
-      width: 36,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.borderMid,
-      alignSelf: "center",
-      marginBottom: 16,
-    },
-    sheetTitleRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-      marginBottom: 4,
-    },
-    sheetArrow: {
-      color: theme.textDisabled,
-      fontSize: 14,
-      fontWeight: "600",
-    },
-    sheetDrugPill: {
-      color: theme.accent,
-      fontSize: 17,
-      fontWeight: "800",
-    },
-    sheetBadgeRow: {
-      flexDirection: "row",
-      gap: 6,
-      flexWrap: "wrap",
-    },
-    sheetSection: {
-      gap: 6,
-    },
-    sheetSectionLabel: {
-      color: theme.textSecondary,
-      fontSize: 11,
-      fontWeight: "700",
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-    },
-    sheetRationaleBox: {
-      backgroundColor: theme.surfaceAlt,
-      borderRadius: 10,
-      padding: 12,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    sheetMechanismLink: {
-      flex: 1,
-      color: theme.textSecondary,
-      fontSize: 12,
-      textAlign: "center",
-      fontStyle: "italic",
-    },
-    sheetRationale: {
-      color: theme.textPrimary,
-      fontSize: 14,
-      lineHeight: 22,
-    },
-    sheetDivider: {
-      height: 1,
-      backgroundColor: theme.border,
-      marginVertical: 12,
-    },
-    sheetSourceCitation: {
-      color: theme.textDisabled,
-      fontSize: 12,
-    },
-    sheetActionButton: {
-      flex: 1,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 7,
-      borderRadius: 10,
-      padding: 13,
-      borderWidth: 1,
-      borderColor: theme.accentBorder,
-      backgroundColor: theme.accentBg,
-    },
-    sheetActionText: {
-      color: theme.accent,
-      fontSize: 14,
-      fontWeight: "700",
-    },
+    panelTitle: { fontSize: 15, fontWeight: "700", color: theme.textPrimary },
+    panelTierLabel: { fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
+    panelDrugList: { fontSize: 14, fontWeight: "500", color: theme.textPrimary },
   });
 }
