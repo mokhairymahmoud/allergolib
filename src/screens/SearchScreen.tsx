@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useCallback, useMemo, useState } from "react";
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Dimensions, FlatList, PanResponder, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { DrugRow } from "../components/DrugRow";
 import type { DrugSearchResult } from "../lib/drugSearch";
@@ -49,6 +49,51 @@ export function SearchScreen({
   const [browseAll, setBrowseAll] = useState(false);
   const trimmedQuery = query.trim();
   const hasQuery = trimmedQuery.length > 0;
+
+  const SCREEN_WIDTH = Dimensions.get("window").width;
+  const slideX = useRef(new Animated.Value(0)).current;
+  const showListView = hasQuery || !!activeClass || browseAll;
+  const prevShowListView = useRef(showListView);
+
+  useEffect(() => {
+    if (showListView && !prevShowListView.current) {
+      slideX.setValue(SCREEN_WIDTH);
+      Animated.spring(slideX, { toValue: 0, useNativeDriver: true, bounciness: 0, speed: 20 }).start();
+    }
+    prevShowListView.current = showListView;
+  }, [showListView, SCREEN_WIDTH, slideX]);
+
+  function goBackToGrid() {
+    Animated.spring(slideX, { toValue: SCREEN_WIDTH, useNativeDriver: true, bounciness: 0, speed: 20 }).start(() => {
+      setActiveClass(null);
+      setActiveSubclass(null);
+      setBrowseAll(false);
+    });
+  }
+
+  const canSwipeBackRef = useRef(false);
+  canSwipeBackRef.current = !hasQuery && (!!activeClass || browseAll);
+
+  const swipeBack = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) =>
+        canSwipeBackRef.current && g.dx > 15 && Math.abs(g.dy) < 40 && g.moveX < 80,
+      onPanResponderMove: (_, g) => {
+        if (g.dx > 0) slideX.setValue(g.dx);
+      },
+      onPanResponderRelease: (_, g) => {
+        if (g.dx > SCREEN_WIDTH * 0.3 || g.vx > 0.4) {
+          Animated.spring(slideX, { toValue: SCREEN_WIDTH, useNativeDriver: true, bounciness: 0, speed: 20 }).start(() => {
+            setActiveClass(null);
+            setActiveSubclass(null);
+            setBrowseAll(false);
+          });
+        } else {
+          Animated.spring(slideX, { toValue: 0, useNativeDriver: true, bounciness: 0, speed: 20 }).start();
+        }
+      },
+    })
+  ).current;
 
   const drugClassEntries = useMemo(() => {
     const map = new Map<string, number>();
@@ -136,6 +181,16 @@ export function SearchScreen({
     <View style={styles.flex1}>
       {/* Search input — always at top */}
       <View style={styles.searchHeader}>
+        <View style={styles.inputRow}>
+          {!hasQuery && (activeClass || browseAll) ? (
+            <Pressable
+              onPress={goBackToGrid}
+              style={styles.backButton}
+              hitSlop={8}
+            >
+              <Ionicons name="arrow-back" size={20} color={theme.textPrimary} />
+            </Pressable>
+          ) : null}
         <View style={styles.inputWrap}>
           <Ionicons name="search" size={18} color={theme.textSecondary} style={styles.searchIcon} />
           <TextInput
@@ -153,6 +208,7 @@ export function SearchScreen({
             </Pressable>
           ) : null}
         </View>
+        </View>
 
         {/* Category filter chips — shown when searching or browsing a category */}
         {(hasQuery || activeClass || browseAll) ? (
@@ -164,7 +220,7 @@ export function SearchScreen({
             keyboardShouldPersistTaps="handled"
           >
             <Pressable
-              onPress={() => { setActiveClass(null); setActiveSubclass(null); if (!hasQuery) setBrowseAll(false); }}
+              onPress={() => { if (!hasQuery) { goBackToGrid(); } else { setActiveClass(null); setActiveSubclass(null); } }}
               style={[styles.filterChip, activeClass === null && (hasQuery || browseAll) && styles.filterChipActive]}
             >
               <Text style={[styles.filterChipText, activeClass === null && (hasQuery || browseAll) && styles.filterChipTextActive]}>
@@ -292,37 +348,42 @@ export function SearchScreen({
         </ScrollView>
       ) : (
         /* ─── Results list: search or filtered browse ─── */
-        <FlatList
-          data={listData}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          style={styles.scrollView}
-          contentContainerStyle={styles.listContent}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          ListHeaderComponent={
-            <View style={styles.resultHeader}>
-              <Text style={styles.resultCount}>
-                {resultCount} {copy(language, hasQuery ? "search.results" : "search.resultsAll")}
-              </Text>
-              {(activeClass || browseAll) && !hasQuery ? (
-                <Pressable onPress={() => { setActiveClass(null); setActiveSubclass(null); setBrowseAll(false); }} hitSlop={8}>
-                  <Text style={styles.clearFilter}>{language === "fr" ? "Effacer" : "Clear"}</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          }
-          ListEmptyComponent={
-            hasQuery ? (
-              <View style={styles.emptyCard}>
-                <Ionicons name="search-outline" size={32} color={theme.textDisabled} style={styles.emptyIcon} />
-                <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
-                <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
+        <Animated.View
+          style={[styles.flex1, !hasQuery && { transform: [{ translateX: slideX }] }]}
+          {...(!hasQuery ? swipeBack.panHandlers : {})}
+        >
+          <FlatList
+            data={listData}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            style={styles.scrollView}
+            contentContainerStyle={styles.listContent}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            ListHeaderComponent={
+              <View style={styles.resultHeader}>
+                <Text style={styles.resultCount}>
+                  {resultCount} {copy(language, hasQuery ? "search.results" : "search.resultsAll")}
+                </Text>
+                {(activeClass || browseAll) && !hasQuery ? (
+                  <Pressable onPress={goBackToGrid} hitSlop={8}>
+                    <Text style={styles.clearFilter}>{language === "fr" ? "Effacer" : "Clear"}</Text>
+                  </Pressable>
+                ) : null}
               </View>
-            ) : null
-          }
-          ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
-        />
+            }
+            ListEmptyComponent={
+              hasQuery ? (
+                <View style={styles.emptyCard}>
+                  <Ionicons name="search-outline" size={32} color={theme.textDisabled} style={styles.emptyIcon} />
+                  <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
+                  <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
+                </View>
+              ) : null
+            }
+            ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
+          />
+        </Animated.View>
       )}
     </View>
   );
@@ -342,7 +403,24 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
+    inputRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+    },
+    backButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: theme.borderMid,
+      flexShrink: 0,
+    },
     inputWrap: {
+      flex: 1,
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.surface,
