@@ -234,7 +234,7 @@ export function OrbitMap({
               onPress={() => setExpandedGroupIdx(expandedGroupIdx === idx ? null : idx)}
             >
               <TextPath href={`#tp-${idx}`} startOffset="50%">
-                {group.groupName[language]} ({group.entries.length})
+                {group.groupName[language]}
               </TextPath>
             </SvgText>
           ))}
