@@ -15,7 +15,7 @@ import type {
   StructuralRelation,
 } from "../../types";
 
-import { OrbitNode, centerFontSize } from "./OrbitNode";
+import { OrbitNode, centerFontSize, centerMaxLines } from "./OrbitNode";
 
 function highestTier(entries: CrossReactivityEntry[]): CrossReactivityTier {
   if (entries.some((e) => e.tier === "higher-concern")) return "higher-concern";
@@ -271,7 +271,7 @@ export function OrbitMap({
           <View
             style={{ width: centerR * 2, height: centerR * 2, borderRadius: centerR, backgroundColor: theme.accent, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 3 }, elevation: 8, borderWidth: 3, borderColor: theme.surface }}
           >
-            <Text style={{ color: "#FFF", fontSize: centerFontSize(drug.name[language], centerR), fontWeight: "800", textAlign: "center", paddingHorizontal: 4, lineHeight: centerFontSize(drug.name[language], centerR) + 3 }} numberOfLines={drug.name[language].trim().split(/\s+/).length >= 2 ? 2 : 1}>{drug.name[language]}</Text>
+            <Text style={{ color: "#FFF", fontSize: centerFontSize(drug.name[language], centerR), fontWeight: "800", textAlign: "center", paddingHorizontal: 4, lineHeight: centerFontSize(drug.name[language], centerR) + 3 }} numberOfLines={centerMaxLines(drug.name[language], centerR)}>{drug.name[language]}</Text>
           </View>
         </View>
       </View>
@@ -360,7 +360,7 @@ export function OrbitMap({
                 <View style={{ width: eSz, height: eSz, overflow: "visible" }}>
                   <View style={{ position: "absolute", left: eC - eOrbitR, top: eC - eOrbitR, width: eOrbitR * 2, height: eOrbitR * 2, borderRadius: eOrbitR, borderWidth: 1.5, borderColor: nodeBorderColor(eTier), borderStyle: "dashed", opacity: 0.25 }} />
                   <View style={{ position: "absolute", left: eC - eGR, top: eC - eGR, width: eGR * 2, height: eGR * 2, borderRadius: eGR, backgroundColor: nodeBgColor(eTier), borderWidth: 2.5, borderColor: nodeBorderColor(eTier), alignItems: "center", justifyContent: "center", zIndex: 10, shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8 }}>
-                    <Text style={{ color: nodeColor(eTier), fontSize: eFontSize, fontWeight: "800", textAlign: "center", paddingHorizontal: 6, lineHeight: eFontSize + 3 }} numberOfLines={eGroup.groupName[language].trim().split(/\s+/).length >= 2 ? 2 : 1}>{eGroup.groupName[language]}</Text>
+                    <Text style={{ color: nodeColor(eTier), fontSize: eFontSize, fontWeight: "800", textAlign: "center", paddingHorizontal: 6, lineHeight: eFontSize + 3 }} numberOfLines={centerMaxLines(eGroup.groupName[language], eGR)}>{eGroup.groupName[language]}</Text>
                   </View>
                   {entries.map((entry, idx) => {
                     const angle = eAngles[idx];
