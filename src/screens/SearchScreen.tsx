@@ -51,20 +51,28 @@ export function SearchScreen({
   const hasQuery = trimmedQuery.length > 0;
 
   const SCREEN_WIDTH = Dimensions.get("window").width;
-  const slideX = useRef(new Animated.Value(0)).current;
+  const slideX = useRef(new Animated.Value(SCREEN_WIDTH)).current;
+  const [listVisible, setListVisible] = useState(false);
   const showListView = hasQuery || !!activeClass || browseAll;
   const prevShowListView = useRef(showListView);
 
   useEffect(() => {
-    if (showListView && !prevShowListView.current) {
+    const wasShowing = prevShowListView.current;
+    prevShowListView.current = showListView;
+
+    if (showListView && !wasShowing) {
+      setListVisible(true);
       slideX.setValue(SCREEN_WIDTH);
       Animated.spring(slideX, { toValue: 0, useNativeDriver: true, bounciness: 0, speed: 20 }).start();
+    } else if (!showListView && wasShowing) {
+      setListVisible(false);
+      slideX.setValue(SCREEN_WIDTH);
     }
-    prevShowListView.current = showListView;
   }, [showListView, SCREEN_WIDTH, slideX]);
 
   function goBackToGrid() {
-    Animated.spring(slideX, { toValue: SCREEN_WIDTH, useNativeDriver: true, bounciness: 0, speed: 20 }).start(() => {
+    Animated.spring(slideX, { toValue: SCREEN_WIDTH, useNativeDriver: true, bounciness: 0, speed: 24 }).start(() => {
+      setListVisible(false);
       setActiveClass(null);
       setActiveSubclass(null);
       setBrowseAll(false);
@@ -83,7 +91,8 @@ export function SearchScreen({
       },
       onPanResponderRelease: (_, g) => {
         if (g.dx > SCREEN_WIDTH * 0.3 || g.vx > 0.4) {
-          Animated.spring(slideX, { toValue: SCREEN_WIDTH, useNativeDriver: true, bounciness: 0, speed: 20 }).start(() => {
+          Animated.spring(slideX, { toValue: SCREEN_WIDTH, useNativeDriver: true, bounciness: 0, speed: 24 }).start(() => {
+            setListVisible(false);
             setActiveClass(null);
             setActiveSubclass(null);
             setBrowseAll(false);
@@ -174,8 +183,6 @@ export function SearchScreen({
   );
 
   const keyExtractor = useCallback((item: DrugSearchResult) => item.drug.id, []);
-
-  const showBrowseView = !hasQuery && !activeClass && !browseAll;
 
   return (
     <View style={styles.flex1}>
@@ -279,15 +286,15 @@ export function SearchScreen({
         ) : null}
       </View>
 
-      {showBrowseView ? (
-        /* ─── Browse view: recents + category grid ─── */
+      <View style={styles.flex1}>
+        {/* ─── Browse view: always mounted underneath ─── */}
         <ScrollView
           style={styles.browseScroll}
           contentContainerStyle={styles.browseContent}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
+          pointerEvents={listVisible || hasQuery ? "none" : "auto"}
         >
-          {/* Recent searches */}
           {recentDrugs.length > 0 ? (
             <View style={styles.recentSection}>
               <Text style={styles.sectionLabel}>{copy(language, "search.recentTitle")}</Text>
@@ -310,7 +317,6 @@ export function SearchScreen({
             </View>
           ) : null}
 
-          {/* Category grid */}
           <View style={styles.categorySection}>
             <Text style={styles.sectionLabel}>{copy(language, "search.categories")}</Text>
             <View style={styles.categoryGrid}>
@@ -334,7 +340,6 @@ export function SearchScreen({
             </View>
           </View>
 
-          {/* All drugs count as a tap target */}
           <Pressable
             onPress={() => setBrowseAll(true)}
             style={styles.browseAllCard}
@@ -346,45 +351,47 @@ export function SearchScreen({
             <Ionicons name="chevron-forward" size={16} color={theme.textDisabled} />
           </Pressable>
         </ScrollView>
-      ) : (
-        /* ─── Results list: search or filtered browse ─── */
-        <Animated.View
-          style={[styles.flex1, !hasQuery && { transform: [{ translateX: slideX }] }]}
-          {...(!hasQuery ? swipeBack.panHandlers : {})}
-        >
-          <FlatList
-            data={listData}
-            renderItem={renderItem}
-            keyExtractor={keyExtractor}
-            style={styles.scrollView}
-            contentContainerStyle={styles.listContent}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-            ListHeaderComponent={
-              <View style={styles.resultHeader}>
-                <Text style={styles.resultCount}>
-                  {resultCount} {copy(language, hasQuery ? "search.results" : "search.resultsAll")}
-                </Text>
-                {(activeClass || browseAll) && !hasQuery ? (
-                  <Pressable onPress={goBackToGrid} hitSlop={8}>
-                    <Text style={styles.clearFilter}>{language === "fr" ? "Effacer" : "Clear"}</Text>
-                  </Pressable>
-                ) : null}
-              </View>
-            }
-            ListEmptyComponent={
-              hasQuery ? (
-                <View style={styles.emptyCard}>
-                  <Ionicons name="search-outline" size={32} color={theme.textDisabled} style={styles.emptyIcon} />
-                  <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
-                  <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
+
+        {/* ─── Results list: overlaid on top, slides in/out ─── */}
+        {(listVisible || hasQuery) ? (
+          <Animated.View
+            style={[styles.listOverlay, !hasQuery && { transform: [{ translateX: slideX }] }]}
+            {...(!hasQuery ? swipeBack.panHandlers : {})}
+          >
+            <FlatList
+              data={listData}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
+              style={styles.scrollView}
+              contentContainerStyle={styles.listContent}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+              ListHeaderComponent={
+                <View style={styles.resultHeader}>
+                  <Text style={styles.resultCount}>
+                    {resultCount} {copy(language, hasQuery ? "search.results" : "search.resultsAll")}
+                  </Text>
+                  {(activeClass || browseAll) && !hasQuery ? (
+                    <Pressable onPress={goBackToGrid} hitSlop={8}>
+                      <Text style={styles.clearFilter}>{language === "fr" ? "Effacer" : "Clear"}</Text>
+                    </Pressable>
+                  ) : null}
                 </View>
-              ) : null
-            }
-            ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
-          />
-        </Animated.View>
-      )}
+              }
+              ListEmptyComponent={
+                hasQuery ? (
+                  <View style={styles.emptyCard}>
+                    <Ionicons name="search-outline" size={32} color={theme.textDisabled} style={styles.emptyIcon} />
+                    <Text style={styles.emptyTitle}>{copy(language, "search.emptyTitle")}</Text>
+                    <Text style={styles.emptyText}>{copy(language, "search.emptyBody")}</Text>
+                  </View>
+                ) : null
+              }
+              ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
+            />
+          </Animated.View>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -578,6 +585,10 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
     },
 
     /* ─── Results list ─── */
+    listOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: theme.bg,
+    },
     scrollView: { flex: 1, backgroundColor: theme.bg },
     listContent: {
       paddingHorizontal: 16,
