@@ -195,16 +195,6 @@ export function SearchScreen({
     <View style={styles.flex1}>
       {/* Search input — always at top */}
       <View style={styles.searchHeader}>
-        <View style={styles.inputRow}>
-          {!hasQuery && !dismissing && (activeClass || browseAll) ? (
-            <Pressable
-              onPress={goBackToGrid}
-              style={styles.backButton}
-              hitSlop={8}
-            >
-              <Ionicons name="arrow-back" size={20} color={theme.textPrimary} />
-            </Pressable>
-          ) : null}
         <View style={styles.inputWrap}>
           <Ionicons name="search" size={18} color={theme.textSecondary} style={styles.searchIcon} />
           <TextInput
@@ -222,75 +212,6 @@ export function SearchScreen({
             </Pressable>
           ) : null}
         </View>
-        </View>
-
-        {/* Category filter chips — shown when searching or browsing a category */}
-        {(hasQuery || (!dismissing && (activeClass || browseAll))) ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterChipList}
-            style={styles.filterChipScroll}
-            keyboardShouldPersistTaps="handled"
-          >
-            <Pressable
-              onPress={() => { if (!hasQuery) { goBackToGrid(); } else { setActiveClass(null); setActiveSubclass(null); } }}
-              style={[styles.filterChip, activeClass === null && (hasQuery || browseAll) && styles.filterChipActive]}
-            >
-              <Text style={[styles.filterChipText, activeClass === null && (hasQuery || browseAll) && styles.filterChipTextActive]}>
-                {copy(language, "search.categoryAll")}
-              </Text>
-            </Pressable>
-            {drugClassEntries.map(([cls]) => {
-              const active = cls === activeClass;
-              return (
-                <Pressable
-                  key={cls}
-                  onPress={() => handleClassPress(cls)}
-                  style={[styles.filterChip, active && styles.filterChipActive]}
-                >
-                  <Text style={[styles.filterChipText, active && styles.filterChipTextActive]} numberOfLines={1}>
-                    {cls}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        ) : null}
-
-        {/* Subclass chips */}
-        {activeClass && !dismissing && subclasses.length > 0 ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterChipList}
-            style={styles.filterChipScroll}
-            keyboardShouldPersistTaps="handled"
-          >
-            <Pressable
-              onPress={() => setActiveSubclass(null)}
-              style={[styles.subFilterChip, activeSubclass === null && styles.subFilterChipActive]}
-            >
-              <Text style={[styles.subFilterChipText, activeSubclass === null && styles.subFilterChipTextActive]}>
-                {copy(language, "search.categoryAll")}
-              </Text>
-            </Pressable>
-            {subclasses.map((sub) => {
-              const active = sub === activeSubclass;
-              return (
-                <Pressable
-                  key={sub}
-                  onPress={() => setActiveSubclass(sub)}
-                  style={[styles.subFilterChip, active && styles.subFilterChipActive]}
-                >
-                  <Text style={[styles.subFilterChipText, active && styles.subFilterChipTextActive]} numberOfLines={1}>
-                    {sub}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        ) : null}
       </View>
 
       <View style={styles.flex1}>
@@ -365,6 +286,83 @@ export function SearchScreen({
             style={[styles.listOverlay, !hasQuery && { transform: [{ translateX: slideX }] }]}
             {...(!hasQuery ? swipeBack.panHandlers : {})}
           >
+            {/* Filter bar inside overlay so it slides with the list */}
+            <View style={styles.filterBar}>
+              {!hasQuery && (activeClass || browseAll) ? (
+                <Pressable
+                  onPress={goBackToGrid}
+                  style={styles.backButton}
+                  hitSlop={8}
+                >
+                  <Ionicons name="arrow-back" size={20} color={theme.textPrimary} />
+                </Pressable>
+              ) : null}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filterChipList}
+                style={styles.flex1}
+                keyboardShouldPersistTaps="handled"
+              >
+                <Pressable
+                  onPress={() => { if (!hasQuery) { goBackToGrid(); } else { setActiveClass(null); setActiveSubclass(null); } }}
+                  style={[styles.filterChip, activeClass === null && (hasQuery || browseAll) && styles.filterChipActive]}
+                >
+                  <Text style={[styles.filterChipText, activeClass === null && (hasQuery || browseAll) && styles.filterChipTextActive]}>
+                    {copy(language, "search.categoryAll")}
+                  </Text>
+                </Pressable>
+                {drugClassEntries.map(([cls]) => {
+                  const active = cls === activeClass;
+                  return (
+                    <Pressable
+                      key={cls}
+                      onPress={() => handleClassPress(cls)}
+                      style={[styles.filterChip, active && styles.filterChipActive]}
+                    >
+                      <Text style={[styles.filterChipText, active && styles.filterChipTextActive]} numberOfLines={1}>
+                        {cls}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            {activeClass && subclasses.length > 0 ? (
+              <View style={styles.subFilterBar}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.filterChipList}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  <Pressable
+                    onPress={() => setActiveSubclass(null)}
+                    style={[styles.subFilterChip, activeSubclass === null && styles.subFilterChipActive]}
+                  >
+                    <Text style={[styles.subFilterChipText, activeSubclass === null && styles.subFilterChipTextActive]}>
+                      {copy(language, "search.categoryAll")}
+                    </Text>
+                  </Pressable>
+                  {subclasses.map((sub) => {
+                    const active = sub === activeSubclass;
+                    return (
+                      <Pressable
+                        key={sub}
+                        onPress={() => setActiveSubclass(sub)}
+                        style={[styles.subFilterChip, active && styles.subFilterChipActive]}
+                      >
+                        <Text style={[styles.subFilterChipText, active && styles.subFilterChipTextActive]} numberOfLines={1}>
+                          {sub}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            ) : null}
+
             <FlatList
               data={listData}
               renderItem={renderItem}
@@ -413,14 +411,8 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
       paddingHorizontal: 16,
       paddingTop: 12,
       paddingBottom: 10,
-      gap: 10,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
-    },
-    inputRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 10,
     },
     backButton: {
       width: 36,
@@ -434,7 +426,6 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
       flexShrink: 0,
     },
     inputWrap: {
-      flex: 1,
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.surface,
@@ -459,9 +450,27 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
     },
     clearButton: { flexShrink: 0 },
 
+    /* ─── Filter bar (inside overlay) ─── */
+    filterBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: theme.bg,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    subFilterBar: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      backgroundColor: theme.bg,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+
     /* ─── Filter chips (horizontal, compact) ─── */
-    filterChipScroll: { marginHorizontal: -16 },
-    filterChipList: { gap: 6, paddingHorizontal: 16 },
+    filterChipList: { gap: 6 },
     filterChip: {
       borderRadius: 999,
       borderWidth: 1.5,
