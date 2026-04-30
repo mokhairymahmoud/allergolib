@@ -12,10 +12,10 @@ type CategoryIconName = React.ComponentProps<typeof Ionicons>["name"];
 
 function categoryIcon(cls: string): CategoryIconName {
   const lower = cls.toLowerCase();
-  if (lower.includes("beta-lactam") || lower.includes("bêta-lactam")) return "medical-outline";
+  if (lower.includes("beta-lactam") || lower.includes("bêta-lactam") || lower.includes("antibiotic")) return "medical-outline";
   if (lower.includes("morphini") || lower.includes("antalgi") || lower.includes("opioid")) return "fitness-outline";
   if (lower.includes("anesth")) return "water-outline";
-  if (lower.includes("curare") || lower.includes("neuromusc")) return "pulse-outline";
+  if (lower.includes("curare") || lower.includes("nmba")) return "pulse-outline";
   if (lower.includes("hypnoti")) return "moon-outline";
   if (lower.includes("colorant") || lower.includes("dye")) return "color-palette-outline";
   return "flask-outline";
