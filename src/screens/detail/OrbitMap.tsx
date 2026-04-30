@@ -132,17 +132,9 @@ export function OrbitMap({
   // ─── Concentric arcs geometry ────────────────────────────────────────────
   const screenW = Dimensions.get("window").width - 32;
   const centerR = 40;
-  const ringGap = 6;
+  const arcThickness = 36;
+  const ringGap = 8;
   const firstRingOffset = 10;
-  const minArcThickness = 22;
-  const maxArcThickness = 52;
-
-  const maxEntryCount = Math.max(...groups.map((g) => g.entries.length), 1);
-
-  function arcThicknessForCount(count: number) {
-    const t = count / maxEntryCount;
-    return minArcThickness + t * (maxArcThickness - minArcThickness);
-  }
 
   type ArcData = {
     group: CrossReactivityGroup; idx: number; tier: CrossReactivityTier;
@@ -161,25 +153,21 @@ export function OrbitMap({
     const tierGroups = groups.map((g, i) => ({ group: g, idx: i })).filter(({ group }) => highestTier(group.entries) === tier);
     if (tierGroups.length === 0) continue;
 
-    const thicknesses = tierGroups.map(({ group }) => arcThicknessForCount(group.entries.length));
-    const tierThickness = Math.max(...thicknesses);
-
+    const innerR = currentR;
+    const outerR = currentR + arcThickness;
     const n = tierGroups.length;
-    const gapAngle = 0.15;
-    const sweepPerGroup = (2 * Math.PI - gapAngle * n) / n;
-    const clampedSweep = Math.min(sweepPerGroup, Math.PI * 0.85);
-    const totalUsed = clampedSweep * n + gapAngle * n;
+    const gapAngle = 0.12;
+    const totalDrugs = tierGroups.reduce((sum, { group }) => sum + group.entries.length, 0);
+    const availableAngle = 2 * Math.PI - gapAngle * n;
+    const totalUsed = availableAngle + gapAngle * n;
     let angle = tierBaseOffsets[tier] - totalUsed / 2 + gapAngle / 2;
 
-    for (let i = 0; i < tierGroups.length; i++) {
-      const { group, idx } = tierGroups[i];
-      const thickness = thicknesses[i];
-      const innerR = currentR + (tierThickness - thickness) / 2;
-      const outerR = innerR + thickness;
-      arcs.push({ group, idx, tier, innerR, outerR, startAngle: angle, sweepAngle: clampedSweep, midAngle: angle + clampedSweep / 2 });
-      angle += clampedSweep + gapAngle;
+    for (const { group, idx } of tierGroups) {
+      const sweep = Math.max((group.entries.length / totalDrugs) * availableAngle, 0.25);
+      arcs.push({ group, idx, tier, innerR, outerR, startAngle: angle, sweepAngle: sweep, midAngle: angle + sweep / 2 });
+      angle += sweep + gapAngle;
     }
-    currentR += tierThickness + ringGap;
+    currentR = outerR + ringGap;
   }
 
   const maxOuterR = Math.max(...arcs.map((a) => a.outerR), centerR + 30);
