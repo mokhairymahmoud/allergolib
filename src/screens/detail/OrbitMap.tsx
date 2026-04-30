@@ -223,21 +223,26 @@ export function OrbitMap({
               return <Path key={`tp-${idx}`} id={`tp-${idx}`} d={`M ${sx} ${sy} A ${textR} ${textR} 0 0 1 ${ex} ${ey}`} fill="none" />;
             })}
           </Defs>
-          {arcs.map(({ group, idx }) => (
-            <SvgText
-              key={`txt-${idx}`}
-              fill="#FFF"
-              fontSize={10}
-              fontWeight="700"
-              dy={4}
-              textAnchor="middle"
-              onPress={() => setExpandedGroupIdx(expandedGroupIdx === idx ? null : idx)}
-            >
-              <TextPath href={`#tp-${idx}`} startOffset="50%">
-                {group.groupName[language]}
-              </TextPath>
-            </SvgText>
-          ))}
+          {arcs.map(({ group, idx, orbitR, sweepAngle }) => {
+            const label = `${group.groupName[language]} (${group.entries.length})`;
+            const arcLen = (orbitR + arcThickness / 2) * sweepAngle;
+            const fontSize = label.length * 6 > arcLen ? 8 : 10;
+            return (
+              <SvgText
+                key={`txt-${idx}`}
+                fill="#FFF"
+                fontSize={fontSize}
+                fontWeight="700"
+                dy={4}
+                textAnchor="middle"
+                onPress={() => setExpandedGroupIdx(expandedGroupIdx === idx ? null : idx)}
+              >
+                <TextPath href={`#tp-${idx}`} startOffset="50%">
+                  {label}
+                </TextPath>
+              </SvgText>
+            );
+          })}
         </Svg>
 
         {/* Center node */}
