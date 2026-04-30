@@ -296,9 +296,10 @@ export default function App() {
                 <Pressable onPress={toggleDark} style={styles.pill}>
                   <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={14} color={theme.textSecondary} />
                 </Pressable>
-                <Pressable onPress={() => setLanguage(language === "fr" ? "en" : "fr")} style={styles.pill}>
-                  <Ionicons name="globe-outline" size={14} color={theme.textSecondary} />
-                  <Text style={styles.pillText}>{language === "fr" ? "EN" : "FR"}</Text>
+                <Pressable onPress={() => setLanguage(language === "fr" ? "en" : "fr")} style={styles.langPill}>
+                  <Text style={styles.langOption}>{language === "fr" ? "FR" : "EN"}</Text>
+                  <Text style={styles.langDivider}>|</Text>
+                  <Text style={styles.langOptionInactive}>{language === "fr" ? "EN" : "FR"}</Text>
                 </Pressable>
               </View>
 
@@ -463,6 +464,32 @@ function makeStyles(theme: typeof lightTheme) {
       color: theme.textSecondary,
       fontSize: 12,
       fontWeight: "700",
+    },
+    langPill: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      borderWidth: 1,
+      borderColor: theme.borderMid,
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      backgroundColor: theme.surface,
+    },
+    langOption: {
+      color: theme.accent,
+      fontSize: 12,
+      fontWeight: "800",
+    },
+    langDivider: {
+      color: theme.borderMid,
+      fontSize: 12,
+      fontWeight: "400",
+    },
+    langOptionInactive: {
+      color: theme.textDisabled,
+      fontSize: 12,
+      fontWeight: "600",
     },
     footer: {
       backgroundColor: theme.surface,

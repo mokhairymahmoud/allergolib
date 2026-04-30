@@ -88,26 +88,49 @@ export function DilutionTab({
             <View style={styles.results}>
               {plans.map((plan) => (
                 <View key={plan.ratio} style={styles.card}>
-                  <Text style={styles.ratio}>{plan.ratio}</Text>
-                  <Text style={styles.meta}>
-                    {copy(language, "detail.calculatorTarget")}:{" "}
-                    {formatNumber(plan.targetConcentration, language)}
-                    {concentrationUnit ? ` ${concentrationUnit}` : ""}
-                  </Text>
-                  <Text style={styles.meta}>
-                    {copy(language, "detail.calculatorDirect")}:{" "}
-                    {formatNumber(plan.stockVolumeMl, language)} mL +{" "}
-                    {formatNumber(plan.diluentVolumeMl, language)} mL diluent
-                  </Text>
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.ratio}>{plan.ratio}</Text>
+                    <Text style={styles.targetConc}>
+                      → {formatNumber(plan.targetConcentration, language)}
+                      {concentrationUnit ? ` ${concentrationUnit}` : ""}
+                    </Text>
+                  </View>
+
+                  <View style={styles.recipeSection}>
+                    <Text style={styles.recipeLabel}>{copy(language, "detail.calculatorDirect")}</Text>
+                    <View style={styles.recipeRow}>
+                      <View style={styles.recipePill}>
+                        <Text style={styles.recipePillValue}>{formatNumber(plan.stockVolumeMl, language)} mL</Text>
+                        <Text style={styles.recipePillLabel}>{copy(language, "detail.calculatorStockVol")}</Text>
+                      </View>
+                      <Text style={styles.recipePlus}>+</Text>
+                      <View style={styles.recipePill}>
+                        <Text style={styles.recipePillValue}>{formatNumber(plan.diluentVolumeMl, language)} mL</Text>
+                        <Text style={styles.recipePillLabel}>{copy(language, "detail.calculatorDiluentVol")}</Text>
+                      </View>
+                      <Text style={styles.recipeEquals}>= {formatNumber(parsedFinalVolume!, language)} mL</Text>
+                    </View>
+                  </View>
+
                   {plan.stepUpFromRatio &&
                   plan.stepUpStockVolumeMl !== undefined &&
                   plan.stepUpDiluentVolumeMl !== undefined ? (
-                    <Text style={styles.meta}>
-                      {copy(language, "detail.calculatorStepwise")}: {plan.stepUpFromRatio}
-                      {" -> "}
-                      {formatNumber(plan.stepUpStockVolumeMl, language)} mL +{" "}
-                      {formatNumber(plan.stepUpDiluentVolumeMl, language)} mL diluent
-                    </Text>
+                    <View style={styles.recipeSection}>
+                      <Text style={styles.recipeLabel}>
+                        {copy(language, "detail.calculatorStepwise")} ({plan.stepUpFromRatio})
+                      </Text>
+                      <View style={styles.recipeRow}>
+                        <View style={styles.recipePillAlt}>
+                          <Text style={styles.recipePillValue}>{formatNumber(plan.stepUpStockVolumeMl, language)} mL</Text>
+                          <Text style={styles.recipePillLabel}>{plan.stepUpFromRatio}</Text>
+                        </View>
+                        <Text style={styles.recipePlus}>+</Text>
+                        <View style={styles.recipePillAlt}>
+                          <Text style={styles.recipePillValue}>{formatNumber(plan.stepUpDiluentVolumeMl, language)} mL</Text>
+                          <Text style={styles.recipePillLabel}>{copy(language, "detail.calculatorDiluentVol")}</Text>
+                        </View>
+                      </View>
+                    </View>
                   ) : null}
                 </View>
               ))}
@@ -179,24 +202,83 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
       fontSize: 14,
       lineHeight: 20,
     },
-    results: { gap: 10 },
+    results: { gap: 12 },
     card: {
-      gap: 4,
+      gap: 12,
       backgroundColor: theme.surfaceAlt,
       borderRadius: 10,
-      padding: 12,
+      padding: 14,
       borderWidth: 1,
       borderColor: theme.border,
     },
+    cardHeader: {
+      flexDirection: "row",
+      alignItems: "baseline",
+      gap: 10,
+    },
     ratio: {
       color: theme.textPrimary,
-      fontSize: 16,
+      fontSize: 18,
       fontWeight: "800",
     },
-    meta: {
-      color: theme.textPrimary,
+    targetConc: {
+      color: theme.textSecondary,
       fontSize: 13,
-      lineHeight: 20,
+      fontWeight: "600",
+    },
+    recipeSection: {
+      gap: 6,
+    },
+    recipeLabel: {
+      color: theme.textSecondary,
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    recipeRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      flexWrap: "wrap",
+    },
+    recipePill: {
+      backgroundColor: theme.accentBg,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: theme.accentBorder,
+    },
+    recipePillAlt: {
+      backgroundColor: theme.surface,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: theme.borderMid,
+    },
+    recipePillValue: {
+      color: theme.textPrimary,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    recipePillLabel: {
+      color: theme.textSecondary,
+      fontSize: 10,
+      fontWeight: "600",
+    },
+    recipePlus: {
+      color: theme.textDisabled,
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    recipeEquals: {
+      color: theme.textSecondary,
+      fontSize: 12,
+      fontWeight: "600",
     },
   });
 }

@@ -287,7 +287,7 @@ export function SearchScreen({
         keyboardDismissMode="on-drag"
         ListHeaderComponent={
           <Text style={styles.resultCount}>
-            {resultCount} {copy(language, "search.results")}
+            {resultCount} {copy(language, hasQuery ? "search.results" : "search.resultsAll")}
           </Text>
         }
         ListEmptyComponent={

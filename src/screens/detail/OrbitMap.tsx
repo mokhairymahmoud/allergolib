@@ -143,8 +143,9 @@ export function OrbitMap({
     );
   }
 
-  const centerR = 42;
-  const arcThickness = 36;
+  const availableR = (screenW - 40) / 2;
+  const centerR = Math.max(42, Math.min(52, availableR * 0.22));
+  const arcThickness = Math.max(36, Math.min(48, availableR * 0.2));
   const ringGap = 8;
   const firstRingOffset = 10;
   const tierRadii: Record<CrossReactivityTier, number> = {
@@ -185,7 +186,7 @@ export function OrbitMap({
   }
 
   const maxR = Math.max(...arcs.map((a) => a.orbitR + arcThickness), centerR + 40);
-  const sz = (maxR + 70) * 2;
+  const sz = Math.min((maxR + 70) * 2, screenW + 32);
   const c = sz / 2;
 
   function arcPath(sa: number, sweep: number, innerR: number, outerR: number): string {
