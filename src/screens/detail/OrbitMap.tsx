@@ -337,7 +337,10 @@ export function OrbitMap({
       {/* Group drill-down overlay */}
       <Modal visible={expandedGroupIdx !== null} transparent animationType="fade" onRequestClose={() => setExpandedGroupIdx(null)}>
         <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.82)", justifyContent: "center", alignItems: "center" }} onPress={() => setExpandedGroupIdx(null)}>
-          <Pressable onPress={() => {}} style={{ width: screenW, alignItems: "center" }}>
+          <Pressable onPress={() => {}} style={{ alignItems: "center" }}>
+            <Pressable onPress={() => setExpandedGroupIdx(null)} style={{ position: "absolute", top: -44, right: -8, zIndex: 20, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" }} hitSlop={8}>
+              <Ionicons name="close" size={20} color="#FFF" />
+            </Pressable>
             {expandedGroupIdx !== null ? (() => {
               const eGroup = groups[expandedGroupIdx];
               if (!eGroup) return null;
