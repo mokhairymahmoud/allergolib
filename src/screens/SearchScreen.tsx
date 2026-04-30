@@ -164,7 +164,7 @@ export function SearchScreen({
             keyboardShouldPersistTaps="handled"
           >
             <Pressable
-              onPress={() => { setActiveClass(null); setActiveSubclass(null); }}
+              onPress={() => { setActiveClass(null); setActiveSubclass(null); if (!hasQuery) setBrowseAll(false); }}
               style={[styles.filterChip, activeClass === null && (hasQuery || browseAll) && styles.filterChipActive]}
             >
               <Text style={[styles.filterChipText, activeClass === null && (hasQuery || browseAll) && styles.filterChipTextActive]}>
