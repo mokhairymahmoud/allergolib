@@ -129,16 +129,22 @@ export function OrbitMap({
     }
   }
 
-  // ─── Concentric arcs geometry ────────────────────────────────────────────
+  // ─── Concentric arcs geometry (same as master) ──────────────────────────
   const screenW = Dimensions.get("window").width - 32;
-  const centerR = 40;
-  const arcThickness = 36;
+  const availableR = (screenW - 40) / 2;
+  const centerR = Math.max(42, Math.min(52, availableR * 0.22));
+  const arcThickness = Math.max(36, Math.min(48, availableR * 0.2));
   const ringGap = 8;
   const firstRingOffset = 10;
+  const tierRadii: Record<CrossReactivityTier, number> = {
+    "higher-concern": centerR + firstRingOffset,
+    "lower-expected": centerR + firstRingOffset + arcThickness + ringGap,
+    "uncertain": centerR + firstRingOffset + (arcThickness + ringGap) * 2,
+  };
 
   type ArcData = {
     group: CrossReactivityGroup; idx: number; tier: CrossReactivityTier;
-    innerR: number; outerR: number; startAngle: number; sweepAngle: number; midAngle: number;
+    orbitR: number; startAngle: number; sweepAngle: number; midAngle: number;
   };
   const arcs: ArcData[] = [];
 
@@ -148,40 +154,36 @@ export function OrbitMap({
     "uncertain": -Math.PI / 2 - (2 * Math.PI) / 3,
   };
 
-  let currentR = centerR + firstRingOffset;
   for (const tier of tierOrder) {
     const tierGroups = groups.map((g, i) => ({ group: g, idx: i })).filter(({ group }) => highestTier(group.entries) === tier);
     if (tierGroups.length === 0) continue;
-
-    const innerR = currentR;
-    const outerR = currentR + arcThickness;
+    const orbitR = tierRadii[tier];
     const n = tierGroups.length;
-    const gapAngle = 0.12;
-    const totalDrugs = tierGroups.reduce((sum, { group }) => sum + group.entries.length, 0);
-    const availableAngle = 2 * Math.PI - gapAngle * n;
-    const totalUsed = availableAngle + gapAngle * n;
+    const gapAngle = 0.15;
+    const sweepPerGroup = (2 * Math.PI - gapAngle * n) / n;
+    const clampedSweep = Math.min(sweepPerGroup, Math.PI * 0.8);
+    const totalUsed = clampedSweep * n + gapAngle * n;
     let angle = tierBaseOffsets[tier] - totalUsed / 2 + gapAngle / 2;
-
     for (const { group, idx } of tierGroups) {
-      const sweep = Math.max((group.entries.length / totalDrugs) * availableAngle, 0.25);
-      arcs.push({ group, idx, tier, innerR, outerR, startAngle: angle, sweepAngle: sweep, midAngle: angle + sweep / 2 });
-      angle += sweep + gapAngle;
+      arcs.push({ group, idx, tier, orbitR, startAngle: angle, sweepAngle: clampedSweep, midAngle: angle + clampedSweep / 2 });
+      angle += clampedSweep + gapAngle;
     }
-    currentR = outerR + ringGap;
   }
 
-  const maxOuterR = Math.max(...arcs.map((a) => a.outerR), centerR + 30);
-  const sz = Math.min((maxOuterR + 55) * 2, screenW + 16);
+  const maxR = Math.max(...arcs.map((a) => a.orbitR + arcThickness), centerR + 40);
+  const sz = Math.min((maxR + 70) * 2, screenW + 32);
   const ctr = sz / 2;
 
-  function arcPath(sa: number, sweep: number, innerR: number, outerR: number): string {
+  function arcPath(sa: number, sweep: number, orbitR: number): string {
+    const iR = orbitR;
+    const oR = orbitR + arcThickness;
     const ea = sa + sweep;
     const large = sweep > Math.PI ? 1 : 0;
-    const ox1 = ctr + outerR * Math.cos(sa), oy1 = ctr + outerR * Math.sin(sa);
-    const ox2 = ctr + outerR * Math.cos(ea), oy2 = ctr + outerR * Math.sin(ea);
-    const ix2 = ctr + innerR * Math.cos(ea), iy2 = ctr + innerR * Math.sin(ea);
-    const ix1 = ctr + innerR * Math.cos(sa), iy1 = ctr + innerR * Math.sin(sa);
-    return `M ${ox1} ${oy1} A ${outerR} ${outerR} 0 ${large} 1 ${ox2} ${oy2} L ${ix2} ${iy2} A ${innerR} ${innerR} 0 ${large} 0 ${ix1} ${iy1} Z`;
+    const ox1 = ctr + oR * Math.cos(sa), oy1 = ctr + oR * Math.sin(sa);
+    const ox2 = ctr + oR * Math.cos(ea), oy2 = ctr + oR * Math.sin(ea);
+    const ix2 = ctr + iR * Math.cos(ea), iy2 = ctr + iR * Math.sin(ea);
+    const ix1 = ctr + iR * Math.cos(sa), iy1 = ctr + iR * Math.sin(sa);
+    return `M ${ox1} ${oy1} A ${oR} ${oR} 0 ${large} 1 ${ox2} ${oy2} L ${ix2} ${iy2} A ${iR} ${iR} 0 ${large} 0 ${ix1} ${iy1} Z`;
   }
 
   return (
@@ -190,14 +192,14 @@ export function OrbitMap({
       <View style={{ width: sz, height: sz, alignSelf: "center" }}>
         <Svg width={sz} height={sz}>
           {/* Guide rings */}
-          {[...new Set(arcs.map((a) => (a.innerR + a.outerR) / 2))].map((r, i) => (
+          {[...new Set(arcs.map((a) => a.orbitR + arcThickness / 2))].map((r, i) => (
             <Circle key={`guide-${i}`} cx={ctr} cy={ctr} r={r} fill="none" stroke={theme.borderMid} strokeWidth={1} strokeDasharray="4,6" opacity={0.2} />
           ))}
           {/* Arcs */}
-          {arcs.map(({ tier, innerR, outerR, startAngle, sweepAngle, idx }) => (
+          {arcs.map(({ tier, orbitR, startAngle, sweepAngle, idx }) => (
             <Path
               key={`arc-${idx}`}
-              d={arcPath(startAngle, sweepAngle, innerR, outerR)}
+              d={arcPath(startAngle, sweepAngle, orbitR)}
               fill={nodeColor(tier)}
               opacity={expandedGroupIdx === idx ? 1 : 0.8}
               onPress={() => setExpandedGroupIdx(expandedGroupIdx === idx ? null : idx)}
@@ -205,8 +207,8 @@ export function OrbitMap({
           ))}
           {/* Text paths */}
           <Defs>
-            {arcs.map(({ startAngle, sweepAngle, innerR, outerR, idx, midAngle }) => {
-              const textR = (innerR + outerR) / 2;
+            {arcs.map(({ startAngle, sweepAngle, orbitR, idx, midAngle }) => {
+              const textR = orbitR + arcThickness / 2;
               const sa = startAngle;
               const ea = startAngle + sweepAngle;
               const normMid = ((midAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
