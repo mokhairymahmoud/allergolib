@@ -53,6 +53,7 @@ export function SearchScreen({
   const SCREEN_WIDTH = Dimensions.get("window").width;
   const slideX = useRef(new Animated.Value(SCREEN_WIDTH)).current;
   const [listVisible, setListVisible] = useState(false);
+  const [dismissing, setDismissing] = useState(false);
   const showListView = hasQuery || !!activeClass || browseAll;
   const prevShowListView = useRef(showListView);
 
@@ -62,17 +63,21 @@ export function SearchScreen({
 
     if (showListView && !wasShowing) {
       setListVisible(true);
+      setDismissing(false);
       slideX.setValue(SCREEN_WIDTH);
       Animated.spring(slideX, { toValue: 0, useNativeDriver: true, bounciness: 0, speed: 20 }).start();
     } else if (!showListView && wasShowing) {
       setListVisible(false);
+      setDismissing(false);
       slideX.setValue(SCREEN_WIDTH);
     }
   }, [showListView, SCREEN_WIDTH, slideX]);
 
   function goBackToGrid() {
+    setDismissing(true);
     Animated.spring(slideX, { toValue: SCREEN_WIDTH, useNativeDriver: true, bounciness: 0, speed: 24 }).start(() => {
       setListVisible(false);
+      setDismissing(false);
       setActiveClass(null);
       setActiveSubclass(null);
       setBrowseAll(false);
@@ -91,8 +96,10 @@ export function SearchScreen({
       },
       onPanResponderRelease: (_, g) => {
         if (g.dx > SCREEN_WIDTH * 0.3 || g.vx > 0.4) {
+          setDismissing(true);
           Animated.spring(slideX, { toValue: SCREEN_WIDTH, useNativeDriver: true, bounciness: 0, speed: 24 }).start(() => {
             setListVisible(false);
+            setDismissing(false);
             setActiveClass(null);
             setActiveSubclass(null);
             setBrowseAll(false);
@@ -189,7 +196,7 @@ export function SearchScreen({
       {/* Search input — always at top */}
       <View style={styles.searchHeader}>
         <View style={styles.inputRow}>
-          {!hasQuery && (activeClass || browseAll) ? (
+          {!hasQuery && !dismissing && (activeClass || browseAll) ? (
             <Pressable
               onPress={goBackToGrid}
               style={styles.backButton}
@@ -218,7 +225,7 @@ export function SearchScreen({
         </View>
 
         {/* Category filter chips — shown when searching or browsing a category */}
-        {(hasQuery || activeClass || browseAll) ? (
+        {(hasQuery || (!dismissing && (activeClass || browseAll))) ? (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -252,7 +259,7 @@ export function SearchScreen({
         ) : null}
 
         {/* Subclass chips */}
-        {activeClass && subclasses.length > 0 ? (
+        {activeClass && !dismissing && subclasses.length > 0 ? (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
