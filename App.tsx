@@ -73,6 +73,7 @@ export default function App() {
   const [activeDataset, setActiveDataset] = useState(() => getBundledActiveDataset());
   const [language, setLanguage] = useState<Language>("fr");
   const [homeTab, setHomeTab] = useState<HomeTab>("search");
+  const [searchResetSignal, setSearchResetSignal] = useState(0);
   const [query, setQuery] = useState("");
   const [selectedDrugId, setSelectedDrugId] = useState<string | null>(null);
   const [favoriteDrugIds, setFavoriteDrugIds] = useState<string[]>([]);
@@ -320,6 +321,7 @@ export default function App() {
                         onToggleFavorite={toggleFavorite}
                         query={query}
                         recentDrugs={recentDrugs}
+                        resetSignal={searchResetSignal}
                         searchResults={searchResults}
                       />
                     ) : null}
@@ -351,7 +353,13 @@ export default function App() {
                   {HOME_TABS.map((tab) => {
                     const selected = tab === homeTab;
                     return (
-                      <Pressable key={tab} onPress={() => setHomeTab(tab)} style={styles.tab}>
+                      <Pressable key={tab} onPress={() => {
+                        if (tab === "search" && homeTab === "search") {
+                          setSearchResetSignal((n) => n + 1);
+                        } else {
+                          setHomeTab(tab);
+                        }
+                      }} style={styles.tab}>
                         <Ionicons
                           name={homeTabIconName(tab, selected)}
                           size={24}

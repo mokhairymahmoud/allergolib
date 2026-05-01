@@ -31,6 +31,7 @@ export function SearchScreen({
   onChangeQuery,
   onOpenDrug,
   onToggleFavorite,
+  resetSignal,
 }: {
   language: Language;
   query: string;
@@ -41,6 +42,7 @@ export function SearchScreen({
   onChangeQuery: (value: string) => void;
   onOpenDrug: (drugId: string) => void;
   onToggleFavorite: (drugId: string) => void;
+  resetSignal: number;
 }) {
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
@@ -83,6 +85,19 @@ export function SearchScreen({
       setBrowseAll(false);
     });
   }
+
+  const resetSignalRef = useRef(resetSignal);
+  useEffect(() => {
+    if (resetSignal !== resetSignalRef.current) {
+      resetSignalRef.current = resetSignal;
+      if (activeClass || activeSubclass || browseAll) {
+        goBackToGrid();
+      }
+      if (query) {
+        onChangeQuery("");
+      }
+    }
+  }, [resetSignal]);
 
   const canSwipeBackRef = useRef(false);
   canSwipeBackRef.current = !hasQuery && (!!activeClass || browseAll);
