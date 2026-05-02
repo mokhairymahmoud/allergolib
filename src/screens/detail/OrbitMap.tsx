@@ -38,7 +38,7 @@ export function OrbitMap({
 }) {
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
-  const [expandedGroupIdx, setExpandedGroupIdx] = useState<number | null>(null);
+  const [expandedArc, setExpandedArc] = useState<{ groupIdx: number; tier: CrossReactivityTier } | null>(null);
   const [sheetEntry, setSheetEntry] = useState<{ entry: CrossReactivityEntry; groupName: string } | null>(null);
   const sheetSlide = useRef(new Animated.Value(400)).current;
   const prevSheetEntry = useRef(sheetEntry);
@@ -155,18 +155,20 @@ export function OrbitMap({
   };
 
   for (const tier of tierOrder) {
-    const tierGroups = groups.map((g, i) => ({ group: g, idx: i })).filter(({ group }) => highestTier(group.entries) === tier);
-    if (tierGroups.length === 0) continue;
+    const tierContributions = groups
+      .map((g, i) => ({ group: g, idx: i, count: g.entries.filter((e) => e.tier === tier).length }))
+      .filter(({ count }) => count > 0);
+    if (tierContributions.length === 0) continue;
     const orbitR = tierRadii[tier];
-    const n = tierGroups.length;
+    const n = tierContributions.length;
     const gapAngle = 0.15;
     const sweepPerGroup = (2 * Math.PI - gapAngle * n) / n;
-    const clampedSweep = Math.min(sweepPerGroup, Math.PI * 0.8);
-    const totalUsed = clampedSweep * n + gapAngle * n;
+    const sweepAngle = Math.min(sweepPerGroup, Math.PI * 0.8);
+    const totalUsed = sweepAngle * n + gapAngle * n;
     let angle = tierBaseOffsets[tier] - totalUsed / 2 + gapAngle / 2;
-    for (const { group, idx } of tierGroups) {
-      arcs.push({ group, idx, tier, orbitR, startAngle: angle, sweepAngle: clampedSweep, midAngle: angle + clampedSweep / 2 });
-      angle += clampedSweep + gapAngle;
+    for (const { group, idx } of tierContributions) {
+      arcs.push({ group, idx, tier, orbitR, startAngle: angle, sweepAngle, midAngle: angle + sweepAngle / 2 });
+      angle += sweepAngle + gapAngle;
     }
   }
 
@@ -196,18 +198,18 @@ export function OrbitMap({
             <Circle key={`guide-${i}`} cx={ctr} cy={ctr} r={r} fill="none" stroke={theme.borderMid} strokeWidth={1} strokeDasharray="4,6" opacity={0.2} />
           ))}
           {/* Arcs */}
-          {arcs.map(({ tier, orbitR, startAngle, sweepAngle, idx }) => (
+          {arcs.map(({ tier, orbitR, startAngle, sweepAngle, idx }, ai) => (
             <Path
-              key={`arc-${idx}`}
+              key={`arc-${ai}`}
               d={arcPath(startAngle, sweepAngle, orbitR)}
               fill={nodeColor(tier)}
-              opacity={expandedGroupIdx === idx ? 1 : 0.8}
-              onPress={() => setExpandedGroupIdx(expandedGroupIdx === idx ? null : idx)}
+              opacity={expandedArc?.groupIdx === idx && expandedArc.tier === tier ? 1 : 0.8}
+              onPress={() => setExpandedArc(expandedArc?.groupIdx === idx && expandedArc.tier === tier ? null : { groupIdx: idx, tier })}
             />
           ))}
           {/* Text paths */}
           <Defs>
-            {arcs.map(({ startAngle, sweepAngle, orbitR, idx, midAngle }) => {
+            {arcs.map(({ startAngle, sweepAngle, orbitR, midAngle }, ai) => {
               const textR = orbitR + arcThickness / 2;
               const sa = startAngle;
               const ea = startAngle + sweepAngle;
@@ -216,28 +218,29 @@ export function OrbitMap({
               if (isBottom) {
                 const sx = ctr + textR * Math.cos(ea), sy = ctr + textR * Math.sin(ea);
                 const ex = ctr + textR * Math.cos(sa), ey = ctr + textR * Math.sin(sa);
-                return <Path key={`tp-${idx}`} id={`tp-${idx}`} d={`M ${sx} ${sy} A ${textR} ${textR} 0 0 0 ${ex} ${ey}`} fill="none" />;
+                return <Path key={`tp-${ai}`} id={`tp-${ai}`} d={`M ${sx} ${sy} A ${textR} ${textR} 0 0 0 ${ex} ${ey}`} fill="none" />;
               }
               const sx = ctr + textR * Math.cos(sa), sy = ctr + textR * Math.sin(sa);
               const ex = ctr + textR * Math.cos(ea), ey = ctr + textR * Math.sin(ea);
-              return <Path key={`tp-${idx}`} id={`tp-${idx}`} d={`M ${sx} ${sy} A ${textR} ${textR} 0 0 1 ${ex} ${ey}`} fill="none" />;
+              return <Path key={`tp-${ai}`} id={`tp-${ai}`} d={`M ${sx} ${sy} A ${textR} ${textR} 0 0 1 ${ex} ${ey}`} fill="none" />;
             })}
           </Defs>
-          {arcs.map(({ group, idx, orbitR, sweepAngle }) => {
-            const label = `${group.groupName[language]} (${group.entries.length})`;
+          {arcs.map(({ group, idx, tier, orbitR, sweepAngle }, ai) => {
+            const tierCount = group.entries.filter((e) => e.tier === tier).length;
+            const label = `${group.groupName[language]} (${tierCount})`;
             const arcLen = (orbitR + arcThickness / 2) * sweepAngle;
             const fontSize = label.length * 6 > arcLen ? 8 : 10;
             return (
               <SvgText
-                key={`txt-${idx}`}
+                key={`txt-${ai}`}
                 fill="#FFF"
                 fontSize={fontSize}
                 fontWeight="700"
                 dy={4}
                 textAnchor="middle"
-                onPress={() => setExpandedGroupIdx(expandedGroupIdx === idx ? null : idx)}
+                onPress={() => setExpandedArc(expandedArc?.groupIdx === idx && expandedArc.tier === tier ? null : { groupIdx: idx, tier })}
               >
-                <TextPath href={`#tp-${idx}`} startOffset="50%">
+                <TextPath href={`#tp-${ai}`} startOffset="50%">
                   {label}
                 </TextPath>
               </SvgText>
@@ -311,36 +314,37 @@ export function OrbitMap({
       })()}
 
       {/* ─── Group drill-down overlay ─── */}
-      <Modal visible={expandedGroupIdx !== null} transparent animationType="fade" onRequestClose={() => setExpandedGroupIdx(null)}>
-        <Pressable style={styles.overlayBg} onPress={() => { setExpandedGroupIdx(null); setSheetEntry(null); }}>
+      <Modal visible={expandedArc !== null} transparent animationType="fade" onRequestClose={() => setExpandedArc(null)}>
+        <Pressable style={styles.overlayBg} onPress={() => { setExpandedArc(null); setSheetEntry(null); }}>
           <Pressable onPress={() => {}} style={styles.overlayContent}>
-            {expandedGroupIdx !== null ? (() => {
-              const group = groups[expandedGroupIdx];
+            {expandedArc !== null ? (() => {
+              const group = groups[expandedArc.groupIdx];
               if (!group) return null;
-              const tier = highestTier(group.entries);
+              const activeTier = expandedArc.tier;
+              const filteredEntries = group.entries.filter((e) => e.tier === activeTier);
               return (
                 <View style={styles.overlayCard}>
                   {/* Header */}
                   <View style={styles.overlayHeader}>
-                    <View style={[styles.overlayTierDot, { backgroundColor: nodeColor(tier) }]} />
+                    <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: nodeColor(activeTier) }} />
                     <Text style={styles.overlayGroupName}>{group.groupName[language]}</Text>
-                    <Pressable onPress={() => { setExpandedGroupIdx(null); setSheetEntry(null); }} hitSlop={8}>
+                    <Pressable onPress={() => { setExpandedArc(null); setSheetEntry(null); }} hitSlop={8}>
                       <Ionicons name="close" size={20} color={theme.textDisabled} />
                     </Pressable>
                   </View>
                   <View style={styles.overlayBadgeRow}>
-                    <View style={tierBadgeStyle(tier)}>
-                      <Ionicons name={tierIcon(tier)} size={10} color={tierIconColor(tier)} />
-                      <Text style={tierBadgeTextStyle(tier)}>{tierLabel(tier)}</Text>
+                    <View style={tierBadgeStyle(activeTier)}>
+                      <Ionicons name={tierIcon(activeTier)} size={10} color={tierIconColor(activeTier)} />
+                      <Text style={tierBadgeTextStyle(activeTier)}>{tierLabel(activeTier)}</Text>
                     </View>
                     <Text style={styles.overlayCount}>
-                      {group.entries.length} {copy(language, "crossReactivity.drugs")}
+                      {filteredEntries.length} {copy(language, "crossReactivity.drugs")}
                     </Text>
                   </View>
 
                   {/* Drug list */}
                   <ScrollView style={styles.overlayScroll} bounces={false} showsVerticalScrollIndicator={false}>
-                    {group.entries.map((entry) => {
+                    {filteredEntries.map((entry) => {
                       const name = drugNameById[entry.drugId];
                       const displayName = name ? name[language] : entry.drugId;
                       const isNavigable = Boolean(name);
@@ -363,7 +367,7 @@ export function OrbitMap({
                             </View>
                           </View>
                           {isNavigable ? (
-                            <Pressable onPress={() => { setSheetEntry(null); setExpandedGroupIdx(null); onOpenDrug(entry.drugId); }} hitSlop={8} style={styles.drugOpenBtn}>
+                            <Pressable onPress={() => { setSheetEntry(null); setExpandedArc(null); onOpenDrug(entry.drugId); }} hitSlop={8} style={styles.drugOpenBtn}>
                               <Ionicons name="open-outline" size={14} color={theme.accent} />
                             </Pressable>
                           ) : null}
@@ -418,7 +422,7 @@ export function OrbitMap({
                         <Text style={styles.sheetRationale}>{entry.rationale[language]}</Text>
                       </View>
                       {sourceCitations.length > 0 ? (<><View style={styles.sheetDivider} /><Text style={styles.sheetSource}>{copy(language, "crossReactivity.source")}: {sourceCitations.join(", ")}</Text></>) : null}
-                      {isNavigable ? (<><View style={styles.sheetDivider} /><Pressable style={styles.sheetActionBtn} onPress={() => { setSheetEntry(null); setExpandedGroupIdx(null); onOpenDrug(entry.drugId); }}><Ionicons name="open-outline" size={16} color={theme.accent} /><Text style={styles.sheetActionText}>{copy(language, "crossReactivity.openDrug")} — {displayName}</Text></Pressable></>) : null}
+                      {isNavigable ? (<><View style={styles.sheetDivider} /><Pressable style={styles.sheetActionBtn} onPress={() => { setSheetEntry(null); setExpandedArc(null); onOpenDrug(entry.drugId); }}><Ionicons name="open-outline" size={16} color={theme.accent} /><Text style={styles.sheetActionText}>{copy(language, "crossReactivity.openDrug")} — {displayName}</Text></Pressable></>) : null}
                     </ScrollView>
                   );
                 })()}
