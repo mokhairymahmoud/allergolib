@@ -17,12 +17,6 @@ import type {
 
 import { centerFontSize, centerMaxLines } from "./OrbitNode";
 
-function highestTier(entries: CrossReactivityEntry[]): CrossReactivityTier {
-  if (entries.some((e) => e.tier === "higher-concern")) return "higher-concern";
-  if (entries.some((e) => e.tier === "lower-expected")) return "lower-expected";
-  return "uncertain";
-}
-
 export function OrbitMap({
   drug,
   language,
@@ -48,8 +42,11 @@ export function OrbitMap({
   }
   prevSheetEntry.current = sheetEntry;
 
-  const drugNameById: Record<string, { en: string; fr: string }> = {};
-  for (const d of allDrugs) drugNameById[d.id] = d.name;
+  const drugNameById = useMemo(() => {
+    const map: Record<string, { en: string; fr: string }> = {};
+    for (const d of allDrugs) map[d.id] = d.name;
+    return map;
+  }, [allDrugs]);
 
   if (!drug.crossReactivity || drug.crossReactivity.length === 0) {
     return (
@@ -129,7 +126,13 @@ export function OrbitMap({
     }
   }
 
-  // ─── Concentric arcs geometry (same as master) ──────────────────────────
+  function isActiveArc(idx: number, tier: CrossReactivityTier) {
+    return expandedArc?.groupIdx === idx && expandedArc.tier === tier;
+  }
+  function toggleArc(idx: number, tier: CrossReactivityTier) {
+    setExpandedArc(isActiveArc(idx, tier) ? null : { groupIdx: idx, tier });
+  }
+
   const screenW = Dimensions.get("window").width - 32;
   const availableR = (screenW - 40) / 2;
   const centerR = Math.max(42, Math.min(52, availableR * 0.22));
@@ -145,6 +148,7 @@ export function OrbitMap({
   type ArcData = {
     group: CrossReactivityGroup; idx: number; tier: CrossReactivityTier;
     orbitR: number; startAngle: number; sweepAngle: number; midAngle: number;
+    tierCount: number;
   };
   const arcs: ArcData[] = [];
 
@@ -166,8 +170,8 @@ export function OrbitMap({
     const sweepAngle = Math.min(sweepPerGroup, Math.PI * 0.8);
     const totalUsed = sweepAngle * n + gapAngle * n;
     let angle = tierBaseOffsets[tier] - totalUsed / 2 + gapAngle / 2;
-    for (const { group, idx } of tierContributions) {
-      arcs.push({ group, idx, tier, orbitR, startAngle: angle, sweepAngle, midAngle: angle + sweepAngle / 2 });
+    for (const { group, idx, count } of tierContributions) {
+      arcs.push({ group, idx, tier, orbitR, startAngle: angle, sweepAngle, midAngle: angle + sweepAngle / 2, tierCount: count });
       angle += sweepAngle + gapAngle;
     }
   }
@@ -203,8 +207,8 @@ export function OrbitMap({
               key={`arc-${ai}`}
               d={arcPath(startAngle, sweepAngle, orbitR)}
               fill={nodeColor(tier)}
-              opacity={expandedArc?.groupIdx === idx && expandedArc.tier === tier ? 1 : 0.8}
-              onPress={() => setExpandedArc(expandedArc?.groupIdx === idx && expandedArc.tier === tier ? null : { groupIdx: idx, tier })}
+              opacity={isActiveArc(idx, tier) ? 1 : 0.8}
+              onPress={() => toggleArc(idx, tier)}
             />
           ))}
           {/* Text paths */}
@@ -225,8 +229,7 @@ export function OrbitMap({
               return <Path key={`tp-${ai}`} id={`tp-${ai}`} d={`M ${sx} ${sy} A ${textR} ${textR} 0 0 1 ${ex} ${ey}`} fill="none" />;
             })}
           </Defs>
-          {arcs.map(({ group, idx, tier, orbitR, sweepAngle }, ai) => {
-            const tierCount = group.entries.filter((e) => e.tier === tier).length;
+          {arcs.map(({ group, idx, tier, orbitR, sweepAngle, tierCount }, ai) => {
             const label = `${group.groupName[language]} (${tierCount})`;
             const arcLen = (orbitR + arcThickness / 2) * sweepAngle;
             const fontSize = label.length * 6 > arcLen ? 8 : 10;
@@ -238,7 +241,7 @@ export function OrbitMap({
                 fontWeight="700"
                 dy={4}
                 textAnchor="middle"
-                onPress={() => setExpandedArc(expandedArc?.groupIdx === idx && expandedArc.tier === tier ? null : { groupIdx: idx, tier })}
+                onPress={() => toggleArc(idx, tier)}
               >
                 <TextPath href={`#tp-${ai}`} startOffset="50%">
                   {label}
@@ -326,7 +329,7 @@ export function OrbitMap({
                 <View style={styles.overlayCard}>
                   {/* Header */}
                   <View style={styles.overlayHeader}>
-                    <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: nodeColor(activeTier) }} />
+                    <View style={[styles.overlayTierDot, { backgroundColor: nodeColor(activeTier) }]} />
                     <Text style={styles.overlayGroupName}>{group.groupName[language]}</Text>
                     <Pressable onPress={() => { setExpandedArc(null); setSheetEntry(null); }} hitSlop={8}>
                       <Ionicons name="close" size={20} color={theme.textDisabled} />
