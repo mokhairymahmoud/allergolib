@@ -5,6 +5,9 @@ This folder contains the Google Apps Script web app for admin curation.
 For day-to-day maintenance and recovery guidance, use
 [OPERATIONS.md](/Users/mohamedkhairy/dev/allergolib/admin/apps-script/OPERATIONS.md:1).
 
+For a step-by-step UI walkthrough with screenshots, use
+[ADMIN_UI_TUTORIAL.md](/Users/mohamedkhairy/dev/allergolib/admin/apps-script/ADMIN_UI_TUTORIAL.md:1).
+
 ## What it supports
 
 - desktop-first web app shell

@@ -472,10 +472,13 @@ h3 { font-size: 18px; }
 
 .sectionHead {
   display: flex;
-  justify-content: space-between;
   gap: 12px;
   align-items: flex-start;
   margin-bottom: 18px;
+}
+
+.sectionHead > div:first-of-type {
+  flex: 1;
 }
 
 .sectionHead:has(+ .collapseBody.isCollapsed) {

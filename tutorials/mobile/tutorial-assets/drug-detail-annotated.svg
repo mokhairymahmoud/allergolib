@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1206" height="2622" viewBox="0 0 1206 2622">
+  <image href="drug-detail.png" x="0" y="0" width="1206" height="2622" />
+  <g font-family="Arial, sans-serif" font-size="28" font-weight="700" text-anchor="middle">
+    <g fill="#2563eb" stroke="#ffffff" stroke-width="8">
+      <circle cx="92" cy="820" r="34" />
+      <circle cx="92" cy="987" r="34" />
+      <circle cx="150" cy="1270" r="34" />
+      <circle cx="112" cy="1660" r="34" />
+      <circle cx="1036" cy="820" r="34" />
+      <circle cx="760" cy="820" r="34" />
+    </g>
+    <g fill="#ffffff">
+      <text x="92" y="830">1</text>
+      <text x="92" y="997">2</text>
+      <text x="150" y="1280">3</text>
+      <text x="112" y="1670">4</text>
+      <text x="1036" y="830">5</text>
+      <text x="760" y="830">6</text>
+    </g>
+  </g>
+</svg>

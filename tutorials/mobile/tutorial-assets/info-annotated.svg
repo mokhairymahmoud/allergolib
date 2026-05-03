@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1206" height="2622" viewBox="0 0 1206 2622">
+  <image href="info-screen.png" x="0" y="0" width="1206" height="2622" />
+  <g font-family="Arial, sans-serif" font-size="28" font-weight="700" text-anchor="middle">
+    <g fill="#2563eb" stroke="#ffffff" stroke-width="8">
+      <circle cx="92" cy="510" r="34" />
+      <circle cx="92" cy="958" r="34" />
+      <circle cx="92" cy="1570" r="34" />
+    </g>
+    <g fill="#ffffff">
+      <text x="92" y="520">1</text>
+      <text x="92" y="968">2</text>
+      <text x="92" y="1580">3</text>
+    </g>
+  </g>
+</svg>
