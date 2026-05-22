@@ -108,7 +108,7 @@ jobs:
             --cache-control "public, max-age=60, must-revalidate"
 
       - name: Promote stable latest release
-        if: ${{ !inputs.dry_run && inputs.promote_latest }}
+        if: ${{ !inputs.dry_run && (inputs.promote_latest || github.event_name == 'schedule') }}
         run: |
           set -euo pipefail
           prefix="${DATASET_S3_PREFIX:-datasets}"
