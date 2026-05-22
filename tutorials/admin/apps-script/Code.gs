@@ -260,6 +260,7 @@ function saveDrugFromAdmin(payload) {
     writeTable_(testEntriesTable);
     writeTable_(notesTable);
     writeTable_(crossReactivityTable);
+    updateReleaseMetadata_();
 
     SpreadsheetApp.flush();
 
@@ -335,6 +336,7 @@ function deleteDrugFromAdmin(payload) {
     if (crossReactivityTable.headers.length) {
       writeTable_(crossReactivityTable);
     }
+    updateReleaseMetadata_();
 
     SpreadsheetApp.flush();
 
@@ -428,6 +430,7 @@ function saveSourceFromAdmin(payload) {
     }
 
     writeTable_(sourcesTable);
+    updateReleaseMetadata_();
     SpreadsheetApp.flush();
 
     return {
@@ -471,6 +474,7 @@ function deleteSourceFromAdmin(payload) {
 
     removeRowsByField_(sourcesTable, "id", sourceId);
     writeTable_(sourcesTable);
+    updateReleaseMetadata_();
     SpreadsheetApp.flush();
 
     return {
@@ -1472,6 +1476,51 @@ function replaceCrossReactivityRows_(table, targetDrugId, record) {
 
   table.rows = preservedRows.concat(nextRows);
   table.objects = table.rows.map(function (row) { return rowToObject_(table.headers, row); });
+}
+
+function updateReleaseMetadata_() {
+  var sheet = getRequiredSheet_("release_metadata");
+  var range = sheet.getDataRange();
+  var values = range.getDisplayValues();
+
+  if (!values.length) return;
+
+  var headers = values[0];
+  var keyCol = headers.indexOf("key");
+  var valueCol = headers.indexOf("value");
+
+  if (keyCol === -1 || valueCol === -1) return;
+
+  var now = new Date();
+  var pad = function (n) { return n < 10 ? "0" + n : String(n); };
+  var todayVersion = now.getFullYear() + "." + pad(now.getMonth() + 1) + "." + pad(now.getDate());
+  var todayISO = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate()) + "T00:00:00Z";
+
+  var approvedBy = getActiveUserName_();
+
+  for (var i = 1; i < values.length; i++) {
+    var key = values[i][keyCol];
+    if (key === "version") {
+      sheet.getRange(i + 1, valueCol + 1).setValue(todayVersion);
+    } else if (key === "releasedAt") {
+      sheet.getRange(i + 1, valueCol + 1).setValue(todayISO);
+    } else if (key === "approvedBy") {
+      sheet.getRange(i + 1, valueCol + 1).setValue(approvedBy);
+    }
+  }
+}
+
+function getActiveUserName_() {
+  try {
+    var token = ScriptApp.getOAuthToken();
+    var response = UrlFetchApp.fetch("https://www.googleapis.com/oauth2/v1/userinfo?alt=json", {
+      headers: { Authorization: "Bearer " + token },
+      muteHttpExceptions: true,
+    });
+    var info = JSON.parse(response.getContentText());
+    if (info.name) return info.name;
+  } catch (e) {}
+  return Session.getActiveUser().getEmail() || "Unknown";
 }
 
 function normalizeText_(value) {
