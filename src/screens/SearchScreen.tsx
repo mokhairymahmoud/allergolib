@@ -617,7 +617,7 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
 
     /* ─── Results list ─── */
     listOverlay: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       backgroundColor: theme.bg,
     },
     scrollView: { flex: 1, backgroundColor: theme.bg },

@@ -65,7 +65,7 @@ export default function App() {
   const [darkOverride, setDarkOverride] = useState<boolean | null>(null);
 
   const effectiveScheme: "light" | "dark" =
-    darkOverride !== null ? (darkOverride ? "dark" : "light") : (systemScheme ?? "light");
+    darkOverride !== null ? (darkOverride ? "dark" : "light") : (systemScheme === "dark" ? "dark" : "light");
   const isDark = effectiveScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = useMemo(() => makeStyles(theme), [theme]);
@@ -428,7 +428,7 @@ function makeStyles(theme: typeof lightTheme) {
       overflow: "hidden",
     },
     stackLayer: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
     },
     container: {
       flex: 1,
