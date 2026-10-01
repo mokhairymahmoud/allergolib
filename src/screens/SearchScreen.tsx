@@ -4,7 +4,7 @@ import { Animated, Dimensions, FlatList, PanResponder, Pressable, ScrollView, St
 
 import { DrugRow } from "../components/DrugRow";
 import type { DrugSearchResult } from "../lib/drugSearch";
-import { copy } from "../lib/i18n";
+import { copy, countCopy } from "../lib/i18n";
 import { useTheme } from "../theme/ThemeContext";
 import type { DrugRecord, Language } from "../types";
 
@@ -222,7 +222,13 @@ export function SearchScreen({
             value={query}
           />
           {query.length > 0 ? (
-            <Pressable onPress={() => { onChangeQuery(""); setActiveClass(null); setActiveSubclass(null); setBrowseAll(false); }} hitSlop={8} style={styles.clearButton}>
+            <Pressable
+              onPress={() => { onChangeQuery(""); setActiveClass(null); setActiveSubclass(null); setBrowseAll(false); }}
+              hitSlop={8}
+              style={styles.clearButton}
+              accessibilityRole="button"
+              accessibilityLabel={copy(language, "a11y.clearSearch")}
+            >
               <Ionicons name="close-circle" size={18} color={theme.textDisabled} />
             </Pressable>
           ) : null}
@@ -268,31 +274,32 @@ export function SearchScreen({
                   key={cls}
                   onPress={() => handleClassPress(cls)}
                   style={styles.categoryCard}
+                  accessibilityRole="button"
                 >
                   <View style={styles.categoryCardIcon}>
                     <Ionicons name={categoryIcon(cls)} size={20} color={theme.accent} />
                   </View>
                   <Text style={styles.categoryCardName} numberOfLines={2}>{cls}</Text>
                   <Text style={styles.categoryCardCount}>
-                    {count} {count === 1
-                      ? (language === "fr" ? "médicament" : "drug")
-                      : (language === "fr" ? "médicaments" : "drugs")}
+                    {countCopy(language, count, "search.drugOne", "search.drugMany")}
                   </Text>
                 </Pressable>
               ))}
+              <Pressable
+                onPress={() => setBrowseAll(true)}
+                style={[styles.categoryCard, styles.browseAllCard]}
+                accessibilityRole="button"
+              >
+                <View style={styles.categoryCardIcon}>
+                  <Ionicons name="list-outline" size={20} color={theme.accent} />
+                </View>
+                <Text style={styles.categoryCardName} numberOfLines={2}>{copy(language, "search.categoryAll")}</Text>
+                <Text style={styles.categoryCardCount}>
+                  {countCopy(language, allDrugs.length, "search.drugOne", "search.drugMany")}
+                </Text>
+              </Pressable>
             </View>
           </View>
-
-          <Pressable
-            onPress={() => setBrowseAll(true)}
-            style={styles.browseAllCard}
-          >
-            <Ionicons name="list-outline" size={18} color={theme.accent} />
-            <Text style={styles.browseAllText}>
-              {copy(language, "search.categoryAll")} — {allDrugs.length} {language === "fr" ? "médicaments" : "drugs"}
-            </Text>
-            <Ionicons name="chevron-forward" size={16} color={theme.textDisabled} />
-          </Pressable>
         </ScrollView>
 
         {/* ─── Results list: overlaid on top, slides in/out ─── */}
@@ -389,11 +396,13 @@ export function SearchScreen({
               ListHeaderComponent={
                 <View style={styles.resultHeader}>
                   <Text style={styles.resultCount}>
-                    {resultCount} {copy(language, hasQuery ? "search.results" : "search.resultsAll")}
+                    {hasQuery
+                      ? countCopy(language, resultCount, "search.resultsOne", "search.results")
+                      : countCopy(language, resultCount, "search.resultsAllOne", "search.resultsAll")}
                   </Text>
                   {(activeClass || browseAll) && !hasQuery ? (
                     <Pressable onPress={goBackToGrid} hitSlop={8}>
-                      <Text style={styles.clearFilter}>{language === "fr" ? "Effacer" : "Clear"}</Text>
+                      <Text style={styles.clearFilter}>{copy(language, "search.clearFilter")}</Text>
                     </Pressable>
                   ) : null}
                 </View>
@@ -567,11 +576,12 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
     categoryGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 10,
+      justifyContent: "space-between",
+      rowGap: 10,
     },
     categoryCard: {
-      width: "48%",
-      flexGrow: 1,
+      // Fixed two-column cells: an odd last category must not stretch to full width.
+      width: "48.5%",
       backgroundColor: theme.surface,
       borderRadius: 12,
       padding: 14,
@@ -599,20 +609,8 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
       fontWeight: "500",
     },
     browseAllCard: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 10,
-      backgroundColor: theme.surface,
-      borderRadius: 12,
-      padding: 14,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    browseAllText: {
-      flex: 1,
-      color: theme.textPrimary,
-      fontSize: 14,
-      fontWeight: "600",
+      borderStyle: "dashed",
+      borderColor: theme.accentBorder,
     },
 
     /* ─── Results list ─── */

@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { NoteList } from "../../components/NoteList";
@@ -20,10 +20,13 @@ import type {
   SourceDocument,
   TestKind,
   TestNote,
+  TestRecord,
 } from "../../types";
 
 import { DilutionTab } from "./DilutionTab";
 import { OrbitMap } from "./OrbitMap";
+
+const CONTENT_PADDING_TOP = 12;
 
 type DetailTab = "testing" | "cross" | "dilution" | "sources";
 const DETAIL_TABS: DetailTab[] = ["testing", "cross", "dilution", "sources"];
@@ -43,6 +46,13 @@ function isTestAvailable(drug: DrugRecord, kind: TestKind) {
 
 function availableTests(drug: DrugRecord) {
   return TEST_KINDS.filter((kind) => isTestAvailable(drug, kind));
+}
+
+/** The single number a clinician looks for first: the preferred source's (max) concentration. */
+function headlineValue(test: TestRecord, sources: Record<string, SourceDocument>) {
+  if (!hasTestProvenance(test, sources)) return null;
+  const entry = preferredSourceEntry(test);
+  return entry?.maxConcentration ?? entry?.concentration ?? null;
 }
 
 function concentrationLabel(language: Language, kind: TestKind) {
@@ -114,7 +124,16 @@ export function DetailScreen({
     Boolean(preferredEntry?.concentration) &&
     (testKind !== "idr" || preferredEntry?.concentration !== preferredEntry?.maxConcentration);
   const sourcesDisagree = testSourcesDisagree(test);
-  const [headerExpanded, setHeaderExpanded] = useState(true);
+  const preferredSource = preferredEntry ? sources[preferredEntry.sourceId] : undefined;
+  const dilutionTargets = (["prick", "idr"] as const).flatMap((kind) => {
+    const value = headlineValue(drug.tests[kind], sources);
+    return value ? [{ kind, value }] : [];
+  });
+  const scrollRef = useRef<ScrollView>(null);
+  const contentY = useRef(0);
+  const stickyBarHeight = useRef(0);
+  const [headerHeight, setHeaderHeight] = useState(120);
+  const [showNavTitle, setShowNavTitle] = useState(false);
 
   const metricItems: DetailMetricItem[] = [];
 
@@ -147,13 +166,28 @@ export function DetailScreen({
 
   return (
     <View style={styles.flex1}>
-      {/* Sticky nav header */}
+      {/* Nav header — shows the drug name once the header card has scrolled away */}
       <View style={styles.navHeader}>
-        <Pressable onPress={onBack} style={styles.backButton} hitSlop={8}>
+        <Pressable
+          onPress={onBack}
+          style={styles.backButton}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={copy(language, "a11y.back")}
+        >
           <Ionicons name="arrow-back" size={20} color={theme.textPrimary} />
         </Pressable>
-        <Text style={styles.navTitle} numberOfLines={1}>{drug.name[language]}</Text>
-        <Pressable onPress={onToggleFavorite} style={styles.navAction} hitSlop={8}>
+        <Text style={[styles.navTitle, !showNavTitle && styles.navTitleHidden]} numberOfLines={1}>
+          {drug.name[language]}
+        </Text>
+        <Pressable
+          onPress={onToggleFavorite}
+          style={styles.navAction}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={copy(language, isSaved ? "a11y.favoriteRemove" : "a11y.favoriteAdd")}
+          accessibilityState={{ selected: isSaved }}
+        >
           <Ionicons
             name={isSaved ? "heart" : "heart-outline"}
             size={22}
@@ -162,12 +196,22 @@ export function DetailScreen({
         </Pressable>
       </View>
 
-      {/* Drug header card — collapsible */}
-      <Pressable
-        onPress={() => setHeaderExpanded((v) => !v)}
-        style={{ paddingHorizontal: 16, paddingTop: headerExpanded ? 8 : 0, paddingBottom: headerExpanded ? 4 : 0 }}
+      <ScrollView
+        ref={scrollRef}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        stickyHeaderIndices={[1]}
+        scrollEventThrottle={16}
+        onScroll={(event) => {
+          const next = event.nativeEvent.contentOffset.y > headerHeight - 8;
+          if (next !== showNavTitle) setShowNavTitle(next);
+        }}
       >
-        {headerExpanded ? (
+        {/* Drug header card — scrolls away under the sticky tab bar */}
+        <View
+          style={styles.headerWrap}
+          onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
+        >
           <View style={styles.detailHeader}>
             <View style={styles.metaRow}>
               <View style={styles.classBadge}>
@@ -178,82 +222,73 @@ export function DetailScreen({
                   <Text style={styles.subclassBadgeText}>{drug.subclassName[language]}</Text>
                 </View>
               ) : null}
-              <View style={{ flex: 1 }} />
-              <Ionicons name="chevron-up" size={16} color={theme.textDisabled} />
             </View>
-            <Text style={styles.detailTitle}>{drug.name[language]}</Text>
+            <Text style={styles.detailTitle} accessibilityRole="header">{drug.name[language]}</Text>
             {drug.aliases.length > 0 ? (
               <Text style={styles.detailSubtitle}>{drug.aliases.join(", ")}</Text>
             ) : null}
           </View>
-        ) : (
-          <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 6, gap: 8 }}>
-            <View style={styles.classBadge}>
-              <Text style={styles.classBadgeText}>{drug.className[language]}</Text>
-            </View>
-            {drug.subclassName ? (
-              <View style={styles.subclassBadge}>
-                <Text style={styles.subclassBadgeText}>{drug.subclassName[language]}</Text>
-              </View>
-            ) : null}
-            <View style={{ flex: 1 }} />
-            <Ionicons name="chevron-down" size={16} color={theme.textDisabled} />
-          </View>
-        )}
-      </Pressable>
+        </View>
 
-      {/* Top-level underline tab bar */}
-      <View style={styles.tabBar}>
-        {DETAIL_TABS.map((tab) => {
-          const selected = tab === detailTab;
-          return (
-            <Pressable
-              key={tab}
-              onPress={() => setDetailTab(tab)}
-              style={[styles.tab, selected && styles.tabSelected]}
-            >
-              <Text style={[styles.tabText, selected && styles.tabTextSelected]}>
-                {detailTabLabel(language, tab)}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+        {/* Top-level underline tab bar (sticky). On native, ScrollView replaces a sticky child's
+            style with its own, so the row layout lives on an inner view. */}
+        <View style={styles.stickyBar} onLayout={(event) => { stickyBarHeight.current = event.nativeEvent.layout.height; }}>
+        <View style={styles.tabBar} accessibilityRole="tablist">
+          {DETAIL_TABS.map((tab) => {
+            const selected = tab === detailTab;
+            return (
+              <Pressable
+                key={tab}
+                onPress={() => setDetailTab(tab)}
+                style={[styles.tab, selected && styles.tabSelected]}
+                accessibilityRole="tab"
+                accessibilityState={{ selected }}
+              >
+                <Text style={[styles.tabText, selected && styles.tabTextSelected]}>
+                  {detailTabLabel(language, tab)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+        <View style={styles.content} onLayout={(event) => { contentY.current = event.nativeEvent.layout.y; }}>
         {/* Tab: Testing */}
         {detailTab === "testing" ? (
           <>
-            {availableTestKinds.length > 1 ? (
-              <View style={[styles.segmentedControl, { marginBottom: 4 }]}>
-                {TEST_KINDS.map((kind) => {
-                  const selected = kind === testKind;
-                  const disabled = !isTestAvailable(drug, kind);
-                  return (
-                    <Pressable
-                      key={kind}
-                      disabled={disabled}
-                      onPress={() => setTestKind(kind)}
-                      style={[
-                        styles.segmentButton,
-                        selected && styles.segmentButtonSelected,
-                        disabled && styles.segmentButtonDisabled,
-                      ]}
+            {/* At-a-glance summary: every test's headline value side by side; doubles as the selector */}
+            <View style={styles.summaryRow}>
+              {TEST_KINDS.map((kind) => {
+                const selected = kind === testKind;
+                const available = isTestAvailable(drug, kind);
+                const value = available ? headlineValue(drug.tests[kind], sources) : null;
+                return (
+                  <Pressable
+                    key={kind}
+                    disabled={!available}
+                    onPress={() => setTestKind(kind)}
+                    style={[
+                      styles.summaryCard,
+                      selected && available && styles.summaryCardSelected,
+                      !available && styles.summaryCardEmpty,
+                    ]}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: selected && available, disabled: !available }}
+                  >
+                    <Text style={[styles.summaryLabel, selected && available && styles.summaryLabelSelected]}>
+                      {testTitle(language, kind)}
+                    </Text>
+                    <Text
+                      style={available ? styles.summaryValue : styles.summaryValueEmpty}
+                      numberOfLines={2}
                     >
-                      <Text
-                        style={[
-                          styles.segmentButtonText,
-                          selected && styles.segmentButtonTextSelected,
-                          disabled && styles.segmentButtonTextDisabled,
-                        ]}
-                      >
-                        {testTitle(language, kind)}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            ) : null}
+                      {available ? value ?? "—" : copy(language, "detail.noData")}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
 
             {!canShowProvenance ? (
               <View style={styles.warningPanel}>
@@ -272,8 +307,28 @@ export function DetailScreen({
             {canShowProvenance ? (
               <View style={styles.panel}>
                 <View style={styles.panelHeaderRow}>
-                  <Text style={styles.sectionTitle}>{testTitle(language, testKind)}</Text>
-                  <Text style={styles.panelHeaderLabel}>{copy(language, "detail.validatedData")}</Text>
+                  <Text style={[styles.sectionTitle, styles.panelHeaderTitle]}>{testTitle(language, testKind)}</Text>
+                  <View style={styles.chipRow}>
+                    {preferredSource ? (
+                      <Pressable
+                        onPress={() => setDetailTab("sources")}
+                        style={styles.sourceChip}
+                        accessibilityRole="link"
+                        accessibilityLabel={`${copy(language, "detail.preferredSource")}: ${preferredSource.label}`}
+                      >
+                        <Ionicons name="shield-checkmark-outline" size={12} color={theme.accentBadgeText} />
+                        <Text style={styles.sourceChipText} numberOfLines={2}>
+                          {preferredSource.label}
+                        </Text>
+                      </Pressable>
+                    ) : null}
+                    {sourcesDisagree ? (
+                      <View style={styles.differChip}>
+                        <Ionicons name="warning-outline" size={12} color={theme.warningText} />
+                        <Text style={styles.differChipText}>{copy(language, "detail.sourcesDiffer")}</Text>
+                      </View>
+                    ) : null}
+                  </View>
                 </View>
                 {metricItems.length ? (
                   <View style={styles.metricGrid}>
@@ -292,23 +347,6 @@ export function DetailScreen({
                 ) : (
                   <Text style={styles.emptyState}>{copy(language, "detail.noTestData")}</Text>
                 )}
-              </View>
-            ) : null}
-
-            {canShowProvenance && warnings.length ? (
-              <View style={styles.warningPanel}>
-                <View style={styles.warningPanelHeader}>
-                  <Ionicons name="warning-outline" size={18} color={theme.warningText} />
-                  <Text style={styles.warningTitle}>{copy(language, "detail.warnings")}</Text>
-                </View>
-                <NoteList language={language} notes={warnings} tone="warning" />
-              </View>
-            ) : null}
-
-            {canShowProvenance && supporting.length ? (
-              <View style={styles.panel}>
-                <Text style={styles.sectionTitle}>{copy(language, "detail.notes")}</Text>
-                <NoteList language={language} notes={supporting} />
               </View>
             ) : null}
 
@@ -354,6 +392,23 @@ export function DetailScreen({
                 </View>
               </View>
             ) : null}
+
+            {canShowProvenance && warnings.length ? (
+              <View style={styles.warningPanel}>
+                <View style={styles.warningPanelHeader}>
+                  <Ionicons name="warning-outline" size={18} color={theme.warningText} />
+                  <Text style={styles.warningTitle}>{copy(language, "detail.warnings")}</Text>
+                </View>
+                <NoteList language={language} notes={warnings} tone="warning" />
+              </View>
+            ) : null}
+
+            {canShowProvenance && supporting.length ? (
+              <View style={styles.panel}>
+                <Text style={styles.sectionTitle}>{copy(language, "detail.notes")}</Text>
+                <NoteList language={language} notes={supporting} />
+              </View>
+            ) : null}
           </>
         ) : null}
 
@@ -366,6 +421,13 @@ export function DetailScreen({
             sources={sources}
             onOpenDrug={onOpenDrug}
             onBuildPanel={onBuildPanel}
+            onJumpToPanel={(panelY) =>
+              scrollRef.current?.scrollTo({
+                // OrbitMap is the first child of the content view, so it starts at its top padding.
+                y: contentY.current + CONTENT_PADDING_TOP + panelY - stickyBarHeight.current - 8,
+                animated: true,
+              })
+            }
           />
         ) : null}
 
@@ -375,6 +437,7 @@ export function DetailScreen({
             language={language}
             dilutions={test.dilutions}
             concentrationUnit={concentrationUnit}
+            targets={dilutionTargets}
           />
         ) : null}
 
@@ -411,7 +474,7 @@ export function DetailScreen({
             )}
           </>
         ) : null}
-
+        </View>
       </ScrollView>
     </View>
   );
@@ -451,6 +514,7 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
       fontWeight: "700",
       textAlign: "center",
     },
+    navTitleHidden: { opacity: 0 },
     navAction: {
       width: 36,
       height: 36,
@@ -518,8 +582,10 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
       fontSize: 14,
       lineHeight: 20,
     },
+    stickyBar: { backgroundColor: theme.bg },
     tabBar: {
       flexDirection: "row",
+      backgroundColor: theme.bg,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
       paddingHorizontal: 16,
@@ -544,45 +610,102 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
       fontWeight: "700",
     },
     scrollView: { flex: 1, backgroundColor: theme.bg },
+    scrollContent: { flexGrow: 1 },
+    headerWrap: {
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 4,
+    },
     content: {
       flexGrow: 1,
       paddingHorizontal: 16,
-      paddingTop: 12,
+      paddingTop: CONTENT_PADDING_TOP,
       paddingBottom: 32,
       gap: 16,
     },
-    segmentedControl: {
+    summaryRow: {
       flexDirection: "row",
-      backgroundColor: theme.border,
-      borderRadius: 10,
-      padding: 3,
-      gap: 2,
+      gap: 8,
     },
-    segmentButton: {
+    summaryCard: {
       flex: 1,
-      borderRadius: 8,
-      paddingVertical: 9,
-      alignItems: "center",
-    },
-    segmentButtonSelected: {
+      gap: 4,
       backgroundColor: theme.surface,
-      shadowColor: "#000",
-      shadowOpacity: 0.08,
-      shadowRadius: 4,
-      shadowOffset: { width: 0, height: 1 },
-      elevation: 2,
+      borderRadius: 10,
+      paddingVertical: 10,
+      paddingHorizontal: 8,
+      borderWidth: 1.5,
+      borderColor: theme.border,
     },
-    segmentButtonDisabled: { opacity: 0.4 },
-    segmentButtonText: {
+    summaryCardSelected: {
+      borderColor: theme.accent,
+      backgroundColor: theme.accentBg,
+    },
+    summaryCardEmpty: {
+      backgroundColor: "transparent",
+      borderStyle: "dashed",
+      borderColor: theme.borderMid,
+    },
+    summaryLabel: {
       color: theme.textSecondary,
-      fontSize: 13,
-      fontWeight: "600",
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
     },
-    segmentButtonTextSelected: {
+    summaryLabelSelected: { color: theme.accentText },
+    summaryValue: {
       color: theme.textPrimary,
+      fontSize: 15,
+      fontWeight: "800",
+    },
+    summaryValueEmpty: {
+      color: theme.textSecondary,
+      fontSize: 12,
+      fontWeight: "600",
+      paddingVertical: 2,
+    },
+    chipRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "flex-end",
+      gap: 6,
+      flex: 1,
+      minWidth: 0,
+    },
+    sourceChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      maxWidth: "100%",
+      flexShrink: 1,
+      backgroundColor: theme.accentBadgeBg,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    sourceChipText: {
+      flexShrink: 1,
+      color: theme.accentBadgeText,
+      fontSize: 11,
       fontWeight: "700",
     },
-    segmentButtonTextDisabled: { color: theme.textDisabled },
+    differChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: theme.warningBg,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: theme.warningBorder,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    differChipText: {
+      color: theme.warningText,
+      fontSize: 11,
+      fontWeight: "700",
+    },
     panel: {
       backgroundColor: theme.surface,
       borderRadius: 12,
@@ -600,13 +723,7 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
       alignItems: "center",
       gap: 8,
     },
-    panelHeaderLabel: {
-      color: theme.accent,
-      fontSize: 12,
-      fontWeight: "700",
-      textTransform: "uppercase",
-      letterSpacing: 0.6,
-    },
+    panelHeaderTitle: { flexShrink: 0 },
     sectionTitle: {
       color: theme.textPrimary,
       fontSize: 15,

@@ -58,6 +58,7 @@ import { FavoritesScreen } from "./src/screens/FavoritesScreen";
 import { InfoScreen } from "./src/screens/InfoScreen";
 import { PanelScreen } from "./src/screens/PanelScreen";
 import { SearchScreen } from "./src/screens/SearchScreen";
+import { PanelsScreen } from "./src/screens/PanelsScreen";
 import { SessionScreen } from "./src/screens/SessionScreen";
 import { darkTheme, lightTheme } from "./src/theme/colors";
 import { ThemeContext } from "./src/theme/ThemeContext";
@@ -65,19 +66,21 @@ import type { DrugRecord, Language } from "./src/types";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const HOME_TABS = ["search", "favorites", "info"] as const;
+const HOME_TABS = ["search", "favorites", "panels", "info"] as const;
 const DARK_MODE_STORAGE_KEY = "@allergolib/dark-mode";
 
 type HomeTab = (typeof HOME_TABS)[number];
 
 function homeTabIconName(tab: HomeTab, selected: boolean): React.ComponentProps<typeof Ionicons>["name"] {
   if (tab === "favorites") return selected ? "heart" : "heart-outline";
+  if (tab === "panels") return selected ? "clipboard" : "clipboard-outline";
   if (tab === "info") return selected ? "information-circle" : "information-circle-outline";
   return selected ? "search" : "search-outline";
 }
 
 function homeTabLabelKey(tab: HomeTab) {
   if (tab === "favorites") return "home.tabFavorites";
+  if (tab === "panels") return "home.tabPanels";
   if (tab === "info") return "home.tabInfo";
   return "home.tabSearch";
 }
@@ -274,9 +277,17 @@ export default function App() {
   const savedPanels = panels
     .flatMap((panel) => {
       const culprit = drugsById.get(panel.culpritDrugId);
-      return culprit ? [{ culprit, drugCount: panel.drugIds.length + 1, updatedAt: panel.updatedAt }] : [];
+      return culprit
+        ? [{
+            culprit,
+            drugCount: panel.drugIds.length + 1,
+            updatedAt: panel.updatedAt,
+            hasActiveSession: Boolean(activeSessionFor(sessions, panel.culpritDrugId)),
+          }]
+        : [];
     })
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const activeSessionCount = sessions.filter((session) => !session.completedAt).length;
   const recentDrugs = recentDrugIds
     .map((drugId) => activeDataset.dataset.drugs.find((drug) => drug.id === drugId) ?? null)
     .filter((drug): drug is DrugRecord => Boolean(drug));
@@ -558,10 +569,22 @@ export default function App() {
                 <View style={styles.titleBlock}>
                   <AppLogo theme={theme} />
                 </View>
-                <Pressable onPress={toggleDark} style={styles.pill}>
+                <Pressable
+                  onPress={toggleDark}
+                  style={styles.pill}
+                  hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityLabel={copy(language, "a11y.themeToggle")}
+                >
                   <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={14} color={theme.textSecondary} />
                 </Pressable>
-                <Pressable onPress={() => setLanguage(language === "fr" ? "en" : "fr")} style={styles.langPill}>
+                <Pressable
+                  onPress={() => setLanguage(language === "fr" ? "en" : "fr")}
+                  style={styles.langPill}
+                  hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityLabel={copy(language, "a11y.languageToggle")}
+                >
                   <Text style={styles.langOption}>{language === "fr" ? "FR" : "EN"}</Text>
                   <Text style={styles.langDivider}>|</Text>
                   <Text style={styles.langOptionInactive}>{language === "fr" ? "EN" : "FR"}</Text>
@@ -596,8 +619,14 @@ export default function App() {
                         favoriteDrugs={favoriteDrugs}
                         language={language}
                         onOpenDrug={openDrug}
-                        onOpenPanel={setOpenPanelCulpritId}
                         onToggleFavorite={toggleFavorite}
+                      />
+                    ) : null}
+
+                    {homeTab === "panels" ? (
+                      <PanelsScreen
+                        language={language}
+                        onOpenPanel={setOpenPanelCulpritId}
                         savedPanels={savedPanels}
                       />
                     ) : null}
@@ -618,19 +647,38 @@ export default function App() {
                 <View style={styles.tabs}>
                   {HOME_TABS.map((tab) => {
                     const selected = tab === homeTab;
+                    const badgeCount = tab === "panels" ? activeSessionCount : 0;
                     return (
-                      <Pressable key={tab} onPress={() => {
-                        if (tab === "search" && homeTab === "search") {
-                          setSearchResetSignal((n) => n + 1);
-                        } else {
-                          setHomeTab(tab);
+                      <Pressable
+                        key={tab}
+                        onPress={() => {
+                          if (tab === "search" && homeTab === "search") {
+                            setSearchResetSignal((n) => n + 1);
+                          } else {
+                            setHomeTab(tab);
+                          }
+                        }}
+                        style={styles.tab}
+                        accessibilityRole="tab"
+                        accessibilityState={{ selected }}
+                        accessibilityLabel={
+                          badgeCount
+                            ? `${copy(language, homeTabLabelKey(tab))}, ${badgeCount} ${copy(language, "session.inProgress")}`
+                            : copy(language, homeTabLabelKey(tab))
                         }
-                      }} style={styles.tab}>
-                        <Ionicons
-                          name={homeTabIconName(tab, selected)}
-                          size={24}
-                          color={selected ? theme.accent : theme.textDisabled}
-                        />
+                      >
+                        <View>
+                          <Ionicons
+                            name={homeTabIconName(tab, selected)}
+                            size={24}
+                            color={selected ? theme.accent : theme.textSecondary}
+                          />
+                          {badgeCount ? (
+                            <View style={styles.tabBadge}>
+                              <Text style={styles.tabBadgeText}>{badgeCount}</Text>
+                            </View>
+                          ) : null}
+                        </View>
                         <Text style={[styles.tabText, selected && styles.tabTextSelected]}>
                           {copy(language, homeTabLabelKey(tab))}
                         </Text>
@@ -838,8 +886,27 @@ function makeStyles(theme: typeof lightTheme) {
       justifyContent: "center",
       gap: 3,
     },
+    tabBadge: {
+      position: "absolute",
+      top: -4,
+      right: -10,
+      minWidth: 18,
+      height: 18,
+      borderRadius: 9,
+      paddingHorizontal: 4,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.warningAccent,
+      borderWidth: 2,
+      borderColor: theme.surface,
+    },
+    tabBadgeText: {
+      color: "#FFFFFF",
+      fontSize: 10,
+      fontWeight: "800",
+    },
     tabText: {
-      color: theme.textDisabled,
+      color: theme.textSecondary,
       fontSize: 11,
       fontWeight: "600",
     },

@@ -34,7 +34,7 @@ export const lightTheme: Theme = {
   border: "#E4E9EF",
   borderMid: "#CBD5E1",
   textPrimary: "#0F172A",
-  textSecondary: "#64748B",
+  textSecondary: "#5B6B7F",
   textDisabled: "#94A3B8",
   accent: "#1A73D4",
   accentBg: "#EFF6FF",

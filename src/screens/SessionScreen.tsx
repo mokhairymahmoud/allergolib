@@ -5,7 +5,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, Vibration, V
 import { ActionButton } from "../components/ActionButton";
 import { ComplianceCard } from "../components/ComplianceCard";
 import { canSharePdf, printHtml, shareHtmlAsPdf, shareText } from "../lib/exportActions";
-import { copy } from "../lib/i18n";
+import { copy, countCopy } from "../lib/i18n";
 import {
   interpretationLabel,
   panelCategoryLabel,
@@ -143,8 +143,8 @@ export function SessionScreen({
           <Text style={styles.eyebrow}>{copy(language, "panel.culprit")}</Text>
           <Text style={styles.headerTitle}>{culprit?.name[language]}</Text>
           <Text style={styles.mutedText}>
-            {copy(language, completed ? "session.completed" : "session.inProgress")} · {items.length}{" "}
-            {copy(language, "panel.drugs")}
+            {copy(language, completed ? "session.completed" : "session.inProgress")} ·{" "}
+            {countCopy(language, items.length, "search.drugOne", "search.drugMany")}
           </Text>
         </View>
 

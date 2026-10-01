@@ -13,3 +13,4 @@ admin/apps-script/.clasp.json
 # Local EAS build output
 build/
 *.ipa
+ios/

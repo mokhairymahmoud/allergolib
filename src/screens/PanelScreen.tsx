@@ -15,7 +15,7 @@ import { ComplianceCard } from "../components/ComplianceCard";
 import { searchDrugs } from "../lib/drugSearch";
 import { canSharePdf, printHtml, shareHtmlAsPdf, shareText } from "../lib/exportActions";
 import { formatDateTime } from "../lib/formatters";
-import { copy } from "../lib/i18n";
+import { copy, countCopy } from "../lib/i18n";
 import {
   panelCategoryLabel,
   panelHasPatchData,
@@ -133,7 +133,7 @@ export function PanelScreen({
         <View style={styles.headerCard}>
           <Text style={styles.eyebrow}>{copy(language, "panel.culprit")}</Text>
           <Text style={styles.headerTitle}>{culprit?.name[language]}</Text>
-          <Text style={styles.headerMeta}>{items.length} {copy(language, "panel.drugs")}</Text>
+          <Text style={styles.headerMeta}>{countCopy(language, items.length, "search.drugOne", "search.drugMany")}</Text>
         </View>
 
         <View style={styles.panel}>

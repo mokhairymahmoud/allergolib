@@ -164,11 +164,14 @@ export function DrugRow({
               onPress={(e) => { e.stopPropagation(); onToggleFavorite(); }}
               hitSlop={8}
               style={styles.heartButton}
+              accessibilityRole="button"
+              accessibilityLabel={`${copy(language, isSaved ? "a11y.favoriteRemove" : "a11y.favoriteAdd")}: ${result.drug.name[language]}`}
+              accessibilityState={{ selected: isSaved }}
             >
               <Ionicons
                 name={isSaved ? "heart" : "heart-outline"}
                 size={20}
-                color={isSaved ? theme.accent : theme.textDisabled}
+                color={isSaved ? theme.accent : theme.textSecondary}
               />
             </Pressable>
           ) : null}

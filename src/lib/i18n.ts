@@ -27,7 +27,7 @@ export const dictionary = {
     "search.heroBody":
       "Search the offline reference directly, then open one record at a time for validated concentrations, notes, and provenance.",
     "search.title": "Drug search",
-    "search.placeholder": "Search rocuronium, cefazolin, propofol...",
+    "search.placeholder": "e.g. rocuronium, cefazolin",
     "search.results": "matching drugs",
     "search.resultsAll": "drugs available",
     "search.categories": "Categories",
@@ -71,14 +71,14 @@ export const dictionary = {
     "detail.calculatorBody":
       "Enter the stock concentration to generate offline dilution steps for common perioperative ratios.",
     "detail.calculatorStock": "Stock concentration",
-    "detail.calculatorStockPlaceholder": "10",
+    "detail.calculatorStockPlaceholder": "e.g. 10",
     "detail.calculatorVolume": "Final volume (mL)",
     "detail.calculatorRatios": "Ratios",
     "detail.calculatorTarget": "Target concentration",
     "detail.calculatorDirect": "Direct mix",
     "detail.calculatorStepwise": "Step from previous dilution",
     "detail.calculatorEmpty":
-      "Enter a stock concentration and final volume to calculate ratios such as 1:10 and 1:100 offline.",
+      "Enter the concentration of the vial you have on hand to see how to prepare each dilution.",
     "detail.calculatorInvalid": "Use positive numbers for both fields.",
     "detail.calculatorStockVol": "stock",
     "detail.calculatorDiluentVol": "diluent",
@@ -99,7 +99,7 @@ export const dictionary = {
     "favorites.body": "Keep your most-used references separate from the main search flow.",
     "favorites.emptyTitle": "No saved drugs yet",
     "favorites.emptyBody":
-      "Use the Save action on a drug to keep it available in this tab.",
+      "Tap the ♡ heart at the top of a drug page to keep it in this tab.",
     "info.title": "About this release",
     "info.body":
       "This screen groups release metadata, provenance framing, and beta-use guidance away from clinical lookup.",
@@ -229,7 +229,35 @@ export const dictionary = {
     "session.sheetTitle": "Skin test results",
     "session.sheetStarted": "Session started",
     "session.notInterpreted": "Not interpreted",
-    "session.positiveCount": "positive"
+    "session.positiveCount": "positive",
+    "detail.noData": "No data",
+    "detail.sourcesDiffer": "Sources differ",
+    "detail.calculatorTargetTitle": "Dilute to a validated maximum",
+    "detail.calculatorTargetPrick": "Prick max",
+    "detail.calculatorTargetIdr": "IDR max",
+    "detail.calculatorNoDilution": "The stock is at or below this target: use it undiluted.",
+    "detail.calculatorSerial": "Serial 1:10 dilutions",
+    "detail.calculatorStep": "Step",
+    "detail.calculatorFromStock": "from stock",
+    "detail.calculatorFromStep": "from step",
+    "detail.calculatorCheck": "Double-check every calculation against your local protocol before preparing.",
+    "detail.calculatorCommonRatios": "Common ratios",
+    "source.status.approved": "Approved",
+    "source.viewDocument": "View source document",
+    "search.drugOne": "drug",
+    "search.drugMany": "drugs",
+    "home.tabPanels": "Panels",
+    "panel.emptyTitle": "No test panels yet",
+    "panel.emptyBody": "Open a drug, go to its Cross-React tab and tap “Build panel” to create one.",
+    "a11y.back": "Back",
+    "a11y.favoriteAdd": "Add to favorites",
+    "a11y.favoriteRemove": "Remove from favorites",
+    "a11y.themeToggle": "Toggle dark mode",
+    "a11y.languageToggle": "Switch language",
+    "a11y.clearSearch": "Clear search",
+    "search.resultsOne": "matching drug",
+    "search.resultsAllOne": "drug available",
+    "search.clearFilter": "Clear"
   },
   fr: {
     "compliance.badge": "Bêta privée",
@@ -257,7 +285,7 @@ export const dictionary = {
     "search.heroBody":
       "Interrogez directement la référence hors ligne, puis ouvrez une fiche à la fois pour les concentrations validées, les notes et la provenance.",
     "search.title": "Recherche de médicament",
-    "search.placeholder": "Rechercher rocuronium, céfazoline, propofol…",
+    "search.placeholder": "Ex. rocuronium, céfazoline",
     "search.results": "médicaments correspondants",
     "search.resultsAll": "médicaments disponibles",
     "search.categories": "Catégories",
@@ -301,14 +329,14 @@ export const dictionary = {
     "detail.calculatorBody":
       "Saisissez la concentration du stock pour générer hors ligne les étapes de dilution pour les ratios périopératoires courants.",
     "detail.calculatorStock": "Concentration du stock",
-    "detail.calculatorStockPlaceholder": "10",
+    "detail.calculatorStockPlaceholder": "ex. 10",
     "detail.calculatorVolume": "Volume final (mL)",
     "detail.calculatorRatios": "Ratios",
     "detail.calculatorTarget": "Concentration cible",
     "detail.calculatorDirect": "Mélange direct",
     "detail.calculatorStepwise": "Étape depuis la dilution précédente",
     "detail.calculatorEmpty":
-      "Saisissez une concentration de stock et un volume final pour calculer hors ligne des ratios comme 1:10 et 1:100.",
+      "Saisissez la concentration du flacon disponible pour voir comment préparer chaque dilution.",
     "detail.calculatorInvalid": "Utilisez des nombres positifs pour les deux champs.",
     "detail.calculatorStockVol": "stock",
     "detail.calculatorDiluentVol": "diluant",
@@ -329,7 +357,7 @@ export const dictionary = {
     "favorites.body": "Conservez vos références les plus utiles à part du flux principal de recherche.",
     "favorites.emptyTitle": "Aucun médicament enregistré",
     "favorites.emptyBody":
-      "Utilisez l'action Enregistrer sur une fiche pour la garder dans cet onglet.",
+      "Touchez le cœur ♡ en haut d'une fiche pour la garder dans cet onglet.",
     "info.title": "À propos de cette version",
     "info.body":
       "Cet écran regroupe les métadonnées de version, le cadrage de provenance et les consignes d'usage bêta hors du flux de recherche clinique.",
@@ -459,10 +487,46 @@ export const dictionary = {
     "session.sheetTitle": "Résultats des tests cutanés",
     "session.sheetStarted": "Début de séance",
     "session.notInterpreted": "Non interprété",
-    "session.positiveCount": "positif(s)"
+    "session.positiveCount": "positif(s)",
+    "detail.noData": "Aucune donnée",
+    "detail.sourcesDiffer": "Sources divergentes",
+    "detail.calculatorTargetTitle": "Diluer jusqu'au maximum validé",
+    "detail.calculatorTargetPrick": "Prick max",
+    "detail.calculatorTargetIdr": "IDR max",
+    "detail.calculatorNoDilution": "Le stock est inférieur ou égal à cette cible : l'utiliser pur.",
+    "detail.calculatorSerial": "Dilutions successives au 1:10",
+    "detail.calculatorStep": "Étape",
+    "detail.calculatorFromStock": "du stock",
+    "detail.calculatorFromStep": "de l'étape",
+    "detail.calculatorCheck": "Vérifiez chaque calcul selon votre protocole local avant préparation.",
+    "detail.calculatorCommonRatios": "Ratios courants",
+    "source.status.approved": "Validé",
+    "source.viewDocument": "Voir le document source",
+    "search.drugOne": "médicament",
+    "search.drugMany": "médicaments",
+    "home.tabPanels": "Panels",
+    "panel.emptyTitle": "Aucun panel de tests",
+    "panel.emptyBody": "Ouvrez un médicament, onglet R. croisée, puis touchez « Construire le panel » pour en créer un.",
+    "a11y.back": "Retour",
+    "a11y.favoriteAdd": "Ajouter aux favoris",
+    "a11y.favoriteRemove": "Retirer des favoris",
+    "a11y.themeToggle": "Basculer le mode sombre",
+    "a11y.languageToggle": "Changer de langue",
+    "a11y.clearSearch": "Effacer la recherche",
+    "search.resultsOne": "médicament correspondant",
+    "search.resultsAllOne": "médicament disponible",
+    "search.clearFilter": "Effacer"
   }
 } as const;
 
 export function copy(language: Language, key: keyof (typeof dictionary)["en"]) {
   return dictionary[language][key];
+}
+
+type CopyKey = keyof (typeof dictionary)["en"];
+
+/** Picks the singular or plural key for a count; French treats 0 and 1 as singular. */
+export function countCopy(language: Language, count: number, one: CopyKey, many: CopyKey) {
+  const singular = language === "fr" ? count < 2 : count === 1;
+  return `${count} ${copy(language, singular ? one : many)}`;
 }

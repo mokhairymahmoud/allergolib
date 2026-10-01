@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useRef, useState } from "react";
-import { Animated, Dimensions, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Dimensions, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Line, Path, Text as SvgText, TextPath } from "react-native-svg";
 
 import { copy } from "../../lib/i18n";
@@ -17,6 +17,12 @@ import type {
 
 import { centerFontSize, centerMaxLines } from "./OrbitNode";
 
+const ARC_FONT_SIZES = [11, 10];
+/** Rough average bold glyph width relative to font size, used to decide whether a label fits its arc. */
+const ARC_CHAR_WIDTH_RATIO = 0.6;
+// react-native-svg on web falls back to a serif face without an explicit family.
+const ARC_FONT_FAMILY = Platform.OS === "web" ? "system-ui, -apple-system, Segoe UI, Roboto, sans-serif" : undefined;
+
 export function OrbitMap({
   drug,
   language,
@@ -24,6 +30,7 @@ export function OrbitMap({
   sources,
   onOpenDrug,
   onBuildPanel,
+  onJumpToPanel,
 }: {
   drug: DrugRecord;
   language: Language;
@@ -31,12 +38,15 @@ export function OrbitMap({
   sources: Record<string, SourceDocument>;
   onOpenDrug: (drugId: string) => void;
   onBuildPanel: () => void;
+  /** Scrolls the parent to the suggested panel; receives its y offset within this component. */
+  onJumpToPanel: (panelY: number) => void;
 }) {
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const [expandedArc, setExpandedArc] = useState<{ groupIdx: number; tier: CrossReactivityTier } | null>(null);
   const [sheetEntry, setSheetEntry] = useState<{ entry: CrossReactivityEntry; groupName: string } | null>(null);
   const sheetSlide = useRef(new Animated.Value(400)).current;
+  const panelY = useRef(0);
   const prevSheetEntry = useRef(sheetEntry);
   if (sheetEntry && !prevSheetEntry.current) {
     sheetSlide.setValue(400);
@@ -139,6 +149,26 @@ export function OrbitMap({
     setExpandedArc(isActiveArc(idx, tier) ? null : { groupIdx: idx, tier });
   }
 
+  /**
+   * A group can appear on several rings (one per tier), so "Curares (2)" and "Curares (4)"
+   * would be ambiguous. Name the drugs themselves — as many as fit along the arc, then "+N".
+   */
+  function arcLabel(group: CrossReactivityGroup, tier: CrossReactivityTier, count: number, arcLength: number) {
+    const names = group.entries
+      .filter((entry) => entry.tier === tier)
+      .map((entry) => drugNameById[entry.drugId]?.[language] ?? entry.drugId);
+    for (const fontSize of ARC_FONT_SIZES) {
+      const fits = (text: string) => text.length * fontSize * ARC_CHAR_WIDTH_RATIO <= arcLength - 16;
+      for (let shown = names.length; shown > 0; shown -= 1) {
+        const hidden = names.length - shown;
+        const text = names.slice(0, shown).join(", ") + (hidden ? ` +${hidden}` : "");
+        if (fits(text)) return { text, fontSize };
+      }
+    }
+    const fontSize = ARC_FONT_SIZES[ARC_FONT_SIZES.length - 1];
+    return { text: `${group.groupName[language]} · ${count}`, fontSize };
+  }
+
   const screenW = Dimensions.get("window").width - 32;
   const availableR = (screenW - 40) / 2;
   const centerR = Math.max(42, Math.min(52, availableR * 0.22));
@@ -183,7 +213,7 @@ export function OrbitMap({
   }
 
   const maxR = Math.max(...arcs.map((a) => a.orbitR + arcThickness), centerR + 40);
-  const sz = Math.min((maxR + 70) * 2, screenW + 32);
+  const sz = Math.min((maxR + 12) * 2, screenW);
   const ctr = sz / 2;
 
   function arcPath(sa: number, sweep: number, orbitR: number): string {
@@ -200,6 +230,17 @@ export function OrbitMap({
 
   return (
     <View style={{ gap: 16 }}>
+      {/* ─── Shortcut to the suggested panel below the diagram ─── */}
+      <Pressable
+        style={styles.jumpChip}
+        onPress={() => onJumpToPanel(panelY.current)}
+        accessibilityRole="button"
+      >
+        <Ionicons name="list-outline" size={14} color={theme.accent} />
+        <Text style={styles.jumpChipText}>{copy(language, "crossReactivity.panelTitle")}</Text>
+        <Ionicons name="arrow-down" size={14} color={theme.accent} />
+      </Pressable>
+
       {/* ─── Concentric arcs diagram ─── */}
       <View style={{ width: sz, height: sz, alignSelf: "center" }}>
         <Svg width={sz} height={sz}>
@@ -236,21 +277,20 @@ export function OrbitMap({
             })}
           </Defs>
           {arcs.map(({ group, idx, tier, orbitR, sweepAngle, tierCount }, ai) => {
-            const label = `${group.groupName[language]} (${tierCount})`;
-            const arcLen = (orbitR + arcThickness / 2) * sweepAngle;
-            const fontSize = label.length * 6 > arcLen ? 8 : 10;
+            const label = arcLabel(group, tier, tierCount, (orbitR + arcThickness / 2) * sweepAngle);
             return (
               <SvgText
                 key={`txt-${ai}`}
                 fill="#FFF"
-                fontSize={fontSize}
+                fontSize={label.fontSize}
+                fontFamily={ARC_FONT_FAMILY}
                 fontWeight="700"
                 dy={4}
                 textAnchor="middle"
                 onPress={() => toggleArc(idx, tier)}
               >
                 <TextPath href={`#tp-${ai}`} startOffset="50%">
-                  {label}
+                  {label.text}
                 </TextPath>
               </SvgText>
             );
@@ -321,7 +361,7 @@ export function OrbitMap({
           groups.flatMap((g) => (g.panelRationale ? [[g.panelRationale.en, g.panelRationale] as const] : []))
         ).values()];
         return (
-          <View style={styles.panelCard}>
+          <View style={styles.panelCard} onLayout={(event) => { panelY.current = event.nativeEvent.layout.y; }}>
             <Text style={styles.panelTitle}>{copy(language, "crossReactivity.panelTitle")}</Text>
             {rationales.map((r) => (
               <Text key={r.en} style={styles.panelRationale}>{r[language]}</Text>
@@ -490,6 +530,10 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
     badgeUncertainText: { color: theme.textSecondary, fontSize: 10, fontWeight: "800", textTransform: "uppercase" },
     structBadge: { backgroundColor: theme.surfaceAlt, borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2, borderWidth: 1, borderColor: theme.border },
     structBadgeText: { color: theme.textSecondary, fontSize: 10, fontWeight: "700", textTransform: "uppercase" },
+
+    /* Shortcut to suggested panel */
+    jumpChip: { flexDirection: "row", alignItems: "center", alignSelf: "center", gap: 6, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: theme.accentBorder, backgroundColor: theme.accentBg },
+    jumpChipText: { color: theme.accent, fontSize: 13, fontWeight: "700" },
 
     /* Suggested panel */
     panelCard: { backgroundColor: theme.surface, borderRadius: 14, borderWidth: 1, borderColor: theme.border, padding: 16, gap: 14 },

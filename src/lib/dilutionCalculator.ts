@@ -100,3 +100,78 @@ export function extractConcentrationUnit(value?: string) {
   const match = value.match(/^\s*[\d.,]+\s*(.+)$/i);
   return match ? match[1].trim() : "";
 }
+
+export type SerialStep = {
+  /** Concentration reached after this step. */
+  concentration: number;
+  /** Volume taken from the stock (first step) or from the previous step. */
+  carryVolumeMl: number;
+  diluentVolumeMl: number;
+};
+
+export type TargetDilutionPlan = {
+  /** Overall dilution factor, i.e. stock / target. 1 or less means no dilution is needed. */
+  factor: number;
+  stockVolumeMl: number;
+  diluentVolumeMl: number;
+  /**
+   * 1:10 steps (plus a final partial step when the factor is not a power of ten),
+   * each producing `finalVolumeMl`. Only offered when a direct mix would need
+   * less than a tenth of the final volume, where pipetting gets imprecise.
+   */
+  serialSteps: SerialStep[];
+};
+
+const EPSILON = 1e-9;
+
+export function buildTargetDilutionPlan(
+  stockConcentration: number,
+  targetConcentration: number,
+  finalVolumeMl: number
+): TargetDilutionPlan {
+  const factor = stockConcentration / targetConcentration;
+
+  if (factor <= 1 + EPSILON) {
+    return { factor, stockVolumeMl: finalVolumeMl, diluentVolumeMl: 0, serialSteps: [] };
+  }
+
+  const serialSteps: SerialStep[] = [];
+
+  if (factor > 10 + EPSILON) {
+    const tenfoldSteps = Math.floor(Math.log10(factor) + EPSILON);
+    const remainder = factor / 10 ** tenfoldSteps;
+    let concentration = stockConcentration;
+
+    for (let index = 0; index < tenfoldSteps; index += 1) {
+      concentration /= 10;
+      serialSteps.push({
+        concentration,
+        carryVolumeMl: finalVolumeMl / 10,
+        diluentVolumeMl: finalVolumeMl - finalVolumeMl / 10,
+      });
+    }
+
+    if (remainder > 1 + EPSILON) {
+      serialSteps.push({
+        concentration: targetConcentration,
+        carryVolumeMl: finalVolumeMl / remainder,
+        diluentVolumeMl: finalVolumeMl - finalVolumeMl / remainder,
+      });
+    }
+  }
+
+  return {
+    factor,
+    stockVolumeMl: finalVolumeMl / factor,
+    diluentVolumeMl: finalVolumeMl - finalVolumeMl / factor,
+    serialSteps,
+  };
+}
+
+/** Splits a dataset concentration such as "0.01 mg/ml" into its number and unit. */
+export function parseConcentration(value?: string) {
+  const match = value?.match(/^\s*([\d.,]+)\s*(.+)$/);
+  if (!match) return null;
+  const amount = Number(match[1].replace(",", "."));
+  return Number.isFinite(amount) && amount > 0 ? { amount, unit: match[2].trim() } : null;
+}

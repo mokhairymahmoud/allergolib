@@ -1,5 +1,5 @@
 import { formatDateTime, formatNumber, formatReleaseDate } from "./formatters";
-import { copy } from "./i18n";
+import { copy, countCopy } from "./i18n";
 import type { PanelItem } from "./panels";
 import type { Interpretation } from "./readingCriteria";
 import type { TestSession } from "./testSessions";
@@ -210,7 +210,7 @@ export function panelToHtml(context: ExportContext) {
 </head>
 <body>
   <h1>${session ? t("session.sheetTitle") : t("panel.title")}</h1>
-  <p class="subtitle">${t("panel.culprit")}: <strong>${escapeHtml(culprit?.drug.name[language] ?? "")}</strong> · ${items.length} ${t("panel.drugs")}${
+  <p class="subtitle">${t("panel.culprit")}: <strong>${escapeHtml(culprit?.drug.name[language] ?? "")}</strong> · ${escapeHtml(countCopy(language, items.length, "search.drugOne", "search.drugMany"))}${
     session ? ` · ${escapeHtml(sessionStartedLine(session, language))}` : ""
   }</p>
   <div class="fields">

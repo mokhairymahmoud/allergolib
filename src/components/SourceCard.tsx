@@ -2,8 +2,14 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { copy } from "../lib/i18n";
 import { useTheme } from "../theme/ThemeContext";
 import type { Language, SourceDocument } from "../types";
+
+/** Source statuses come from the curation sheet in English; show the known ones translated. */
+function sourceStatusLabel(status: string, language: Language) {
+  return status === "approved" ? copy(language, "source.status.approved") : status;
+}
 
 export function SourceCard({
   source,
@@ -68,7 +74,7 @@ export function SourceCard({
       <Text style={styles.eyebrow}>{eyebrow}</Text>
       <Text style={styles.title}>{source.label}</Text>
       <Text style={styles.meta}>
-        {source.organization} {source.year} • {source.version} • {source.status}
+        {source.organization} {source.year} • {source.version} • {sourceStatusLabel(source.status, language)}
       </Text>
       <Text style={styles.meta}>{source.documentName[language]}</Text>
       <Text style={styles.excerpt}>{source.excerpt[language]}</Text>
@@ -77,10 +83,11 @@ export function SourceCard({
           style={styles.linkRow}
           onPress={() => Linking.openURL(source.url!)}
           hitSlop={8}
+          accessibilityRole="link"
         >
           <Ionicons name="open-outline" size={14} color={theme.accent} />
           <Text style={styles.link}>
-            {language === "fr" ? "Voir le document source" : "View source document"}
+            {copy(language, "source.viewDocument")}
           </Text>
         </Pressable>
       ) : null}
