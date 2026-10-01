@@ -4,6 +4,7 @@
     "slug": "allergolib",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "platforms": [
       "ios",
@@ -11,18 +12,21 @@
       "web"
     ],
     "ios": {
-      "bundleIdentifier": "fr.chunice.allergolib"
+      "bundleIdentifier": "fr.chunice.allergolib",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "fr.chunice.allergolib"
     },
     "extra": {
-      "datasetManifestUrl": "",
+      "datasetManifestUrl": "https://pub-c34d809f85ce4fd6ad497eaeb7df5c62.r2.dev/datasets/latest/manifest.json",
       "eas": {
-        "projectId": "fc5e1480-8716-4397-9daa-1922d79e9e28"
+        "projectId": "2e7c6bb6-8a04-437d-865e-2daa1b81aae0"
       }
     },
-    "owner": "mokhairy",
+    "owner": "eignspaces",
     "plugins": [
       "expo-status-bar",
       "expo-font",

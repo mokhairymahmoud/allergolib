@@ -113,4 +113,4 @@ EXPO_PUBLIC_DATASET_MANIFEST_URL=...
 
 ## Build & Release
 
-EAS is configured in `eas.json` with three profiles: `development` (internal, dev client), `preview` (internal distribution), and `production` (auto-increment version). App owner is `mokhairy` on Expo.
+EAS is configured in `eas.json` with three profiles: `development` (internal, dev client), `preview` (internal distribution), and `production` (auto-increment version). App owner is `eignspaces` on Expo (project `@eignspaces/allergolib`).

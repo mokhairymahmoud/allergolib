@@ -6,3 +6,6 @@ dist/
 admin/apps-script/.clasp.json
 .clasprc.json
 .clasprc
+
+# Local env files (secrets)
+.env*.local
