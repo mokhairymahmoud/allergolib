@@ -1,21 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as Print from "expo-print";
-import * as Sharing from "expo-sharing";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
-  Platform,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 
+import { ActionButton } from "../components/ActionButton";
 import { ComplianceCard } from "../components/ComplianceCard";
 import { searchDrugs } from "../lib/drugSearch";
+import { canSharePdf, printHtml, shareHtmlAsPdf, shareText } from "../lib/exportActions";
+import { formatDateTime } from "../lib/formatters";
 import { copy } from "../lib/i18n";
 import {
   panelCategoryLabel,
@@ -42,6 +41,10 @@ export function PanelScreen({
   onRemoveDrug,
   onReset,
   onDelete,
+  activeSessionStartedAt,
+  previousSessions,
+  onStartSession,
+  onOpenSession,
 }: {
   items: PanelItem[];
   language: Language;
@@ -54,6 +57,10 @@ export function PanelScreen({
   onRemoveDrug: (drugId: string) => void;
   onReset: () => void;
   onDelete: () => void;
+  activeSessionStartedAt?: string;
+  previousSessions: { id: string; startedAt: string; positiveCount: number }[];
+  onStartSession: () => void;
+  onOpenSession: (sessionId: string) => void;
 }) {
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
@@ -77,44 +84,16 @@ export function PanelScreen({
     : [];
   const exportContext = { items, language, sources, manifest };
 
-  async function printPanel() {
+  async function runExport(action: () => Promise<void>) {
     try {
-      const html = panelToHtml(exportContext);
-      if (Platform.OS === "web") {
-        // expo-print on web prints the current page, so print the sheet from its own window.
-        const printWindow = window.open("", "_blank");
-        if (!printWindow) throw new Error("Popup blocked");
-        printWindow.document.write(html);
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-        return;
-      }
-      await Print.printAsync({ html });
+      await action();
     } catch (error) {
-      console.warn("Panel print failed.", error);
+      console.warn("Panel export failed.", error);
       Alert.alert(copy(language, "panel.exportError"));
     }
   }
 
-  async function sharePdf() {
-    try {
-      const { uri } = await Print.printToFileAsync({ html: panelToHtml(exportContext) });
-      await Sharing.shareAsync(uri, { mimeType: "application/pdf", UTI: "com.adobe.pdf" });
-    } catch (error) {
-      console.warn("Panel PDF share failed.", error);
-      Alert.alert(copy(language, "panel.exportError"));
-    }
-  }
-
-  async function shareText() {
-    try {
-      await Share.share({ message: panelToText(exportContext) });
-    } catch (error) {
-      console.warn("Panel text share failed.", error);
-      Alert.alert(copy(language, "panel.exportError"));
-    }
-  }
+  const printPanel = () => runExport(() => printHtml(panelToHtml(exportContext)));
 
   function tierColor(item: PanelItem) {
     if (item.role === "culprit") return theme.accent;
@@ -155,6 +134,43 @@ export function PanelScreen({
           <Text style={styles.eyebrow}>{copy(language, "panel.culprit")}</Text>
           <Text style={styles.headerTitle}>{culprit?.name[language]}</Text>
           <Text style={styles.headerMeta}>{items.length} {copy(language, "panel.drugs")}</Text>
+        </View>
+
+        <View style={styles.panel}>
+          <ActionButton
+            icon={activeSessionStartedAt ? "play-forward-outline" : "timer-outline"}
+            label={copy(language, activeSessionStartedAt ? "session.resume" : "session.start")}
+            onPress={onStartSession}
+            primary
+          />
+          {activeSessionStartedAt ? (
+            <Text style={styles.mutedText}>
+              {copy(language, "session.inProgress")} · {copy(language, "session.started")}{" "}
+              {formatDateTime(activeSessionStartedAt, language)}
+            </Text>
+          ) : null}
+          {previousSessions.length ? (
+            <>
+              <Text style={styles.sectionLabel}>{copy(language, "session.previous")}</Text>
+              {previousSessions.map((session) => (
+                <Pressable
+                  key={session.id}
+                  style={styles.addRow}
+                  onPress={() => onOpenSession(session.id)}
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="document-text-outline" size={18} color={theme.accent} />
+                  <View style={styles.flex1}>
+                    <Text style={styles.addRowName}>{formatDateTime(session.startedAt, language)}</Text>
+                    <Text style={styles.mutedText}>
+                      {session.positiveCount} {copy(language, "session.positiveCount")}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={theme.textDisabled} />
+                </Pressable>
+              ))}
+            </>
+          ) : null}
         </View>
 
         {rationales.length ? (
@@ -267,12 +283,20 @@ export function PanelScreen({
         </View>
 
         <View style={styles.actions}>
-          <ActionButton icon="print-outline" label={copy(language, "panel.print")} onPress={printPanel} primary styles={styles} theme={theme} />
-          {Platform.OS !== "web" ? (
-            <ActionButton icon="document-outline" label={copy(language, "panel.sharePdf")} onPress={sharePdf} styles={styles} theme={theme} />
+          <ActionButton icon="print-outline" label={copy(language, "panel.print")} onPress={printPanel} />
+          {canSharePdf ? (
+            <ActionButton
+              icon="document-outline"
+              label={copy(language, "panel.sharePdf")}
+              onPress={() => runExport(() => shareHtmlAsPdf(panelToHtml(exportContext)))}
+            />
           ) : null}
-          <ActionButton icon="share-outline" label={copy(language, "panel.shareText")} onPress={shareText} styles={styles} theme={theme} />
-          <ActionButton icon="refresh-outline" label={copy(language, "panel.reset")} onPress={onReset} styles={styles} theme={theme} />
+          <ActionButton
+            icon="share-outline"
+            label={copy(language, "panel.shareText")}
+            onPress={() => runExport(() => shareText(panelToText(exportContext)))}
+          />
+          <ActionButton icon="refresh-outline" label={copy(language, "panel.reset")} onPress={onReset} />
           <ActionButton
             icon="trash-outline"
             label={copy(language, confirmingDelete ? "panel.deleteConfirm" : "panel.delete")}
@@ -281,8 +305,6 @@ export function PanelScreen({
               else setConfirmingDelete(true);
             }}
             destructive
-            styles={styles}
-            theme={theme}
           />
         </View>
 
@@ -300,36 +322,6 @@ function ValueCell({ label, value, styles }: { label: string; value?: string; st
       <Text style={styles.valueLabel}>{label}</Text>
       <Text style={value ? styles.value : styles.valueEmpty}>{value ?? "—"}</Text>
     </View>
-  );
-}
-
-function ActionButton({
-  icon,
-  label,
-  onPress,
-  primary,
-  destructive,
-  styles,
-  theme,
-}: {
-  icon: React.ComponentProps<typeof Ionicons>["name"];
-  label: string;
-  onPress: () => void;
-  primary?: boolean;
-  destructive?: boolean;
-  styles: Styles;
-  theme: ReturnType<typeof useTheme>;
-}) {
-  const color = primary ? "#FFF" : destructive ? theme.warningText : theme.accent;
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[styles.actionButton, primary && styles.actionButtonPrimary, destructive && styles.actionButtonDestructive]}
-      accessibilityRole="button"
-    >
-      <Ionicons name={icon} size={16} color={color} />
-      <Text style={[styles.actionText, { color }]}>{label}</Text>
-    </Pressable>
   );
 }
 
@@ -474,19 +466,5 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
     },
     addRowName: { color: theme.textPrimary, fontSize: 14, fontWeight: "600" },
     actions: { gap: 8 },
-    actionButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-      borderRadius: 10,
-      paddingVertical: 12,
-      borderWidth: 1,
-      borderColor: theme.accentBorder,
-      backgroundColor: theme.accentBg,
-    },
-    actionButtonPrimary: { backgroundColor: theme.accent, borderColor: theme.accent },
-    actionButtonDestructive: { backgroundColor: theme.warningBg, borderColor: theme.warningBorder },
-    actionText: { fontSize: 14, fontWeight: "700" },
   });
 }

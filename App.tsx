@@ -34,6 +34,18 @@ import {
   sanitizePanels,
   type TestPanel,
 } from "./src/lib/panels";
+import { cancelReadingAlarm, scheduleReadingAlarm } from "./src/lib/readingAlarms";
+import { IDR_READING_MINUTES, PRICK_READING_MINUTES } from "./src/lib/readingCriteria";
+import {
+  activeSessionFor,
+  addSession,
+  createSession,
+  loadSessions,
+  persistSessions,
+  sanitizeSessions,
+  type TestSession,
+  type TimedStage,
+} from "./src/lib/testSessions";
 import {
   loadRecentDrugIds,
   persistRecentDrugIds,
@@ -46,6 +58,7 @@ import { FavoritesScreen } from "./src/screens/FavoritesScreen";
 import { InfoScreen } from "./src/screens/InfoScreen";
 import { PanelScreen } from "./src/screens/PanelScreen";
 import { SearchScreen } from "./src/screens/SearchScreen";
+import { SessionScreen } from "./src/screens/SessionScreen";
 import { darkTheme, lightTheme } from "./src/theme/colors";
 import { ThemeContext } from "./src/theme/ThemeContext";
 import type { DrugRecord, Language } from "./src/types";
@@ -94,6 +107,9 @@ export default function App() {
   const [panels, setPanels] = useState<TestPanel[]>([]);
   const [panelsHydrated, setPanelsHydrated] = useState(false);
   const [openPanelCulpritId, setOpenPanelCulpritId] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<TestSession[]>([]);
+  const [sessionsHydrated, setSessionsHydrated] = useState(false);
+  const [openSessionId, setOpenSessionId] = useState<string | null>(null);
 
   // ─── Hydration ─────────────────────────────────────────────────────────────
 
@@ -101,12 +117,13 @@ export default function App() {
     let cancelled = false;
 
     async function hydrate() {
-      const [storedDataset, storedFavorites, storedRecents, storedDarkMode, storedPanels] = await Promise.all([
+      const [storedDataset, storedFavorites, storedRecents, storedDarkMode, storedPanels, storedSessions] = await Promise.all([
         loadActiveDataset(),
         loadFavoriteDrugIds(),
         loadRecentDrugIds(),
         AsyncStorage.getItem(DARK_MODE_STORAGE_KEY),
         loadPanels(),
+        loadSessions(),
       ]);
 
       if (cancelled) return;
@@ -121,6 +138,8 @@ export default function App() {
         setFavoritesHydrated(true);
         setRecentHydrated(true);
         setPanelsHydrated(true);
+        setSessions(sanitizeSessions(storedSessions, validDrugIds));
+        setSessionsHydrated(true);
         if (storedDarkMode === "dark") {
           setDarkOverride(true);
         } else if (storedDarkMode === "light") {
@@ -196,6 +215,21 @@ export default function App() {
     void persistPanels(panels);
   }, [panels, panelsHydrated]);
 
+  // ─── Sessions sync ─────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!sessionsHydrated) return;
+    const sanitized = sanitizeSessions(sessions, activeDataset.dataset.drugs.map((drug) => drug.id));
+    if (JSON.stringify(sanitized) !== JSON.stringify(sessions)) {
+      setSessions(sanitized);
+    }
+  }, [activeDataset.dataset.drugs, sessions, sessionsHydrated]);
+
+  useEffect(() => {
+    if (!sessionsHydrated) return;
+    void persistSessions(sessions);
+  }, [sessions, sessionsHydrated]);
+
   // ─── Derived state ─────────────────────────────────────────────────────────
 
   const selectedDrug = selectedDrugId
@@ -215,6 +249,28 @@ export default function App() {
     ? panels.find((panel) => panel.culpritDrugId === openPanelCulpritId) ?? null
     : null;
   const openPanelItems = openPanel ? resolvePanelItems(openPanel, drugsById) : [];
+  const activeSession = openPanel ? activeSessionFor(sessions, openPanel.culpritDrugId) : undefined;
+  const previousSessions = openPanel
+    ? sessions
+        .filter((session) => session.culpritDrugId === openPanel.culpritDrugId && session.completedAt)
+        .sort((a, b) => b.startedAt.localeCompare(a.startedAt))
+        .map((session) => ({
+          id: session.id,
+          startedAt: session.startedAt,
+          positiveCount: Object.values(session.results).filter((r) => r.interpretation === "positive").length,
+        }))
+    : [];
+  const openSession = openSessionId ? sessions.find((session) => session.id === openSessionId) ?? null : null;
+  const openSessionItems = openSession
+    ? resolvePanelItems(
+        {
+          culpritDrugId: openSession.culpritDrugId,
+          drugIds: openSession.drugIds.filter((id) => id !== openSession.culpritDrugId),
+          updatedAt: openSession.startedAt,
+        },
+        drugsById
+      )
+    : [];
   const savedPanels = panels
     .flatMap((panel) => {
       const culprit = drugsById.get(panel.culpritDrugId);
@@ -230,6 +286,12 @@ export default function App() {
       setOpenPanelCulpritId(null);
     }
   }, [openPanel, openPanelCulpritId, panelsHydrated]);
+
+  useEffect(() => {
+    if (openSessionId && !openSession && sessionsHydrated) {
+      setOpenSessionId(null);
+    }
+  }, [openSession, openSessionId, sessionsHydrated]);
 
   useEffect(() => {
     if (selectedDrugId && !selectedDrug) {
@@ -289,6 +351,80 @@ export default function App() {
   function deletePanel(culpritDrugId: string) {
     setOpenPanelCulpritId(null);
     setPanels((current) => current.filter((panel) => panel.culpritDrugId !== culpritDrugId));
+    // A panel's sessions are only reachable from the panel, so they go with it.
+    for (const session of sessions.filter((s) => s.culpritDrugId === culpritDrugId)) {
+      cancelSessionAlarms(session);
+    }
+    setSessions((current) => current.filter((session) => session.culpritDrugId !== culpritDrugId));
+  }
+
+  // ─── Sessions ──────────────────────────────────────────────────────────────
+
+  function updateSession(sessionId: string, update: (session: TestSession) => TestSession) {
+    setSessions((current) => current.map((session) => (session.id === sessionId ? update(session) : session)));
+  }
+
+  function cancelSessionAlarms(session: TestSession) {
+    void cancelReadingAlarm(session.notificationIds.prick);
+    void cancelReadingAlarm(session.notificationIds.idr);
+  }
+
+  function startSession(culpritDrugId: string) {
+    const existing = activeSessionFor(sessions, culpritDrugId);
+    if (existing) {
+      setOpenSessionId(existing.id);
+      return;
+    }
+    const panel = panels.find((p) => p.culpritDrugId === culpritDrugId);
+    if (!panel) return;
+    const session = createSession(culpritDrugId, panel.drugIds);
+    setSessions((current) => addSession(current, session));
+    setOpenSessionId(session.id);
+  }
+
+  function startTimer(session: TestSession, stage: TimedStage) {
+    const minutes = stage === "prick" ? PRICK_READING_MINUTES : IDR_READING_MINUTES;
+    const readyAt = new Date(Date.now() + minutes * 60_000).toISOString();
+    updateSession(session.id, (current) => ({ ...current, readyAt: { ...current.readyAt, [stage]: readyAt } }));
+    const culpritName = drugsById.get(session.culpritDrugId)?.name[language] ?? "";
+    void scheduleReadingAlarm(
+      minutes * 60,
+      copy(language, stage === "prick" ? "session.alarmPrick" : "session.alarmIdr"),
+      `${copy(language, "panel.culprit")}: ${culpritName}`
+    ).then((notificationId) => {
+      if (!notificationId) return;
+      updateSession(session.id, (current) =>
+        current.readyAt[stage] === readyAt
+          ? { ...current, notificationIds: { ...current.notificationIds, [stage]: notificationId } }
+          : current
+      );
+    });
+  }
+
+  function resetTimer(session: TestSession, stage: TimedStage) {
+    void cancelReadingAlarm(session.notificationIds[stage]);
+    updateSession(session.id, (current) => {
+      const { [stage]: _ready, ...readyAt } = current.readyAt;
+      const { [stage]: _notification, ...notificationIds } = current.notificationIds;
+      return { ...current, readyAt, notificationIds };
+    });
+  }
+
+  function finishSession(session: TestSession) {
+    cancelSessionAlarms(session);
+    updateSession(session.id, (current) => ({
+      ...current,
+      completedAt: new Date().toISOString(),
+      readyAt: {},
+      notificationIds: {},
+    }));
+    setOpenSessionId(null);
+  }
+
+  function deleteSession(session: TestSession) {
+    cancelSessionAlarms(session);
+    setOpenSessionId(null);
+    setSessions((current) => current.filter((s) => s.id !== session.id));
   }
 
   function toggleDark() {
@@ -370,13 +506,22 @@ export default function App() {
   }
 
   // Android hardware back: close the top-most layer before letting the app exit.
-  const backTargetRef = useRef({ detail: false, panel: false, close: closeDetail });
-  backTargetRef.current = { detail: Boolean(selectedDrugId), panel: Boolean(openPanelCulpritId), close: closeDetail };
+  const backTargetRef = useRef({ detail: false, session: false, panel: false, close: closeDetail });
+  backTargetRef.current = {
+    detail: Boolean(selectedDrugId),
+    session: Boolean(openSessionId),
+    panel: Boolean(openPanelCulpritId),
+    close: closeDetail,
+  };
   useEffect(() => {
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
       const target = backTargetRef.current;
       if (target.detail) {
         target.close();
+        return true;
+      }
+      if (target.session) {
+        setOpenSessionId(null);
         return true;
       }
       if (target.panel) {
@@ -405,7 +550,7 @@ export default function App() {
           {/* Home layer */}
           <Animated.View
             style={[styles.stackLayer, { transform: [{ translateX: homeTranslateX }] }]}
-            pointerEvents={selectedDrug || openPanel ? "none" : "auto"}
+            pointerEvents={selectedDrug || openPanel || openSession ? "none" : "auto"}
           >
             <View style={styles.container}>
               {/* Top bar */}
@@ -500,7 +645,7 @@ export default function App() {
           {/* Panel layer (below detail so drugs opened from a panel return to it) */}
           <SlideOverLayer
             open={Boolean(openPanel)}
-            interactive={!selectedDrug}
+            interactive={!selectedDrug && !openSession}
             onRequestClose={() => setOpenPanelCulpritId(null)}
           >
             <View style={styles.container}>
@@ -523,6 +668,42 @@ export default function App() {
                   }
                   onReset={() => resetPanel(openPanel.culpritDrugId)}
                   onDelete={() => deletePanel(openPanel.culpritDrugId)}
+                  activeSessionStartedAt={activeSession?.startedAt}
+                  previousSessions={previousSessions}
+                  onStartSession={() => startSession(openPanel.culpritDrugId)}
+                  onOpenSession={setOpenSessionId}
+                />
+              ) : null}
+            </View>
+          </SlideOverLayer>
+
+          {/* Session layer (above its panel, below detail) */}
+          <SlideOverLayer
+            open={Boolean(openSession)}
+            interactive={!selectedDrug}
+            onRequestClose={() => setOpenSessionId(null)}
+          >
+            <View style={styles.container}>
+              {openSession ? (
+                <SessionScreen
+                  key={openSession.id}
+                  session={openSession}
+                  items={openSessionItems}
+                  language={language}
+                  sources={activeDataset.dataset.sources}
+                  manifest={activeDataset.manifest}
+                  onBack={() => setOpenSessionId(null)}
+                  onOpenDrug={openDrug}
+                  onUpdate={(update) => updateSession(openSession.id, update)}
+                  onStartTimer={(stage) => startTimer(openSession, stage)}
+                  onResetTimer={(stage) => resetTimer(openSession, stage)}
+                  onFinish={() => finishSession(openSession)}
+                  onReopen={
+                    activeSessionFor(sessions, openSession.culpritDrugId)
+                      ? undefined
+                      : () => updateSession(openSession.id, (current) => ({ ...current, completedAt: undefined }))
+                  }
+                  onDelete={() => deleteSession(openSession)}
                 />
               ) : null}
             </View>

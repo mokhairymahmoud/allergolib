@@ -1,6 +1,8 @@
-import { formatReleaseDate } from "./formatters";
+import { formatDateTime, formatNumber, formatReleaseDate } from "./formatters";
 import { copy } from "./i18n";
 import type { PanelItem } from "./panels";
+import type { Interpretation } from "./readingCriteria";
+import type { TestSession } from "./testSessions";
 import { hasTestProvenance, preferredSourceEntry, sourcesDisagree } from "./testData";
 import type {
   CrossReactivityTier,
@@ -95,7 +97,31 @@ type ExportContext = {
   language: Language;
   sources: Record<string, SourceDocument>;
   manifest: DatasetManifest;
+  /** When present, the sheet is filled with this session's measurements. */
+  session?: TestSession;
 };
+
+export function interpretationLabel(interpretation: Interpretation | undefined, language: Language) {
+  switch (interpretation) {
+    case "positive": return copy(language, "session.positive");
+    case "negative": return copy(language, "session.negative");
+    case "equivocal": return copy(language, "session.equivocal");
+    default: return copy(language, "session.notInterpreted");
+  }
+}
+
+function formatMm(value: number | undefined, language: Language) {
+  return value === undefined ? undefined : `${formatNumber(value, language)} mm`;
+}
+
+function formatIdrResult(initial: number | undefined, wheal: number | undefined, language: Language) {
+  if (initial === undefined && wheal === undefined) return undefined;
+  return `${formatMm(initial, language) ?? "?"} → ${formatMm(wheal, language) ?? "?"}`;
+}
+
+function sessionStartedLine(session: TestSession, language: Language) {
+  return `${copy(language, "session.sheetStarted")}: ${formatDateTime(session.startedAt, language)}`;
+}
 
 function citedSources({ items, sources, language }: ExportContext) {
   const ids = new Set<string>();
@@ -111,7 +137,7 @@ function datasetLine({ manifest, language }: ExportContext) {
 
 /** A printable bench sheet: test concentrations plus blank columns for recording results. */
 export function panelToHtml(context: ExportContext) {
-  const { items, language, sources } = context;
+  const { items, language, sources, session } = context;
   const t = (key: Parameters<typeof copy>[1]) => escapeHtml(copy(language, key));
   const showPatch = panelHasPatchData(items, sources, language);
   const culprit = items.find((item) => item.role === "culprit");
@@ -129,12 +155,27 @@ export function panelToHtml(context: ExportContext) {
       <td>${cell(values.idrMax)}</td>
       <td>${values.idrDilutions.length ? escapeHtml(values.idrDilutions.join(" → ")) : "—"}</td>
       ${showPatch ? `<td>${cell(values.patch)}</td>` : ""}
-      <td class="blank"></td><td class="blank"></td><td class="blank"></td>
+      ${resultCells(item.drug.id)}
     </tr>`;
   });
 
-  const controlRow = (label: string) =>
-    `<tr class="control"><td colspan="${columnCount - 3}">${label}</td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>`;
+  function resultCells(drugId: string) {
+    if (!session) return `<td class="blank"></td><td class="blank"></td><td class="blank"></td>`;
+    const result = session.results[drugId] ?? {};
+    const interpretation = result.interpretation
+      ? `<strong class="${result.interpretation}">${escapeHtml(interpretationLabel(result.interpretation, language))}</strong>`
+      : "—";
+    return `<td>${escapeHtml(formatMm(result.prickMm, language) ?? "—")}</td>
+      <td>${escapeHtml(formatIdrResult(result.idrInitialMm, result.idrMm, language) ?? "—")}</td>
+      <td>${interpretation}</td>`;
+  }
+
+  const controlRow = (label: string, valueMm?: number) =>
+    `<tr class="control"><td colspan="${columnCount - 3}">${label}</td>${
+      session
+        ? `<td>${escapeHtml(formatMm(valueMm, language) ?? "—")}</td><td></td><td></td>`
+        : `<td class="blank"></td><td class="blank"></td><td class="blank"></td>`
+    }</tr>`;
 
   const sourceItems = citedSources(context)
     .map((source) => `<li>${escapeHtml(source.label)}: ${escapeHtml(source.documentName[language])} (${escapeHtml(source.organization)}, ${escapeHtml(source.year)})</li>`)
@@ -145,7 +186,7 @@ export function panelToHtml(context: ExportContext) {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>${t("panel.title")}</title>
+<title>${session ? t("session.sheetTitle") : t("panel.title")}</title>
 <style>
   @page { size: A4 landscape; margin: 12mm; }
   body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; color: #0f172a; font-size: 11px; margin: 0; }
@@ -162,12 +203,16 @@ export function panelToHtml(context: ExportContext) {
   .muted { color: #64748b; font-size: 10px; }
   .legend, .footer { color: #475569; margin-top: 10px; }
   .footer ul { margin: 4px 0; padding-left: 16px; }
+  strong.positive { color: #b91c1c; }
+  strong.equivocal { color: #b45309; }
   .disclaimer { margin-top: 10px; padding: 8px; border: 1px solid #bfdbfe; background: #eff6ff; }
 </style>
 </head>
 <body>
-  <h1>${t("panel.title")}</h1>
-  <p class="subtitle">${t("panel.culprit")}: <strong>${escapeHtml(culprit?.drug.name[language] ?? "")}</strong> · ${items.length} ${t("panel.drugs")}</p>
+  <h1>${session ? t("session.sheetTitle") : t("panel.title")}</h1>
+  <p class="subtitle">${t("panel.culprit")}: <strong>${escapeHtml(culprit?.drug.name[language] ?? "")}</strong> · ${items.length} ${t("panel.drugs")}${
+    session ? ` · ${escapeHtml(sessionStartedLine(session, language))}` : ""
+  }</p>
   <div class="fields">
     <span>${t("panel.sheetPatient")}</span>
     <span>${t("panel.sheetDate")}</span>
@@ -186,8 +231,8 @@ export function panelToHtml(context: ExportContext) {
       <th>${t("panel.sheetInterpretation")}</th>
     </tr></thead>
     <tbody>
-      ${controlRow(t("panel.sheetPositiveControl"))}
-      ${controlRow(t("panel.sheetNegativeControl"))}
+      ${controlRow(t("panel.sheetPositiveControl"), session?.positiveControlMm)}
+      ${controlRow(t("panel.sheetNegativeControl"), session?.negativeControlMm)}
       ${rows.join("")}
     </tbody>
   </table>
@@ -207,12 +252,18 @@ export function panelToHtml(context: ExportContext) {
 
 /** A plain-text summary suitable for pasting into a patient record or referral letter. */
 export function panelToText(context: ExportContext) {
-  const { items, language, sources } = context;
+  const { items, language, sources, session } = context;
   const culprit = items.find((item) => item.role === "culprit");
   const lines = [
-    `${copy(language, "panel.title")} | ${copy(language, "panel.culprit")}: ${culprit?.drug.name[language] ?? ""}`,
-    "",
+    `${copy(language, session ? "session.sheetTitle" : "panel.title")} | ${copy(language, "panel.culprit")}: ${culprit?.drug.name[language] ?? ""}`,
   ];
+  if (session) {
+    lines.push(
+      sessionStartedLine(session, language),
+      `${copy(language, "panel.sheetPositiveControl")}: ${formatMm(session.positiveControlMm, language) ?? "—"} | ${copy(language, "panel.sheetNegativeControl")}: ${formatMm(session.negativeControlMm, language) ?? "—"}`
+    );
+  }
+  lines.push("");
 
   for (const item of items) {
     const values = panelTestValues(item.drug, sources, language);
@@ -226,6 +277,16 @@ export function panelToText(context: ExportContext) {
     lines.push(
       `- ${item.drug.name[language]}${marker} [${panelCategoryLabel(item, language)}]: ${parts.join(", ") || copy(language, "panel.noValue")}`
     );
+    if (session) {
+      const result = session.results[item.drug.id] ?? {};
+      const measured = [
+        result.prickMm !== undefined ? `${copy(language, "panel.prick")} ${formatMm(result.prickMm, language)}` : null,
+        formatIdrResult(result.idrInitialMm, result.idrMm, language)
+          ? `IDR ${formatIdrResult(result.idrInitialMm, result.idrMm, language)}`
+          : null,
+      ].filter(Boolean);
+      lines.push(`  → ${[...measured, interpretationLabel(result.interpretation, language)].join(" | ")}`);
+    }
   }
 
   lines.push("");

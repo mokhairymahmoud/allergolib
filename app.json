@@ -31,6 +31,7 @@
       "expo-status-bar",
       "expo-font",
       "expo-sharing",
+      "expo-notifications",
       "./plugins/withSceneLifecycle"
     ]
   }

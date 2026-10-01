@@ -43,7 +43,7 @@ All application state lives in the root `App` component. On mount, a `hydrate()`
 - `src/types.ts` — Domain models: `Drug`, `Test`, `Source`, `Dataset`, `Manifest`
 - `src/theme/` — Theme type, light/dark color tokens (`colors.ts`), ThemeContext + `useTheme()` (`ThemeContext.tsx`)
 - `src/components/` — Shared UI components: `AppLogo`, `ComplianceBanner`, `ComplianceCard`, `DrugRow`, `NeutralEmptyCard`, `NoteList`, `SourceCard`
-- `src/screens/` — Screen-level components: `SearchScreen`, `FavoritesScreen`, `InfoScreen`, `PanelScreen`
+- `src/screens/` — Screen-level components: `SearchScreen`, `FavoritesScreen`, `InfoScreen`, `PanelScreen`, `SessionScreen`
 - `src/screens/detail/` — Drug detail screen split by tab: `DetailScreen` (shell + Testing/Sources tabs), `DilutionTab`, `OrbitMap`, `OrbitNode`
 - `src/data/runtimeDataset.ts` — Dataset loading, remote sync, AsyncStorage caching
 - `src/data/loadBundledDataset.ts` — Imports the static bundled JSON
@@ -55,7 +55,9 @@ All application state lives in the root `App` component. On mount, a `hydrate()`
 - `src/lib/recentSearches.ts` — AsyncStorage persistence for recently viewed drugs
 - `src/lib/filterDrugs.ts` — Drug classification and category filtering
 - `src/lib/testData.ts` — Shared test helpers (preferred source entry, source disagreement, provenance)
-- `src/lib/panels.ts` / `src/lib/panelExport.ts` — Test panel model/persistence and printable HTML / plain-text export
+- `src/lib/panels.ts` / `src/lib/panelExport.ts` — Test panel model/persistence and printable HTML / plain-text export (filled with results when given a session)
+- `src/lib/testSessions.ts` / `src/lib/readingCriteria.ts` / `src/lib/readingAlarms.ts` — Bench session model, reading criteria used for *suggested* interpretations (clinician-reviewed thresholds), local notification alarms
+- `src/lib/exportActions.ts` — Print / PDF share / text share helpers
 - `src/lib/i18n.ts` — All UI and medical content strings in `en`/`fr`
 - `admin/apps-script/` — Google Apps Script backend + web UI for data curation
 
@@ -87,6 +89,7 @@ All features must work without a network connection. Storage keys:
 - `@periop-skin-test/recent-searches` — recently viewed drugs (max 6)
 - `@allergolib/dark-mode` — dark mode override (`"dark"` | `"light"`)
 - `@allergolib/test-panels` — saved skin-test panels, one per suspected culprit (no patient data)
+- `@allergolib/test-sessions` — bench sessions run from a panel: timers, control and wheal measurements, interpretations (no patient identity; max 20, oldest completed evicted)
 
 ### Localization
 
