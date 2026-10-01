@@ -114,3 +114,5 @@ EXPO_PUBLIC_DATASET_MANIFEST_URL=...
 ## Build & Release
 
 EAS is configured in `eas.json` with three profiles: `development` (internal, dev client), `preview` (internal distribution), and `production` (auto-increment version). App owner is `eignspaces` on Expo (project `@eignspaces/allergolib`).
+
+`plugins/withSceneLifecycle.js` is a local config plugin that makes the generated iOS app adopt the UIScene life cycle (via Expo's `ExpoAppSceneDelegate`). iOS 27 kills apps built with the iOS 27 SDK at launch without it — keep it until Expo's prebuild template does this itself.

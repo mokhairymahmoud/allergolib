@@ -9,3 +9,7 @@ admin/apps-script/.clasp.json
 
 # Local env files (secrets)
 .env*.local
+
+# Local EAS build output
+build/
+*.ipa

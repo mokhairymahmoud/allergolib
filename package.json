@@ -18,7 +18,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:ios:local": "eas build --platform ios --profile production --local --output ./build/allergolib.ipa",
+    "submit:ios": "eas submit --platform ios --profile production --path ./build/allergolib.ipa"
   },
   "dependencies": {
     "@expo/ngrok": "^4.1.3",
