@@ -6,6 +6,13 @@ import { NoteList } from "../../components/NoteList";
 import { SourceCard } from "../../components/SourceCard";
 import { extractConcentrationUnit } from "../../lib/dilutionCalculator";
 import { copy } from "../../lib/i18n";
+import {
+  TEST_KINDS,
+  hasDisplayableTestContent,
+  hasTestProvenance,
+  preferredSourceEntry,
+  sourcesDisagree as testSourcesDisagree,
+} from "../../lib/testData";
 import { useTheme } from "../../theme/ThemeContext";
 import type {
   DrugRecord,
@@ -13,13 +20,10 @@ import type {
   SourceDocument,
   TestKind,
   TestNote,
-  TestRecord,
 } from "../../types";
 
 import { DilutionTab } from "./DilutionTab";
 import { OrbitMap } from "./OrbitMap";
-
-const TAB_ORDER: TestKind[] = ["prick", "idr", "patch"];
 
 type DetailTab = "testing" | "cross" | "dilution" | "sources";
 const DETAIL_TABS: DetailTab[] = ["testing", "cross", "dilution", "sources"];
@@ -33,21 +37,12 @@ function detailTabLabel(language: Language, tab: DetailTab) {
   }
 }
 
-function hasDisplayableTestContent(test: TestRecord) {
-  return (
-    test.sourceEntries.some((e) => e.concentration || e.maxConcentration) ||
-    test.dilutions.length > 0 ||
-    Boolean(test.vehicle) ||
-    test.notes.length > 0
-  );
-}
-
 function isTestAvailable(drug: DrugRecord, kind: TestKind) {
   return hasDisplayableTestContent(drug.tests[kind]);
 }
 
 function availableTests(drug: DrugRecord) {
-  return TAB_ORDER.filter((kind) => isTestAvailable(drug, kind));
+  return TEST_KINDS.filter((kind) => isTestAvailable(drug, kind));
 }
 
 function concentrationLabel(language: Language, kind: TestKind) {
@@ -59,30 +54,6 @@ function concentrationLabel(language: Language, kind: TestKind) {
 
 function testTitle(language: Language, kind: TestKind) {
   return copy(language, `tests.${kind}`);
-}
-
-function hasSourceDocumentContent(source: SourceDocument | undefined) {
-  return Boolean(
-    source?.label &&
-      source.organization &&
-      source.year &&
-      source.version &&
-      source.documentName.en &&
-      source.documentName.fr &&
-      source.excerpt.en &&
-      source.excerpt.fr
-  );
-}
-
-function hasTestProvenance(
-  test: TestRecord,
-  sources: Record<string, SourceDocument>
-) {
-  if (!hasDisplayableTestContent(test)) {
-    return true;
-  }
-  const preferred = test.sourceEntries.find((e) => e.isPreferred);
-  return hasSourceDocumentContent(preferred ? sources[preferred.sourceId] : undefined);
 }
 
 function splitNotes(notes: TestNote[]) {
@@ -107,6 +78,7 @@ export function DetailScreen({
   onBack,
   onToggleFavorite,
   onOpenDrug,
+  onBuildPanel,
 }: {
   drug: DrugRecord;
   language: Language;
@@ -116,6 +88,7 @@ export function DetailScreen({
   onBack: () => void;
   onToggleFavorite: () => void;
   onOpenDrug: (drugId: string) => void;
+  onBuildPanel: () => void;
 }) {
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
@@ -132,8 +105,7 @@ export function DetailScreen({
 
   const test = drug.tests[testKind];
   const canShowProvenance = hasTestProvenance(test, sources);
-  const preferredEntry = test.sourceEntries.find((e) => e.isPreferred);
-  const nonPreferredEntries = test.sourceEntries.filter((e) => !e.isPreferred);
+  const preferredEntry = preferredSourceEntry(test);
   const { warnings, supporting } = splitNotes(test.notes);
   const concentrationUnit = extractConcentrationUnit(
     preferredEntry?.maxConcentration ?? preferredEntry?.concentration
@@ -141,9 +113,7 @@ export function DetailScreen({
   const shouldShowStandardConcentration =
     Boolean(preferredEntry?.concentration) &&
     (testKind !== "idr" || preferredEntry?.concentration !== preferredEntry?.maxConcentration);
-  const sourcesDisagree = nonPreferredEntries.some(
-    (e) => e.concentration && e.concentration !== preferredEntry?.concentration
-  );
+  const sourcesDisagree = testSourcesDisagree(test);
   const [headerExpanded, setHeaderExpanded] = useState(true);
 
   const metricItems: DetailMetricItem[] = [];
@@ -256,7 +226,7 @@ export function DetailScreen({
           <>
             {availableTestKinds.length > 1 ? (
               <View style={[styles.segmentedControl, { marginBottom: 4 }]}>
-                {TAB_ORDER.map((kind) => {
+                {TEST_KINDS.map((kind) => {
                   const selected = kind === testKind;
                   const disabled = !isTestAvailable(drug, kind);
                   return (
@@ -395,6 +365,7 @@ export function DetailScreen({
             allDrugs={allDrugs}
             sources={sources}
             onOpenDrug={onOpenDrug}
+            onBuildPanel={onBuildPanel}
           />
         ) : null}
 

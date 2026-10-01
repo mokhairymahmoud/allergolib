@@ -23,12 +23,14 @@ export function OrbitMap({
   allDrugs,
   sources,
   onOpenDrug,
+  onBuildPanel,
 }: {
   drug: DrugRecord;
   language: Language;
   allDrugs: DrugRecord[];
   sources: Record<string, SourceDocument>;
   onOpenDrug: (drugId: string) => void;
+  onBuildPanel: () => void;
 }) {
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
@@ -56,6 +58,10 @@ export function OrbitMap({
         </View>
         <Text style={styles.emptyTitle}>{copy(language, "crossReactivity.emptyTitle")}</Text>
         <Text style={styles.emptyBody}>{copy(language, "crossReactivity.emptyBody")}</Text>
+        <Pressable style={[styles.sheetActionBtn, { marginTop: 8, paddingHorizontal: 20 }]} onPress={onBuildPanel} accessibilityRole="button">
+          <Ionicons name="list-outline" size={16} color={theme.accent} />
+          <Text style={styles.sheetActionText}>{copy(language, "crossReactivity.buildPanel")}</Text>
+        </Pressable>
       </View>
     );
   }
@@ -294,24 +300,55 @@ export function OrbitMap({
 
       {/* ─── Suggested Panel ─── */}
       {(() => {
-        const panelDrugIds = new Set<string>();
-        for (const g of groups) for (const id of g.suggestedPanel) panelDrugIds.add(id);
-        if (panelDrugIds.size === 0) return null;
-        const tierDrugs: Record<CrossReactivityTier, string[]> = { "higher-concern": [], "lower-expected": [], "uncertain": [] };
-        for (const g of groups) for (const entry of g.entries) {
-          if (panelDrugIds.has(entry.drugId) && !tierDrugs[entry.tier].includes(entry.drugId)) tierDrugs[entry.tier].push(entry.drugId);
+        const panelDrugIds: string[] = [];
+        for (const g of groups) for (const id of g.suggestedPanel) {
+          if (id !== drug.id && !panelDrugIds.includes(id)) panelDrugIds.push(id);
         }
-        const tierBuckets = tierOrder.filter((t) => tierDrugs[t].length > 0).map((t) => ({ tier: t, drugs: tierDrugs[t] }));
-        if (tierBuckets.length === 0) return null;
+        const tierDrugs: Record<CrossReactivityTier, string[]> = { "higher-concern": [], "lower-expected": [], "uncertain": [] };
+        const classified = new Set<string>();
+        for (const tier of tierOrder) for (const g of groups) for (const entry of g.entries) {
+          if (entry.tier === tier && panelDrugIds.includes(entry.drugId) && !classified.has(entry.drugId)) {
+            tierDrugs[tier].push(entry.drugId);
+            classified.add(entry.drugId);
+          }
+        }
+        const unclassified = panelDrugIds.filter((id) => !classified.has(id));
+        const buckets: { key: string; label: string; color: string; drugs: string[] }[] = [
+          ...tierOrder.map((t) => ({ key: t, label: tierLabel(t), color: nodeColor(t), drugs: tierDrugs[t] })),
+          { key: "other", label: copy(language, "crossReactivity.panelOther"), color: theme.textSecondary, drugs: unclassified },
+        ].filter((bucket) => bucket.drugs.length > 0);
+        const rationales = [...new Map(
+          groups.flatMap((g) => (g.panelRationale ? [[g.panelRationale.en, g.panelRationale] as const] : []))
+        ).values()];
         return (
           <View style={styles.panelCard}>
             <Text style={styles.panelTitle}>{copy(language, "crossReactivity.panelTitle")}</Text>
-            {tierBuckets.map(({ tier, drugs }) => (
-              <View key={tier} style={{ gap: 4 }}>
-                <Text style={[styles.panelTierLabel, { color: nodeColor(tier) }]}>{tierLabel(tier)}</Text>
-                <Text style={styles.panelDrugList}>{drugs.map((id) => drugNameById[id]?.[language] ?? id).join(", ")}</Text>
+            {rationales.map((r) => (
+              <Text key={r.en} style={styles.panelRationale}>{r[language]}</Text>
+            ))}
+            {buckets.map(({ key, label: bucketLabel, color, drugs }) => (
+              <View key={key} style={{ gap: 6 }}>
+                <Text style={[styles.panelTierLabel, { color }]}>{bucketLabel}</Text>
+                <View style={styles.panelChips}>
+                  {drugs.map((id) => {
+                    const name = drugNameById[id];
+                    return name ? (
+                      <Pressable key={id} style={styles.panelChip} onPress={() => onOpenDrug(id)} accessibilityRole="link">
+                        <Text style={styles.panelChipText}>{name[language]}</Text>
+                      </Pressable>
+                    ) : (
+                      <View key={id} style={[styles.panelChip, { opacity: 0.6 }]}>
+                        <Text style={styles.panelChipText}>{id}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
               </View>
             ))}
+            <Pressable style={styles.sheetActionBtn} onPress={onBuildPanel} accessibilityRole="button">
+              <Ionicons name="list-outline" size={16} color={theme.accent} />
+              <Text style={styles.sheetActionText}>{copy(language, "crossReactivity.buildPanel")}</Text>
+            </Pressable>
           </View>
         );
       })()}
@@ -458,7 +495,10 @@ function makeStyles(theme: ReturnType<typeof useTheme>) {
     panelCard: { backgroundColor: theme.surface, borderRadius: 14, borderWidth: 1, borderColor: theme.border, padding: 16, gap: 14 },
     panelTitle: { fontSize: 15, fontWeight: "700", color: theme.textPrimary },
     panelTierLabel: { fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
-    panelDrugList: { fontSize: 14, fontWeight: "500", color: theme.textPrimary },
+    panelRationale: { fontSize: 13, lineHeight: 19, color: theme.textSecondary },
+    panelChips: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+    panelChip: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: theme.surfaceAlt, borderWidth: 1, borderColor: theme.border },
+    panelChipText: { fontSize: 13, fontWeight: "600", color: theme.textPrimary },
 
     /* Overlay */
     overlayBg: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", alignItems: "center", padding: 24 },

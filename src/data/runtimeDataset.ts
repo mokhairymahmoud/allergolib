@@ -14,14 +14,13 @@ import type {
   SourceDocument,
   StructuralRelation,
   TestNote,
-  TestKind,
   TestRecord,
   TestSourceEntry,
 } from "../types";
+import { TEST_KINDS, hasDisplayableTestContent } from "../lib/testData";
 import { bundledDatasetJson, bundledManifestJson } from "./loadBundledDataset";
 
 const STORAGE_KEY = "@periop-skin-test/active-dataset";
-const TEST_KINDS: TestKind[] = ["prick", "idr", "patch"];
 const APP_VERSION = appConfig.expo.version;
 const REMOTE_MANIFEST_URL =
   process.env.EXPO_PUBLIC_DATASET_MANIFEST_URL?.trim() ||
@@ -126,15 +125,6 @@ function asLocalizedStringArray(value: unknown, context: string): LocalizedStrin
   }
 
   return value.map((entry, index) => asLocalizedString(entry, `${context}[${index}]`));
-}
-
-function hasDisplayableTestContent(test: TestRecord) {
-  return (
-    test.sourceEntries.some((e) => e.concentration || e.maxConcentration) ||
-    test.dilutions.length > 0 ||
-    Boolean(test.vehicle) ||
-    test.notes.length > 0
-  );
 }
 
 function assertSourceDocumentComplete(

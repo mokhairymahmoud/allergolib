@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { DrugRow } from "../components/DrugRow";
+import { formatReleaseDate } from "../lib/formatters";
 import { copy } from "../lib/i18n";
 import { useTheme } from "../theme/ThemeContext";
 import type { DrugRecord, Language } from "../types";
@@ -12,13 +13,17 @@ export function FavoritesScreen({
   favoriteDrugs,
   favoriteDrugIds,
   onOpenDrug,
+  onOpenPanel,
   onToggleFavorite,
+  savedPanels,
 }: {
   language: Language;
   favoriteDrugs: DrugRecord[];
   favoriteDrugIds: string[];
   onOpenDrug: (drugId: string) => void;
+  onOpenPanel: (culpritDrugId: string) => void;
   onToggleFavorite: (drugId: string) => void;
+  savedPanels: { culprit: DrugRecord; drugCount: number; updatedAt: string }[];
 }) {
   const theme = useTheme();
   const styles = useMemo(
@@ -68,6 +73,37 @@ export function FavoritesScreen({
           lineHeight: 20,
           textAlign: "center",
         },
+        panelRow: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+          backgroundColor: theme.surface,
+          borderRadius: 12,
+          padding: 14,
+          borderWidth: 1,
+          borderColor: theme.border,
+        },
+        panelIcon: {
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: theme.accentBg,
+        },
+        panelText: {
+          flex: 1,
+          gap: 2,
+        },
+        panelName: {
+          color: theme.textPrimary,
+          fontSize: 15,
+          fontWeight: "700",
+        },
+        panelMeta: {
+          color: theme.textSecondary,
+          fontSize: 12,
+        },
       }),
     [theme]
   );
@@ -103,6 +139,36 @@ export function FavoritesScreen({
         </View>
       )}
 
+      {savedPanels.length ? (
+        <>
+          <View style={styles.header}>
+            <Text style={styles.title}>{copy(language, "panel.savedTitle")}</Text>
+            <Text style={styles.subtitle}>{copy(language, "panel.savedBody")}</Text>
+          </View>
+          <View style={styles.resultsList}>
+            {savedPanels.map(({ culprit, drugCount, updatedAt }) => (
+              <Pressable
+                key={`panel-${culprit.id}`}
+                style={styles.panelRow}
+                onPress={() => onOpenPanel(culprit.id)}
+                accessibilityRole="button"
+              >
+                <View style={styles.panelIcon}>
+                  <Ionicons name="list-outline" size={18} color={theme.accent} />
+                </View>
+                <View style={styles.panelText}>
+                  <Text style={styles.panelName}>{culprit.name[language]}</Text>
+                  <Text style={styles.panelMeta}>
+                    {drugCount} {copy(language, "panel.drugs")} · {copy(language, "panel.updated")}{" "}
+                    {formatReleaseDate(updatedAt, language)}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={theme.textDisabled} />
+              </Pressable>
+            ))}
+          </View>
+        </>
+      ) : null}
     </ScrollView>
   );
 }

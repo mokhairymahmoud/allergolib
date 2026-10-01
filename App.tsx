@@ -5,6 +5,7 @@ import React, { startTransition, useEffect, useMemo, useRef, useState } from "re
 import {
   ActivityIndicator,
   Animated,
+  BackHandler,
   Dimensions,
   PanResponder,
   Pressable,
@@ -16,6 +17,7 @@ import {
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { AppLogo } from "./src/components/AppLogo";
+import { SlideOverLayer } from "./src/components/SlideOverLayer";
 import {
   getBundledActiveDataset,
   loadActiveDataset,
@@ -24,6 +26,14 @@ import {
 import { loadFavoriteDrugIds, persistFavoriteDrugIds, sanitizeFavoriteDrugIds } from "./src/lib/favorites";
 import { arraysEqual } from "./src/lib/formatters";
 import { copy } from "./src/lib/i18n";
+import {
+  createSuggestedPanel,
+  loadPanels,
+  persistPanels,
+  resolvePanelItems,
+  sanitizePanels,
+  type TestPanel,
+} from "./src/lib/panels";
 import {
   loadRecentDrugIds,
   persistRecentDrugIds,
@@ -34,6 +44,7 @@ import { searchDrugs } from "./src/lib/drugSearch";
 import { DetailScreen } from "./src/screens/detail/DetailScreen";
 import { FavoritesScreen } from "./src/screens/FavoritesScreen";
 import { InfoScreen } from "./src/screens/InfoScreen";
+import { PanelScreen } from "./src/screens/PanelScreen";
 import { SearchScreen } from "./src/screens/SearchScreen";
 import { darkTheme, lightTheme } from "./src/theme/colors";
 import { ThemeContext } from "./src/theme/ThemeContext";
@@ -80,6 +91,9 @@ export default function App() {
   const [recentDrugIds, setRecentDrugIds] = useState<string[]>([]);
   const [favoritesHydrated, setFavoritesHydrated] = useState(false);
   const [recentHydrated, setRecentHydrated] = useState(false);
+  const [panels, setPanels] = useState<TestPanel[]>([]);
+  const [panelsHydrated, setPanelsHydrated] = useState(false);
+  const [openPanelCulpritId, setOpenPanelCulpritId] = useState<string | null>(null);
 
   // ─── Hydration ─────────────────────────────────────────────────────────────
 
@@ -87,11 +101,12 @@ export default function App() {
     let cancelled = false;
 
     async function hydrate() {
-      const [storedDataset, storedFavorites, storedRecents, storedDarkMode] = await Promise.all([
+      const [storedDataset, storedFavorites, storedRecents, storedDarkMode, storedPanels] = await Promise.all([
         loadActiveDataset(),
         loadFavoriteDrugIds(),
         loadRecentDrugIds(),
         AsyncStorage.getItem(DARK_MODE_STORAGE_KEY),
+        loadPanels(),
       ]);
 
       if (cancelled) return;
@@ -102,8 +117,10 @@ export default function App() {
         setActiveDataset(storedDataset);
         setFavoriteDrugIds(sanitizeFavoriteDrugIds(storedFavorites, validDrugIds));
         setRecentDrugIds(sanitizeRecentDrugIds(storedRecents, validDrugIds));
+        setPanels(sanitizePanels(storedPanels, validDrugIds));
         setFavoritesHydrated(true);
         setRecentHydrated(true);
+        setPanelsHydrated(true);
         if (storedDarkMode === "dark") {
           setDarkOverride(true);
         } else if (storedDarkMode === "light") {
@@ -164,6 +181,21 @@ export default function App() {
     void persistRecentDrugIds(recentDrugIds);
   }, [recentDrugIds, recentHydrated]);
 
+  // ─── Panels sync ───────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!panelsHydrated) return;
+    const sanitized = sanitizePanels(panels, activeDataset.dataset.drugs.map((drug) => drug.id));
+    if (JSON.stringify(sanitized) !== JSON.stringify(panels)) {
+      setPanels(sanitized);
+    }
+  }, [activeDataset.dataset.drugs, panels, panelsHydrated]);
+
+  useEffect(() => {
+    if (!panelsHydrated) return;
+    void persistPanels(panels);
+  }, [panels, panelsHydrated]);
+
   // ─── Derived state ─────────────────────────────────────────────────────────
 
   const selectedDrug = selectedDrugId
@@ -175,9 +207,29 @@ export default function App() {
     .map((drugId) => activeDataset.dataset.drugs.find((drug) => drug.id === drugId) ?? null)
     .filter((drug): drug is DrugRecord => Boolean(drug))
     .sort((a, b) => a.name[language].localeCompare(b.name[language], language));
+  const drugsById = useMemo(
+    () => new Map(activeDataset.dataset.drugs.map((drug) => [drug.id, drug])),
+    [activeDataset.dataset.drugs]
+  );
+  const openPanel = openPanelCulpritId
+    ? panels.find((panel) => panel.culpritDrugId === openPanelCulpritId) ?? null
+    : null;
+  const openPanelItems = openPanel ? resolvePanelItems(openPanel, drugsById) : [];
+  const savedPanels = panels
+    .flatMap((panel) => {
+      const culprit = drugsById.get(panel.culpritDrugId);
+      return culprit ? [{ culprit, drugCount: panel.drugIds.length + 1, updatedAt: panel.updatedAt }] : [];
+    })
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const recentDrugs = recentDrugIds
     .map((drugId) => activeDataset.dataset.drugs.find((drug) => drug.id === drugId) ?? null)
     .filter((drug): drug is DrugRecord => Boolean(drug));
+
+  useEffect(() => {
+    if (openPanelCulpritId && !openPanel && panelsHydrated) {
+      setOpenPanelCulpritId(null);
+    }
+  }, [openPanel, openPanelCulpritId, panelsHydrated]);
 
   useEffect(() => {
     if (selectedDrugId && !selectedDrug) {
@@ -201,6 +253,42 @@ export default function App() {
       setSelectedDrugId(drugId);
       setRecentDrugIds((current) => recordRecentDrugId(current, drugId));
     });
+  }
+
+  function updatePanelDrugIds(culpritDrugId: string, update: (drugIds: string[]) => string[]) {
+    setPanels((current) =>
+      current.map((panel) =>
+        panel.culpritDrugId === culpritDrugId
+          ? { ...panel, drugIds: update(panel.drugIds), updatedAt: new Date().toISOString() }
+          : panel
+      )
+    );
+  }
+
+  function buildPanel(culpritDrugId: string) {
+    const culprit = drugsById.get(culpritDrugId);
+    if (!culprit) return;
+    setPanels((current) =>
+      current.some((panel) => panel.culpritDrugId === culpritDrugId)
+        ? current
+        : [...current, createSuggestedPanel(culprit, [...drugsById.keys()])]
+    );
+    setOpenPanelCulpritId(culpritDrugId);
+    closeDetail();
+  }
+
+  function resetPanel(culpritDrugId: string) {
+    const culprit = drugsById.get(culpritDrugId);
+    if (!culprit) return;
+    const suggested = createSuggestedPanel(culprit, [...drugsById.keys()]);
+    setPanels((current) =>
+      current.map((panel) => (panel.culpritDrugId === culpritDrugId ? suggested : panel))
+    );
+  }
+
+  function deletePanel(culpritDrugId: string) {
+    setOpenPanelCulpritId(null);
+    setPanels((current) => current.filter((panel) => panel.culpritDrugId !== culpritDrugId));
   }
 
   function toggleDark() {
@@ -269,6 +357,37 @@ export default function App() {
     })
   ).current;
 
+  function closeDetail() {
+    Animated.spring(slideX, {
+      toValue: SCREEN_WIDTH,
+      useNativeDriver: true,
+      bounciness: 0,
+      speed: 20,
+    }).start(() => {
+      setDetailVisible(false);
+      startTransition(() => setSelectedDrugId(null));
+    });
+  }
+
+  // Android hardware back: close the top-most layer before letting the app exit.
+  const backTargetRef = useRef({ detail: false, panel: false, close: closeDetail });
+  backTargetRef.current = { detail: Boolean(selectedDrugId), panel: Boolean(openPanelCulpritId), close: closeDetail };
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      const target = backTargetRef.current;
+      if (target.detail) {
+        target.close();
+        return true;
+      }
+      if (target.panel) {
+        setOpenPanelCulpritId(null);
+        return true;
+      }
+      return false;
+    });
+    return () => subscription.remove();
+  }, []);
+
   const homeTranslateX = slideX.interpolate({
     inputRange: [0, SCREEN_WIDTH],
     outputRange: [-SCREEN_WIDTH * 0.25, 0],
@@ -286,7 +405,7 @@ export default function App() {
           {/* Home layer */}
           <Animated.View
             style={[styles.stackLayer, { transform: [{ translateX: homeTranslateX }] }]}
-            pointerEvents={selectedDrug ? "none" : "auto"}
+            pointerEvents={selectedDrug || openPanel ? "none" : "auto"}
           >
             <View style={styles.container}>
               {/* Top bar */}
@@ -332,7 +451,9 @@ export default function App() {
                         favoriteDrugs={favoriteDrugs}
                         language={language}
                         onOpenDrug={openDrug}
+                        onOpenPanel={setOpenPanelCulpritId}
                         onToggleFavorite={toggleFavorite}
+                        savedPanels={savedPanels}
                       />
                     ) : null}
 
@@ -376,6 +497,37 @@ export default function App() {
             </View>
           </Animated.View>
 
+          {/* Panel layer (below detail so drugs opened from a panel return to it) */}
+          <SlideOverLayer
+            open={Boolean(openPanel)}
+            interactive={!selectedDrug}
+            onRequestClose={() => setOpenPanelCulpritId(null)}
+          >
+            <View style={styles.container}>
+              {openPanel ? (
+                <PanelScreen
+                  items={openPanelItems}
+                  language={language}
+                  allDrugs={activeDataset.dataset.drugs}
+                  sources={activeDataset.dataset.sources}
+                  manifest={activeDataset.manifest}
+                  onBack={() => setOpenPanelCulpritId(null)}
+                  onOpenDrug={openDrug}
+                  onAddDrug={(drugId) =>
+                    updatePanelDrugIds(openPanel.culpritDrugId, (ids) =>
+                      ids.includes(drugId) ? ids : [...ids, drugId]
+                    )
+                  }
+                  onRemoveDrug={(drugId) =>
+                    updatePanelDrugIds(openPanel.culpritDrugId, (ids) => ids.filter((id) => id !== drugId))
+                  }
+                  onReset={() => resetPanel(openPanel.culpritDrugId)}
+                  onDelete={() => deletePanel(openPanel.culpritDrugId)}
+                />
+              ) : null}
+            </View>
+          </SlideOverLayer>
+
           {/* Detail layer */}
           {detailVisible ? (
             <Animated.View
@@ -389,17 +541,8 @@ export default function App() {
                     allDrugs={activeDataset.dataset.drugs}
                     isSaved={favoriteDrugIds.includes(selectedDrug.id)}
                     language={language}
-                    onBack={() => {
-                      Animated.spring(slideX, {
-                        toValue: SCREEN_WIDTH,
-                        useNativeDriver: true,
-                        bounciness: 0,
-                        speed: 20,
-                      }).start(() => {
-                        setDetailVisible(false);
-                        startTransition(() => setSelectedDrugId(null));
-                      });
-                    }}
+                    onBack={closeDetail}
+                    onBuildPanel={() => buildPanel(selectedDrug.id)}
                     onOpenDrug={openDrug}
                     onToggleFavorite={() => toggleFavorite(selectedDrug.id)}
                     sources={activeDataset.dataset.sources}
